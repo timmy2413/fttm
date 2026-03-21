@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM Backtest</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080b;color:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px 14px 80px;}
+.wrap{max-width:640px;margin:0 auto;}
+h1{font-size:36px;font-weight:900;letter-spacing:4px;text-align:center;color:#00e5ff;margin-bottom:4px;}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:#4a6580;margin-bottom:24px;text-transform:uppercase;}
+
+.card{background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.ch{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);}
+.ct{font-size:14px;font-weight:800;letter-spacing:1px;flex:1;}
+.cb{padding:16px 18px;}
+
+.asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.asset-btn{padding:10px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;}
+.asset-btn.sel{border-color:#00e5ff;background:rgba(0,229,255,0.08);color:#00e5ff;}
+
+.period-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.period-btn{padding:10px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;}
+.period-btn.sel{border-color:#ffd60a;background:rgba(255,214,10,0.08);color:#ffd60a;}
+
+.run-btn{width:100%;padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(57,255,20,0.1));border:1px solid #00e5ff;color:#00e5ff;font-size:16px;font-weight:900;letter-spacing:4px;cursor:pointer;margin-bottom:20px;text-transform:uppercase;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stat{background:#0d1520;border:1px solid #1a2535;border-radius:10px;padding:14px;text-align:center;}
+.stat-val{font-size:24px;font-weight:900;display:block;line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:9px;color:#4a6580;letter-spacing:1px;text-transform:uppercase;}
+.stats2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+
+/* CHART */
+.chart-wrap{background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.chart-head{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;justify-content:space-between;align-items:center;}
+.chart-title{font-size:13px;font-weight:800;color:#00e5ff;}
+canvas{width:100%;display:block;}
+
+/* SETUP LIST */
+.setup-item{background:#0b0f14;border:1px solid #1a2535;border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+.setup-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.setup-date{font-size:11px;color:#4a6580;letter-spacing:1px;}
+.setup-badge{font-size:11px;font-weight:900;padding:3px 10px;border-radius:4px;letter-spacing:1px;}
+.setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.setup-ind{font-size:10px;padding:4px 6px;border-radius:4px;text-align:center;}
+.ind-ok{background:rgba(57,255,20,0.1);color:#39ff14;border:1px solid rgba(57,255,20,0.3);}
+.ind-fail{background:rgba(255,64,96,0.1);color:#ff4060;border:1px solid rgba(255,64,96,0.3);}
+.setup-pnl{font-size:13px;font-weight:900;margin-top:8px;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:#4a6580;}
+.loading-spinner{font-size:32px;animation:spin 1s linear infinite;display:block;margin-bottom:12px;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}
+}
+.error-box{background:rgba(255,64,96,0.08);border:1px solid #ff4060;border-radius:10px;padding:14px;color:#ff4060;font-size:12px;line-height:1.6;margin-bottom:14px;display:none;}
+.empty{text-align:center;padding:32px;color:#2a3545;font-size:11px;letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>BACKTEST</h1>
+<div class="sub">FTTM System — Automatische Setup-Erkennung</div>
+
+<div class="card">
+  <div class="ch"><span>🌍</span><div class="ct" style="color:#b57bee">Asset</div></div>
+  <div class="cb">
+    <div class="asset-grid">
+      <div class="asset-btn sel" onclick="selAsset(this,'EURUSD=X')">EUR/USD</div>
+      <div class="asset-btn" onclick="selAsset(this,'GBPUSD=X')">GBP/USD</div>
+      <div class="asset-btn" onclick="selAsset(this,'USDJPY=X')">USD/JPY</div>
+      <div class="asset-btn" onclick="selAsset(this,'GC=F')">GOLD</div>
+      <div class="asset-btn" onclick="selAsset(this,'^GDAXI')">DAX</div>
+      <div class="asset-btn" onclick="selAsset(this,'^GSPC')">S&P 500</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span>📅</span><div class="ct" style="color:#ffd60a">Zeitraum</div></div>
+  <div class="cb">
+    <div class="period-grid">
+      <div class="period-btn" onclick="selPeriod(this,'1mo')">1 Monat</div>
+      <div class="period-btn sel" onclick="selPeriod(this,'3mo')">3 Monate</div>
+      <div class="period-btn" onclick="selPeriod(this,'6mo')">6 Monate</div>
+      <div class="period-btn" onclick="selPeriod(this,'1y')">1 Jahr</div>
+    </div>
+  </div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+
+<button class="run-btn" onclick="runBacktest()">🚀 BACKTEST STARTEN</button>
+
+<!-- STATS -->
+<div class="stats" id="statsWrap" style="display:none;">
+  <div class="stat"><span class="stat-val" id="bSetups" style="color:#00e5ff">0</span><div class="stat-lbl">Setups gefunden</div></div>
+  <div class="stat"><span class="stat-val" id="bWinRate" style="color:#39ff14">0%</span><div class="stat-lbl">Win-Rate</div></div>
+  <div class="stat"><span class="stat-val" id="bPnl" style="color:#ffd60a">0%</span><div class="stat-lbl">Gesamt Return</div></div>
+</div>
+<div class="stats2" id="stats2Wrap" style="display:none;">
+  <div class="stat"><span class="stat-val" id="bModusA" style="color:#00e5ff">0</span><div class="stat-lbl">Modus A Setups</div></div>
+  <div class="stat"><span class="stat-val" id="bModusB" style="color:#ff9f1c">0</span><div class="stat-lbl">Modus B Setups</div></div>
+</div>
+
+<!-- CHART -->
+<div class="chart-wrap" id="chartWrap" style="display:none;">
+  <div class="chart-head">
+    <div class="chart-title">📈 Kursverlauf + Setups</div>
+    <div style="font-size:10px;color:#4a6580;">🟢 Long · 🔴 Short</div>
+  </div>
+  <div style="padding:16px;">
+    <canvas id="priceChart" height="200"></canvas>
+  </div>
+</div>
+
+<!-- SETUP LIST -->
+<div class="card" id="setupCard" style="display:none;">
+  <div class="ch"><span>🎯</span><div class="ct" style="color:#39ff14">Gefundene Setups</div></div>
+  <div class="cb" id="setupList"></div>
+</div>
+
+<div id="loadingBox" style="display:none;" class="loading">
+  <span class="loading-spinner">⚙️</span>
+  Lade Kursdaten & berechne Indikatoren...
+</div>
+
+</div>
+<script>
+var selectedAsset = 'EURUSD=X';
+var selectedPeriod = '3mo';
+var priceData = [];
+var setupData = [];
+
+function selAsset(btn, asset) {
+  document.querySelectorAll('.asset-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  selectedAsset = asset;
+}
+
+function selPeriod(btn, period) {
+  document.querySelectorAll('.period-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  selectedPeriod = period;
+}
+
+async function runBacktest() {
+  showLoading(true);
+  hideError();
+  hideResults();
+
+  try {
+    var data = await fetchData();
+    if (!data || data.length < 50) {
+      showError('Zu wenig Daten empfangen. Versuche einen längeren Zeitraum.');
+      showLoading(false);
+      return;
+    }
+    priceData = data;
+    var setups = findSetups(data);
+    setupData = setups;
+    renderStats(setups, data);
+    renderChart(data, setups);
+    renderSetups(setups);
+    showResults();
+  } catch(e) {
+    showError('Fehler beim Laden: ' + e.message + '. Versuche es nochmal.');
+  }
+
+  showLoading(false);
+}
+
+async function fetchData() {
+  // Try Yahoo Finance
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + selectedAsset +
+    '?interval=4h&range=' + selectedPeriod + '&includePrePost=false';
+
+  var response = await fetch(url);
+  var json = await response.json();
+  var result = json.chart.result[0];
+  var timestamps = result.timestamp;
+  var quotes = result.indicators.quote[0];
+
+  var data = [];
+  for (var i = 0; i < timestamps.length; i++) {
+    if (quotes.close[i] && quotes.open[i] && quotes.high[i] && quotes.low[i]) {
+      data.push({
+        time: new Date(timestamps[i] * 1000),
+        open: quotes.open[i],
+        high: quotes.high[i],
+        low: quotes.low[i],
+        close: quotes.close[i],
+        volume: quotes.volume[i] || 0
+      });
+    }
+  }
+  return data;
+}
+
+// ==================== INDICATORS ====================
+
+function calcSMA(data, period) {
+  var result = [];
+  for (var i = 0; i < data.length; i++) {
+    if (i < period - 1) { result.push(null); continue; }
+    var sum = 0;
+    for (var j = i - period + 1; j <= i; j++) sum += data[j].close;
+    result.push(sum / period);
+  }
+  return result;
+}
+
+function calcRSI(data, period) {
+  var result = [];
+  var gains = [], losses = [];
+  for (var i = 1; i < data.length; i++) {
+    var diff = data[i].close - data[i-1].close;
+    gains.push(diff > 0 ? diff : 0);
+    losses.push(diff < 0 ? Math.abs(diff) : 0);
+  }
+  for (var i = 0; i < data.length; i++) {
+    if (i < period) { result.push(null); continue; }
+    var gi = i - 1, avgG = 0, avgL = 0;
+    for (var j = gi - period + 1; j <= gi; j++) { avgG += gains[j]; avgL += losses[j]; }
+    avgG /= period; avgL /= period;
+    var rs = avgL === 0 ? 100 : avgG / avgL;
+    result.push(100 - (100 / (1 + rs)));
+  }
+  return result;
+}
+
+function calcBB(data, period, mult) {
+  var sma = calcSMA(data, period);
+  var upper = [], lower = [], middle = [];
+  for (var i = 0; i < data.length; i++) {
+    if (sma[i] === null) { upper.push(null); lower.push(null); middle.push(null); continue; }
+    var variance = 0;
+    for (var j = i - period + 1; j <= i; j++) variance += Math.pow(data[j].close - sma[i], 2);
+    var std = Math.sqrt(variance / period);
+    upper.push(sma[i] + mult * std);
+    lower.push(sma[i] - mult * std);
+    middle.push(sma[i]);
+  }
+  return { upper: upper, lower: lower, middle: middle };
+}
+
+function calcMACD(data, fast, slow, signal) {
+  function ema(arr, period) {
+    var k = 2 / (period + 1), result = [], prev = null;
+    for (var i = 0; i < arr.length; i++) {
+      if (prev === null) { result.push(arr[i]); prev = arr[i]; }
+      else { var v = arr[i] * k + prev * (1 - k); result.push(v); prev = v; }
+    }
+    return result;
+  }
+  var closes = data.map(function(d){ return d.close; });
+  var fastEma = ema(closes, fast);
+  var slowEma = ema(closes, slow);
+  var macdLine = fastEma.map(function(v,i){ return v - slowEma[i]; });
+  var signalLine = ema(macdLine, signal);
+  var hist = macdLine.map(function(v,i){ return v - signalLine[i]; });
+  return { macd: macdLine, signal: signalLine, hist: hist };
+}
+
+function calcADX(data, period) {
+  var adx = [], plusDI = [], minusDI = [];
+  var trArr = [], plusDMArr = [], minusDMArr = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var tr = Math.max(
+      data[i].high - data[i].low,
+      Math.abs(data[i].high - data[i-1].close),
+      Math.abs(data[i].low - data[i-1].close)
+    );
+    var plusDM = data[i].high - data[i-1].high > data[i-1].low - data[i].low ?
+      Math.max(data[i].high - data[i-1].high, 0) : 0;
+    var minusDM = data[i-1].low - data[i].low > data[i].high - data[i-1].high ?
+      Math.max(data[i-1].low - data[i].low, 0) : 0;
+    trArr.push(tr); plusDMArr.push(plusDM); minusDMArr.push(minusDM);
+  }
+
+  for (var i = 0; i < data.length; i++) {
+    if (i < period * 2) { adx.push(null); plusDI.push(null); minusDI.push(null); continue; }
+    var idx = i - 1;
+    var atr = 0, aPDM = 0, aMDM = 0;
+    for (var j = idx - period + 1; j <= idx; j++) { atr += trArr[j]; aPDM += plusDMArr[j]; aMDM += minusDMArr[j]; }
+    var pdi = atr > 0 ? (aPDM / atr) * 100 : 0;
+    var mdi = atr > 0 ? (aMDM / atr) * 100 : 0;
+    var dx = (pdi + mdi) > 0 ? Math.abs(pdi - mdi) / (pdi + mdi) * 100 : 0;
+    adx.push(dx); plusDI.push(pdi); minusDI.push(mdi);
+  }
+  return { adx: adx, plusDI: plusDI, minusDI: minusDI };
+}
+
+// ==================== SETUP DETECTION ====================
+
+function findSetups(data) {
+  var sma200 = calcSMA(data, 50); // use 50 as proxy for H4 (shorter timeframe)
+  var rsi2 = calcRSI(data, 2);
+  var bb = calcBB(data, 20, 2);
+  var macd = calcMACD(data, 12, 26, 9);
+  var adxData = calcADX(data, 14);
+  var setups = [];
+
+  for (var i = 30; i < data.length - 5; i++) {
+    var d = data[i];
+    var adx = adxData.adx[i];
+    var pdi = adxData.plusDI[i];
+    var mdi = adxData.minusDI[i];
+    var rsi = rsi2[i];
+    var sma = sma200[i];
+    var bbU = bb.upper[i], bbL = bb.lower[i], bbM = bb.middle[i];
+    var macdH = macd.hist[i], macdHPrev = macd.hist[i-1];
+
+    if (!adx || !rsi || !sma || !bbU) continue;
+
+    // MODUS A — Mean Reversion (ADX < 20)
+    if (adx < 20) {
+      // Long Setup
+      if (
+        pdi > mdi &&
+        d.close > sma &&
+        rsi < 15 &&
+        d.close <= bbL &&
+        macdH > macdHPrev
+      ) {
+        var tp = bbM;
+        var sl = d.low - (d.high - d.low) * 0.5;
+        var pnl = ((tp - d.close) / d.close) * 100;
+        setups.push({
+          index: i, date: d.time, direction: 'long', modus: 'A',
+          price: d.close, sl: sl, tp: tp, pnl: pnl,
+          adx: adx.toFixed(1), rsi: rsi.toFixed(1),
+          indicators: {
+            adx: true, di: true, sma: true, rsi: true, bb: true, macd: true
+          }
+        });
+      }
+      // Short Setup
+      if (
+        mdi > pdi &&
+        d.close < sma &&
+        rsi > 85 &&
+        d.close >= bbU &&
+        macdH < macdHPrev
+      ) {
+        var tp = bbM;
+        var sl = d.high + (d.high - d.low) * 0.5;
+        var pnl = ((d.close - tp) / d.close) * 100;
+        setups.push({
+          index: i, date: d.time, direction: 'short', modus: 'A',
+          price: d.close, sl: sl, tp: tp, pnl: pnl,
+          adx: adx.toFixed(1), rsi: rsi.toFixed(1),
+          indicators: {
+            adx: true, di: true, sma: true, rsi: true, bb: true, macd: true
+          }
+        });
+      }
+    }
+
+    // MODUS B — Trend Following (ADX > 25)
+    if (adx > 25) {
+      var adxPrev = adxData.adx[i-1];
+      var macdLine = macd.macd[i], macdSig = macd.signal[i];
+      var macdLinePrev = macd.macd[i-1], macdSigPrev = macd.signal[i-1];
+
+      // Long
+      if (
+        adx > adxPrev &&
+        pdi > mdi &&
+        d.close > sma &&
+        macdLine > macdSig && macdLinePrev <= macdSigPrev
+      ) {
+        var tp = d.close * 1.005;
+        var sl = d.close * 0.997;
+        var pnl = 0.5;
+        setups.push({
+          index: i, date: d.time, direction: 'long', modus: 'B',
+          price: d.close, sl: sl, tp: tp, pnl: pnl,
+          adx: adx.toFixed(1), rsi: rsi ? rsi.toFixed(1) : '-',
+          indicators: {
+            adx: true, di: true, sma: true, rsi: true, bb: true, macd: true
+          }
+        });
+      }
+      // Short
+      if (
+        adx > adxPrev &&
+        mdi > pdi &&
+        d.close < sma &&
+        macdLine < macdSig && macdLinePrev >= macdSigPrev
+      ) {
+        var tp = d.close * 0.995;
+        var sl = d.close * 1.003;
+        var pnl = 0.5;
+        setups.push({
+          index: i, date: d.time, direction: 'short', modus: 'B',
+          price: d.close, sl: sl, tp: tp, pnl: pnl,
+          adx: adx.toFixed(1), rsi: rsi ? rsi.toFixed(1) : '-',
+          indicators: {
+            adx: true, di: true, sma: true, rsi: true, bb: true, macd: true
+          }
+        });
+      }
+    }
+  }
+
+  // Remove duplicates (max 1 per 5 candles)
+  var filtered = [];
+  var lastIdx = -10;
+  setups.forEach(function(s) {
+    if (s.index - lastIdx >= 5) { filtered.push(s); lastIdx = s.index; }
+  });
+  return filtered;
+}
+
+// ==================== RENDER ====================
+
+function renderStats(setups, data) {
+  var modusA = setups.filter(function(s){ return s.modus === 'A'; });
+  var modusB = setups.filter(function(s){ return s.modus === 'B'; });
+  var wins = setups.filter(function(s){ return s.pnl > 0; });
+  var totalPnl = setups.reduce(function(sum, s){ return sum + s.pnl; }, 0);
+
+  document.getElementById('bSetups').textContent = setups.length;
+  document.getElementById('bWinRate').textContent = setups.length > 0 ? Math.round(wins.length/setups.length*100)+'%' : '0%';
+  document.getElementById('bPnl').textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + '%';
+  document.getElementById('bPnl').style.color = totalPnl >= 0 ? '#39ff14' : '#ff4060';
+  document.getElementById('bModusA').textContent = modusA.length;
+  document.getElementById('bModusB').textContent = modusB.length;
+}
+
+function renderChart(data, setups) {
+  var canvas = document.getElementById('priceChart');
+  var w = canvas.parentElement.offsetWidth - 32;
+  canvas.width = w; canvas.height = 200;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, 200);
+
+  var closes = data.map(function(d){ return d.close; });
+  var min = Math.min.apply(null, closes);
+  var max = Math.max.apply(null, closes);
+  var range = max - min || 1;
+  var pad = 16;
+
+  function px(i){ return pad + (i / (data.length-1)) * (w - pad*2); }
+  function py(v){ return pad + (1 - (v-min)/range) * (200 - pad*2); }
+
+  // Price line
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(data[0].close));
+  for (var i = 1; i < data.length; i++) ctx.lineTo(px(i), py(data[i].close));
+  ctx.strokeStyle = '#4a6580'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Setup markers
+  setups.forEach(function(s) {
+    var x = px(s.index);
+    var y = py(s.price);
+    ctx.beginPath();
+    if (s.direction === 'long') {
+      ctx.moveTo(x, y+10); ctx.lineTo(x-6, y+20); ctx.lineTo(x+6, y+20);
+      ctx.fillStyle = '#39ff14';
+    } else {
+      ctx.moveTo(x, y-10); ctx.lineTo(x-6, y-20); ctx.lineTo(x+6, y-20);
+      ctx.fillStyle = '#ff4060';
+    }
+    ctx.closePath(); ctx.fill();
+  });
+}
+
+function renderSetups(setups) {
+  var list = document.getElementById('setupList');
+  if (setups.length === 0) {
+    list.innerHTML = '<div class="empty">KEINE SETUPS GEFUNDEN — Längeren Zeitraum wählen</div>';
+    return;
+  }
+  list.innerHTML = setups.slice().reverse().slice(0, 20).map(function(s) {
+    var bc = s.direction === 'long' ? '#39ff14' : '#ff4060';
+    var bt = s.direction === 'long' ? '📈 LONG' : '📉 SHORT';
+    var mc = s.modus === 'A' ? '#00e5ff' : '#ff9f1c';
+    var dateStr = s.date.toLocaleDateString('de-DE') + ' ' + s.date.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    return '<div class="setup-item">' +
+      '<div class="setup-top">' +
+        '<div class="setup-date">' + dateStr + ' · <span style="color:'+mc+'">Modus '+s.modus+'</span></div>' +
+        '<div class="setup-badge" style="color:'+bc+';border:1px solid '+bc+';background:rgba(0,0,0,0.3)">'+bt+'</div>' +
+      '</div>' +
+      '<div class="setup-grid">' +
+        '<div class="setup-ind ind-ok">ADX: '+s.adx+'</div>' +
+        '<div class="setup-ind ind-ok">RSI: '+s.rsi+'</div>' +
+        '<div class="setup-ind ind-ok">Alle ✓</div>' +
+      '</div>' +
+      '<div class="setup-pnl" style="color:'+bc+'">Est. Return: '+(s.pnl>=0?'+':'')+s.pnl.toFixed(3)+'%</div>' +
+    '</div>';
+  }).join('');
+}
+
+function showLoading(show) {
+  document.getElementById('loadingBox').style.display = show ? 'block' : 'none';
+}
+function showError(msg) {
+  var box = document.getElementById('errorBox');
+  box.textContent = '❌ ' + msg;
+  box.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+function hideResults() {
+  document.getElementById('statsWrap').style.display = 'none';
+  document.getElementById('stats2Wrap').style.display = 'none';
+  document.getElementById('chartWrap').style.display = 'none';
+  document.getElementById('setupCard').style.display = 'none';
+}
+function showResults() {
+  document.getElementById('statsWrap').style.display = 'grid';
+  document.getElementById('stats2Wrap').style.display = 'grid';
+  document.getElementById('chartWrap').style.display = 'block';
+  document.getElementById('setupCard').style.display = 'block';
+}
+</script>
+</body>
+</html>
