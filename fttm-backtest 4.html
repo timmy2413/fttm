@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM Backtest</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080b;color:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px 14px 80px;}
+.wrap{max-width:640px;margin:0 auto;}
+h1{font-size:36px;font-weight:900;letter-spacing:4px;text-align:center;color:#00e5ff;margin-bottom:4px;}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:#4a6580;margin-bottom:24px;text-transform:uppercase;}
+.card{background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.ch{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);}
+.ct{font-size:14px;font-weight:800;letter-spacing:1px;flex:1;}
+.cb{padding:16px 18px;}
+.upload-area{border:2px dashed #1a2535;border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.upload-area:hover{border-color:#00e5ff;background:rgba(0,229,255,0.04);}
+.upload-area.active{border-color:#39ff14;background:rgba(57,255,20,0.04);}
+.upload-icon{font-size:40px;margin-bottom:12px;display:block;}
+.upload-text{font-size:13px;color:#4a6580;line-height:1.6;}
+.upload-text strong{color:#dce8f5;}
+.upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.file-info{background:rgba(57,255,20,0.08);border:1px solid #39ff14;border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;color:#39ff14;display:none;}
+.step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.step:last-child{border-bottom:none;}
+.step-num{width:24px;height:24px;border-radius:50%;background:rgba(0,229,255,0.1);border:1px solid #00e5ff;color:#00e5ff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-text{font-size:12px;color:#4a6580;line-height:1.6;flex:1;}
+.step-text strong{color:#dce8f5;}
+.run-btn{width:100%;padding:16px;border-radius:12px;border:1px solid #00e5ff;background:rgba(0,229,255,0.08);color:#00e5ff;font-size:16px;font-weight:900;letter-spacing:4px;cursor:pointer;margin-bottom:20px;text-transform:uppercase;display:none;}
+.stats{display:none;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stats2{display:none;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.stat{background:#0d1520;border:1px solid #1a2535;border-radius:10px;padding:14px;text-align:center;}
+.stat-val{font-size:24px;font-weight:900;display:block;line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:9px;color:#4a6580;letter-spacing:1px;text-transform:uppercase;}
+.chart-wrap{display:none;background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.chart-head{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;justify-content:space-between;align-items:center;}
+.chart-title{font-size:13px;font-weight:800;color:#00e5ff;}
+canvas{width:100%;display:block;}
+.setup-item{background:#0b0f14;border:1px solid #1a2535;border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+.setup-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.setup-date{font-size:11px;color:#4a6580;}
+.setup-badge{font-size:11px;font-weight:900;padding:3px 10px;border-radius:4px;}
+.setup-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(57,255,20,0.1);color:#39ff14;border:1px solid rgba(57,255,20,0.3);}
+.setup-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.price-box{font-size:10px;color:#4a6580;text-align:center;}
+.price-box strong{display:block;font-size:12px;color:#dce8f5;margin-bottom:2px;}
+.empty{text-align:center;padding:32px;color:#2a3545;font-size:11px;letter-spacing:2px;}
+.error-box{background:rgba(255,64,96,0.08);border:1px solid #ff4060;border-radius:10px;padding:14px;color:#ff4060;font-size:12px;line-height:1.6;margin-bottom:14px;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>BACKTEST</h1>
+<div class="sub">FTTM System — MT5 CSV Import</div>
+
+<div class="card">
+  <div class="ch"><span>📖</span><div class="ct" style="color:#ffd60a">So exportierst du aus MT5</div></div>
+  <div class="cb">
+    <div class="step"><div class="step-num">1</div><div class="step-text">MT5 öffnen → Chart auf <strong>H4</strong> stellen</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text">Oben auf <strong>"Ansicht"</strong> → <strong>"Daten exportieren"</strong></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text">Als <strong>CSV Datei</strong> speichern</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text">Datei hier hochladen → <strong>Backtest starten!</strong></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span>📂</span><div class="ct" style="color:#39ff14">CSV hochladen</div></div>
+  <div class="cb">
+    <div class="upload-area" id="uploadArea">
+      <input type="file" class="upload-input" id="csvInput" accept=".csv,.txt" onchange="handleFile(event)">
+      <span class="upload-icon">📊</span>
+      <div class="upload-text"><strong>MT5 CSV hier hochladen</strong><br>Tippe zum Auswählen<br>.csv oder .txt</div>
+    </div>
+    <div class="file-info" id="fileInfo"></div>
+  </div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+<button class="run-btn" id="runBtn" onclick="runBacktest()">BACKTEST STARTEN</button>
+
+<div class="stats" id="statsWrap">
+  <div class="stat"><span class="stat-val" id="bCandles" style="color:#00e5ff">0</span><div class="stat-lbl">Kerzen</div></div>
+  <div class="stat"><span class="stat-val" id="bSetups" style="color:#39ff14">0</span><div class="stat-lbl">Setups</div></div>
+  <div class="stat"><span class="stat-val" id="bWinRate" style="color:#ffd60a">0%</span><div class="stat-lbl">Est. Win-Rate</div></div>
+</div>
+<div class="stats2" id="stats2Wrap">
+  <div class="stat"><span class="stat-val" id="bModusA" style="color:#00e5ff">0</span><div class="stat-lbl">Modus A</div></div>
+  <div class="stat"><span class="stat-val" id="bModusB" style="color:#ff9f1c">0</span><div class="stat-lbl">Modus B</div></div>
+</div>
+
+<div class="chart-wrap" id="chartWrap">
+  <div class="chart-head">
+    <div class="chart-title">Kursverlauf + Setups</div>
+    <div style="font-size:10px;color:#4a6580;">▲ Long &nbsp; ▼ Short</div>
+  </div>
+  <div style="padding:16px;"><canvas id="priceChart" height="200"></canvas></div>
+</div>
+
+<div class="card" id="setupCard" style="display:none;">
+  <div class="ch"><span>🎯</span><div class="ct" style="color:#39ff14">Gefundene Setups</div></div>
+  <div class="cb" id="setupList"></div>
+</div>
+
+</div>
+<script>
+var csvData = [], setups = [];
+
+function handleFile(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var parsed = parseCSV(ev.target.result);
+    if (parsed.length < 50) { showError('Zu wenig Daten — mindestens 50 Kerzen exportieren!'); return; }
+    csvData = parsed;
+    document.getElementById('uploadArea').classList.add('active');
+    var fi = document.getElementById('fileInfo');
+    fi.style.display = 'block';
+    fi.textContent = file.name + ' — ' + parsed.length + ' Kerzen geladen';
+    document.getElementById('runBtn').style.display = 'block';
+    hideError();
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  var lines = text.trim().split('\n');
+  var sep = text.indexOf(';') > -1 ? ';' : ',';
+  var data = [];
+  for (var i = 0; i < lines.length; i++) {
+    var parts = lines[i].trim().split(sep);
+    if (parts.length < 5) continue;
+    var o, h, l, c, dateStr;
+    if (parts.length >= 6) {
+      dateStr = parts[0].trim() + ' ' + parts[1].trim();
+      o = parseFloat(parts[2]); h = parseFloat(parts[3]);
+      l = parseFloat(parts[4]); c = parseFloat(parts[5]);
+    } else {
+      dateStr = parts[0].trim();
+      o = parseFloat(parts[1]); h = parseFloat(parts[2]);
+      l = parseFloat(parts[3]); c = parseFloat(parts[4]);
+    }
+    if (isNaN(o)||isNaN(h)||isNaN(l)||isNaN(c)) continue;
+    data.push({ time: new Date(dateStr), open:o, high:h, low:l, close:c });
+  }
+  return data;
+}
+
+function sma(data, p) {
+  var r = [];
+  for (var i = 0; i < data.length; i++) {
+    if (i < p-1) { r.push(null); continue; }
+    var s = 0; for (var j = i-p+1; j <= i; j++) s += data[j].close;
+    r.push(s/p);
+  }
+  return r;
+}
+
+function rsi(data, p) {
+  var r = new Array(data.length).fill(null);
+  for (var i = p; i < data.length; i++) {
+    var g = 0, l = 0;
+    for (var j = i-p+1; j <= i; j++) { var d = data[j].close - data[j-1].close; if(d>0) g+=d; else l-=d; }
+    var ag = g/p, al = l/p;
+    r[i] = al===0 ? 100 : 100-(100/(1+ag/al));
+  }
+  return r;
+}
+
+function bb(data, p, m) {
+  var s = sma(data, p), u=[], l=[], mid=[];
+  for (var i = 0; i < data.length; i++) {
+    if (!s[i]) { u.push(null); l.push(null); mid.push(null); continue; }
+    var v = 0; for (var j = i-p+1; j <= i; j++) v += Math.pow(data[j].close - s[i], 2);
+    var sd = Math.sqrt(v/p);
+    u.push(s[i]+m*sd); l.push(s[i]-m*sd); mid.push(s[i]);
+  }
+  return {u:u, l:l, m:mid};
+}
+
+function macd(data) {
+  function ema(arr, p) {
+    var k=2/(p+1), r=[], pv=null;
+    for (var i=0; i<arr.length; i++) { var v=pv===null?arr[i]:arr[i]*k+pv*(1-k); r.push(v); pv=v; }
+    return r;
+  }
+  var c = data.map(function(d){return d.close;});
+  var f=ema(c,12), s=ema(c,26);
+  var ml=f.map(function(v,i){return v-s[i];});
+  var sig=ema(ml,9);
+  return {ml:ml, sig:sig, hist:ml.map(function(v,i){return v-sig[i];})};
+}
+
+function adx(data, p) {
+  var adxR=new Array(data.length).fill(null);
+  var pDI=new Array(data.length).fill(null);
+  var mDI=new Array(data.length).fill(null);
+  var trs=[], pDMs=[], mDMs=[];
+  for (var i=1; i<data.length; i++) {
+    var tr=Math.max(data[i].high-data[i].low,Math.abs(data[i].high-data[i-1].close),Math.abs(data[i].low-data[i-1].close));
+    var up=data[i].high-data[i-1].high, dn=data[i-1].low-data[i].low;
+    trs.push(tr); pDMs.push(up>dn&&up>0?up:0); mDMs.push(dn>up&&dn>0?dn:0);
+  }
+  for (var i=p; i<data.length; i++) {
+    var ti=i-1, at=0, ap=0, am=0;
+    for (var j=ti-p+1; j<=ti; j++){at+=trs[j]; ap+=pDMs[j]; am+=mDMs[j];}
+    var pi=at>0?ap/at*100:0, mi=at>0?am/at*100:0;
+    adxR[i]=(pi+mi)>0?Math.abs(pi-mi)/(pi+mi)*100:0;
+    pDI[i]=pi; mDI[i]=mi;
+  }
+  return {adx:adxR, pDI:pDI, mDI:mDI};
+}
+
+function findSetups(data) {
+  var s200=sma(data,200), r2=rsi(data,2), bbObj=bb(data,20,2);
+  var mcd=macd(data), adxObj=adx(data,14), found=[];
+  for (var i=210; i<data.length-3; i++) {
+    var d=data[i], av=adxObj.adx[i], pdi=adxObj.pDI[i], mdi=adxObj.mDI[i];
+    var rv=r2[i], sv=s200[i], bu=bbObj.u[i], bl=bbObj.l[i], bm=bbObj.m[i];
+    var mh=mcd.hist[i], mhp=mcd.hist[i-1];
+    if(!av||!sv||!bu) continue;
+    if (av<20) {
+      if (rv&&rv<15&&d.close>sv&&d.close<=bl&&pdi>mdi&&mh>mhp) {
+        var sl=d.low*0.9995, tp=bm, rr=tp>d.close?(tp-d.close)/(d.close-sl):0;
+        if(rr>=2) found.push({i:i,date:d.time,dir:'long',modus:'A',price:d.close,sl:sl,tp:tp,rr:rr,adx:av.toFixed(1),rsi:rv.toFixed(1)});
+      }
+      if (rv&&rv>85&&d.close<sv&&d.close>=bu&&mdi>pdi&&mh<mhp) {
+        var sl=d.high*1.0005, tp=bm, rr=d.close>tp?(d.close-tp)/(sl-d.close):0;
+        if(rr>=2) found.push({i:i,date:d.time,dir:'short',modus:'A',price:d.close,sl:sl,tp:tp,rr:rr,adx:av.toFixed(1),rsi:rv.toFixed(1)});
+      }
+    }
+    if (av>25&&adxObj.adx[i-1]&&av>adxObj.adx[i-1]) {
+      var ml=mcd.ml[i], ms=mcd.sig[i], mlp=mcd.ml[i-1], msp=mcd.sig[i-1];
+      if(pdi>mdi&&d.close>sv&&ml>ms&&mlp<=msp)
+        found.push({i:i,date:d.time,dir:'long',modus:'B',price:d.close,sl:d.close*0.997,tp:d.close*1.006,rr:2,adx:av.toFixed(1),rsi:rv?rv.toFixed(1):'-'});
+      if(mdi>pdi&&d.close<sv&&ml<ms&&mlp>=msp)
+        found.push({i:i,date:d.time,dir:'short',modus:'B',price:d.close,sl:d.close*1.003,tp:d.close*0.994,rr:2,adx:av.toFixed(1),rsi:rv?rv.toFixed(1):'-'});
+    }
+  }
+  var filt=[], li=-10;
+  found.forEach(function(s){ if(s.i-li>=5){filt.push(s);li=s.i;} });
+  return filt;
+}
+
+function runBacktest() {
+  if (csvData.length<50){showError('Keine Daten!');return;}
+  setups = findSetups(csvData);
+  var modA=setups.filter(function(s){return s.modus==='A';}).length;
+  var modB=setups.filter(function(s){return s.modus==='B';}).length;
+  var wr=setups.length>0?((modA/setups.length*90)+(modB/setups.length*75)).toFixed(0):0;
+  document.getElementById('bCandles').textContent=csvData.length;
+  document.getElementById('bSetups').textContent=setups.length;
+  document.getElementById('bWinRate').textContent=wr+'%';
+  document.getElementById('bModusA').textContent=modA;
+  document.getElementById('bModusB').textContent=modB;
+  document.getElementById('statsWrap').style.display='grid';
+  document.getElementById('stats2Wrap').style.display='grid';
+  drawChart();
+  renderSetups();
+  document.getElementById('chartWrap').style.display='block';
+  document.getElementById('setupCard').style.display='block';
+}
+
+function drawChart() {
+  var canvas=document.getElementById('priceChart');
+  var w=canvas.parentElement.offsetWidth-32;
+  canvas.width=w; canvas.height=200;
+  var ctx=canvas.getContext('2d');
+  var closes=csvData.map(function(d){return d.close;});
+  var min=Math.min.apply(null,closes), max=Math.max.apply(null,closes);
+  var range=max-min||1, pad=16;
+  function px(i){return pad+(i/(csvData.length-1))*(w-pad*2);}
+  function py(v){return pad+(1-(v-min)/range)*(200-pad*2);}
+  ctx.beginPath(); ctx.moveTo(px(0),py(csvData[0].close));
+  for(var i=1;i<csvData.length;i++) ctx.lineTo(px(i),py(csvData[i].close));
+  ctx.strokeStyle='#2a3545'; ctx.lineWidth=1.5; ctx.stroke();
+  setups.forEach(function(s){
+    var x=px(s.i), y=py(s.price);
+    ctx.beginPath();
+    if(s.dir==='long'){ctx.moveTo(x,y+12);ctx.lineTo(x-6,y+22);ctx.lineTo(x+6,y+22);ctx.fillStyle='#39ff14';}
+    else{ctx.moveTo(x,y-12);ctx.lineTo(x-6,y-22);ctx.lineTo(x+6,y-22);ctx.fillStyle='#ff4060';}
+    ctx.closePath(); ctx.fill();
+  });
+}
+
+function renderSetups() {
+  var list=document.getElementById('setupList');
+  if(!setups.length){list.innerHTML='<div class="empty">KEINE SETUPS — Mehr Daten exportieren</div>';return;}
+  list.innerHTML=setups.slice().reverse().map(function(s){
+    var bc=s.dir==='long'?'#39ff14':'#ff4060';
+    var bt=s.dir==='long'?'▲ LONG':'▼ SHORT';
+    var mc=s.modus==='A'?'#00e5ff':'#ff9f1c';
+    var ds=s.date instanceof Date&&!isNaN(s.date)?s.date.toLocaleDateString('de-DE'):'?';
+    return '<div class="setup-item">'+
+      '<div class="setup-top">'+
+        '<div class="setup-date">'+ds+' · <span style="color:'+mc+'">Modus '+s.modus+'</span></div>'+
+        '<div class="setup-badge" style="color:'+bc+';border:1px solid '+bc+';padding:3px 10px">'+bt+'</div>'+
+      '</div>'+
+      '<div class="setup-chips">'+
+        '<div class="chip">ADX: '+s.adx+'</div>'+
+        '<div class="chip">RSI: '+s.rsi+'</div>'+
+        '<div class="chip">R:R 1:'+s.rr.toFixed(1)+'</div>'+
+      '</div>'+
+      '<div class="setup-prices">'+
+        '<div class="price-box"><strong>'+s.price.toFixed(5)+'</strong>Entry</div>'+
+        '<div class="price-box"><strong style="color:#ff4060">'+s.sl.toFixed(5)+'</strong>Stop-Loss</div>'+
+        '<div class="price-box"><strong style="color:#39ff14">'+s.tp.toFixed(5)+'</strong>Take-Profit</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function showError(msg){var b=document.getElementById('errorBox');b.textContent=msg;b.style.display='block';}
+function hideError(){document.getElementById('errorBox').style.display='none';}
+</script>
+</body>
+</html>
