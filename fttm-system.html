@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080b;color:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:28px 16px 80px;}
+.wrap{max-width:640px;margin:0 auto;}
+
+h1{font-size:52px;font-weight:900;letter-spacing:6px;text-align:center;color:#00e5ff;line-height:1;margin-bottom:6px;}
+.sub{text-align:center;font-size:11px;letter-spacing:3px;color:#4a6580;margin-bottom:6px;text-transform:uppercase;}
+.version{text-align:center;font-size:10px;letter-spacing:2px;color:#1a2535;margin-bottom:32px;}
+
+/* QUOTE */
+.quote{background:#0d1520;border-left:3px solid #00e5ff;border-radius:0 10px 10px 0;padding:16px 18px;margin-bottom:28px;font-size:13px;line-height:1.7;color:#4a6580;font-style:italic;}
+.quote strong{color:#00e5ff;font-style:normal;}
+
+/* SECTION */
+.section{margin-bottom:32px;}
+.section-title{font-size:10px;letter-spacing:4px;color:#4a6580;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.section-title::after{content:'';flex:1;height:1px;background:#1a2535;}
+
+/* CARD */
+.card{background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:12px;}
+.card-header{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);}
+.card-title{font-size:14px;font-weight:800;letter-spacing:1px;flex:1;}
+.card-body{padding:16px 18px;}
+
+/* RULES */
+.rule-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.rule-item:last-child{border-bottom:none;}
+.rule-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;margin-top:1px;}
+.rule-text{font-size:13px;line-height:1.6;flex:1;}
+.rule-sub{font-size:11px;color:#4a6580;margin-top:3px;}
+
+/* MODE CARDS */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.mode-card{border-radius:12px;padding:18px;border:2px solid;}
+.mode-a{border-color:rgba(0,229,255,0.4);background:rgba(0,229,255,0.04);}
+.mode-b{border-color:rgba(255,159,28,0.4);background:rgba(255,159,28,0.04);}
+.mode-title{font-size:16px;font-weight:900;letter-spacing:2px;margin-bottom:4px;}
+.mode-sub{font-size:10px;color:#4a6580;letter-spacing:1px;margin-bottom:12px;}
+.mode-item{font-size:12px;color:#4a6580;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.mode-item:last-child{border-bottom:none;}
+.mode-item strong{color:#dce8f5;}
+
+/* ADX TABLE */
+.adx-table{width:100%;border-collapse:collapse;}
+.adx-table td{padding:10px 14px;border-bottom:1px solid #1a2535;font-size:13px;}
+.adx-table td:first-child{font-weight:900;width:120px;}
+.adx-table tr:last-child td{border-bottom:none;}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;line-height:1.5;}
+.check-item:last-child{border-bottom:none;}
+.check-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+
+/* TIMES */
+.time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.time-card{border-radius:10px;padding:14px;border:1px solid #1a2535;background:#0b0f14;text-align:center;}
+.time-val{font-size:20px;font-weight:900;display:block;margin-bottom:4px;}
+.time-lbl{font-size:10px;color:#4a6580;letter-spacing:1px;text-transform:uppercase;}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.stat{background:#0b0f14;border:1px solid #1a2535;border-radius:10px;padding:14px;text-align:center;}
+.stat-val{font-size:28px;font-weight:900;display:block;line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:9px;color:#4a6580;letter-spacing:1px;text-transform:uppercase;}
+
+/* NEWS */
+.news-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;}
+.news-item:last-child{border-bottom:none;}
+.news-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;background:rgba(255,64,96,0.15);border:1px solid #ff4060;color:#ff4060;white-space:nowrap;letter-spacing:1px;}
+
+/* DISCLAIMER */
+.disclaimer{background:rgba(255,64,96,0.05);border:1px solid rgba(255,64,96,0.2);border-radius:10px;padding:14px 16px;font-size:11px;color:#4a6580;line-height:1.7;text-align:center;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FTTM<br>SYSTEM</h1>
+<div class="sub">Dein persönliches Trading Handbuch</div>
+<div class="version">Version 1.0 · EUR/USD · H4 Chart</div>
+
+<div class="quote">
+  <strong>"Wir sind nicht die schlauste Person im Raum. Wir sind die disziplinierteste."</strong><br>
+  — Jim Simons, Medallion Fund · 66% durchschnittliche Jahresrendite über 30 Jahre
+</div>
+
+<!-- PSYCHOLOGIE REGELN -->
+<div class="section">
+  <div class="section-title">Die 7 Psychologie-Regeln</div>
+  <div class="card">
+    <div class="card-header"><span>🧠</span><div class="card-title" style="color:#b57bee">Diese Regeln kommen vor allem anderen</div></div>
+    <div class="card-body">
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">1</div>
+        <div class="rule-text">Maximum 1 Trade pro Session. Nicht 2. Einer.
+          <div class="rule-sub">Egal wie gut das nächste Setup aussieht.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">2</div>
+        <div class="rule-text">Stop-Loss wird VOR dem Trade gesetzt. Danach nie wieder angefasst.
+          <div class="rule-sub">Keine Ausnahmen. Auch nicht wenn die Freundin drängt.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">3</div>
+        <div class="rule-text">Nach einem Verlust: 30 Minuten Pause. Kein sofortiger Re-Entry.
+          <div class="rule-sub">Kein Verlust zurückholen. Der Markt läuft morgen noch.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">4</div>
+        <div class="rule-text">Freundin sieht jeden Trade bevor er ausgeführt wird.
+          <div class="rule-sub">Kein Trade ohne ihr Okay. Sie ist täglich informiert — auch ohne Trade.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">5</div>
+        <div class="rule-text">Nach einem Rückfall: Kein Trading. 48 Stunden Mindestabstand.
+          <div class="rule-sub">Therapeutin beim nächsten Termin aktiv ansprechen.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">6</div>
+        <div class="rule-text">Kein Trade ohne Setup. Kein Setup — kein Trade. Fertig.
+          <div class="rule-sub">Warten ist keine Niederlage. Warten ist der Trade.</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(0,229,255,0.1);color:#00e5ff;">7</div>
+        <div class="rule-text">Journal jeden Tag ausfüllen — auch ohne Trade.
+          <div class="rule-sub">Besonders an schlechten Tagen. Besonders nach Rückfällen.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADX MODUS -->
+<div class="section">
+  <div class="section-title">Schritt 1 — Modus erkennen (ADX)</div>
+  <div class="card">
+    <div class="card-header"><span>📡</span><div class="card-title" style="color:#b57bee">ADX(14) — Der erste Blick</div></div>
+    <div class="card-body">
+      <table class="adx-table">
+        <tr>
+          <td style="color:#00e5ff;">ADX unter 20</td>
+          <td>✅ <strong>Modus A</strong> — Mean Reversion aktiv</td>
+        </tr>
+        <tr>
+          <td style="color:#ffd60a;">ADX 20 – 25</td>
+          <td>⚠️ <strong>Übergangszone</strong> — Kein Trade. Warten.</td>
+        </tr>
+        <tr>
+          <td style="color:#ff9f1c;">ADX über 25</td>
+          <td>🔥 <strong>Modus B</strong> — Trend Following aktiv</td>
+        </tr>
+        <tr>
+          <td style="color:#ff4060;">News aktiv</td>
+          <td>🚫 <strong>Kein Trade</strong> — Kalender prüfen</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODUS A & B -->
+<div class="section">
+  <div class="section-title">Schritt 2 — Strategie ausführen</div>
+  <div class="mode-grid">
+    <div class="mode-card mode-a">
+      <div class="mode-title" style="color:#00e5ff;">MODUS A</div>
+      <div class="mode-sub">MEAN REVERSION · ADX &lt; 20</div>
+      <div class="mode-item"><strong>RSI(2)</strong> unter 15 (Long) / über 85 (Short)</div>
+      <div class="mode-item"><strong>Bollinger</strong> unteres Band (Long) / oberes Band (Short)</div>
+      <div class="mode-item"><strong>SMA 200</strong> Preis über (Long) / unter (Short)</div>
+      <div class="mode-item"><strong>MACD</strong> Histogramm dreht in Richtung</div>
+      <div class="mode-item"><strong>DI</strong> +DI oben (Long) / -DI oben (Short)</div>
+    </div>
+    <div class="mode-card mode-b">
+      <div class="mode-title" style="color:#ff9f1c;">MODUS B</div>
+      <div class="mode-sub">TREND FOLLOWING · ADX &gt; 25</div>
+      <div class="mode-item"><strong>ADX</strong> über 25 und steigend</div>
+      <div class="mode-item"><strong>DI</strong> +DI oben (Long) / -DI oben (Short)</div>
+      <div class="mode-item"><strong>SMA 200</strong> Preis über (Long) / unter (Short)</div>
+      <div class="mode-item"><strong>MACD</strong> Crossover in Trendrichtung</div>
+      <div class="mode-item"><strong>Stoch</strong> Zieht zurück → Linien kreuzen in Trendrichtung</div>
+    </div>
+  </div>
+
+  <!-- ENTRY CHECKLIST -->
+  <div class="card">
+    <div class="card-header"><span>✅</span><div class="card-title" style="color:#39ff14">Pre-Trade Checkliste — ALLE müssen grün sein</div></div>
+    <div class="card-body">
+      <div class="check-item"><div class="check-dot" style="background:#ff4060;"></div>Wirtschaftskalender geprüft — kein News-Event in 30 Min</div>
+      <div class="check-item"><div class="check-dot" style="background:#b57bee;"></div>ADX Wert abgelesen — Modus bestimmt</div>
+      <div class="check-item"><div class="check-dot" style="background:#ffd60a;"></div>SMA 200 Position geprüft</div>
+      <div class="check-item"><div class="check-dot" style="background:#00e5ff;"></div>RSI Signal bestätigt</div>
+      <div class="check-item"><div class="check-dot" style="background:#ff9f1c;"></div>Bollinger Band Signal bestätigt</div>
+      <div class="check-item"><div class="check-dot" style="background:#39ff14;"></div>MACD Bestätigung vorhanden</div>
+      <div class="check-item"><div class="check-dot" style="background:#dce8f5;"></div>Stop-Loss berechnet — Risk-Reward minimum 1:2</div>
+      <div class="check-item"><div class="check-dot" style="background:#dce8f5;"></div>Lotsize berechnet — max 1% Risiko</div>
+      <div class="check-item"><div class="check-dot" style="background:#dce8f5;"></div>Trading-Buddy hat Okay gegeben</div>
+    </div>
+  </div>
+</div>
+
+<!-- RISIKO -->
+<div class="section">
+  <div class="section-title">Risiko-Management</div>
+  <div class="stat-row">
+    <div class="stat">
+      <span class="stat-val" style="color:#ff4060;">1%</span>
+      <div class="stat-lbl">Max Risiko pro Trade</div>
+    </div>
+    <div class="stat">
+      <span class="stat-val" style="color:#00e5ff;">1:2</span>
+      <div class="stat-lbl">Min Risk-Reward</div>
+    </div>
+    <div class="stat">
+      <span class="stat-val" style="color:#39ff14;">0.01</span>
+      <div class="stat-lbl">Start Lotsize</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span>📏</span><div class="card-title" style="color:#ffd60a">Exit Regeln</div></div>
+    <div class="card-body">
+      <div class="check-item"><div class="check-dot" style="background:#39ff14;"></div><strong>Take-Profit 1:</strong> Bollinger Mittellinie — 50% der Position schließen</div>
+      <div class="check-item"><div class="check-dot" style="background:#39ff14;"></div><strong>Take-Profit 2:</strong> Gegenüberliegendes Bollinger Band — Rest schließen</div>
+      <div class="check-item"><div class="check-dot" style="background:#ff4060;"></div><strong>Stop-Loss:</strong> Wird VOR dem Trade gesetzt — danach nie angefasst</div>
+      <div class="check-item"><div class="check-dot" style="background:#ffd60a;"></div><strong>Max Laufzeit Modus A:</strong> 7 Tage — danach manuell schließen</div>
+      <div class="check-item"><div class="check-dot" style="background:#ffd60a;"></div><strong>Max Laufzeit Modus B:</strong> Bis ADX unter 20 fällt</div>
+      <div class="check-item"><div class="check-dot" style="background:#ff4060;"></div><strong>Breaking News:</strong> Sofort schließen — egal ob Plus oder Minus</div>
+    </div>
+  </div>
+</div>
+
+<!-- HANDELSZEITEN -->
+<div class="section">
+  <div class="section-title">Handelszeiten</div>
+  <div class="time-grid">
+    <div class="time-card">
+      <span class="time-val" style="color:#39ff14;">08:00</span>
+      <div class="time-lbl">Markt öffnet</div>
+    </div>
+    <div class="time-card">
+      <span class="time-val" style="color:#ff4060;">20:00</span>
+      <div class="time-lbl">Letzter Trade</div>
+    </div>
+    <div class="time-card">
+      <span class="time-val" style="color:#ffd60a;">10:00</span>
+      <div class="time-lbl">Montag Start</div>
+    </div>
+    <div class="time-card">
+      <span class="time-val" style="color:#ff4060;">20:00</span>
+      <div class="time-lbl">Freitag Ende</div>
+    </div>
+  </div>
+  <div style="background:#0d1520;border:1px solid #1a2535;border-radius:10px;padding:14px 16px;margin-top:10px;font-size:12px;color:#4a6580;line-height:1.7;">
+    H4 Kerzen schließen um: <strong style="color:#dce8f5;">00:00 · 04:00 · 08:00 · 12:00 · 16:00 · 20:00 Uhr</strong><br>
+    Immer nach Kerzenschluss analysieren — nie während die Kerze läuft.
+  </div>
+</div>
+
+<!-- GEFÄHRLICHE NEWS -->
+<div class="section">
+  <div class="section-title">Die 5 gefährlichsten News für EUR/USD</div>
+  <div class="card">
+    <div class="card-header"><span>📅</span><div class="card-title" style="color:#ff4060">30 Min vorher & nachher — kein Trade</div></div>
+    <div class="card-body">
+      <div class="news-item"><div class="news-badge">EXTREM</div><strong>NFP</strong> — Non-Farm Payrolls · Jeden ersten Freitag im Monat</div>
+      <div class="news-item"><div class="news-badge">EXTREM</div><strong>FOMC</strong> — Federal Reserve Zinsentscheidung · ca. alle 6 Wochen</div>
+      <div class="news-item"><div class="news-badge">HOCH</div><strong>CPI</strong> — US Inflationsdaten · Monatlich</div>
+      <div class="news-item"><div class="news-badge">HOCH</div><strong>EZB</strong> — Europäische Zentralbank Zinsentscheidung · ca. alle 6 Wochen</div>
+      <div class="news-item"><div class="news-badge">HOCH</div><strong>GDP</strong> — US Bruttoinlandsprodukt · Quartalsweise</div>
+    </div>
+  </div>
+</div>
+
+<!-- INDIKATOREN -->
+<div class="section">
+  <div class="section-title">Indikator Einstellungen</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="check-item"><div class="check-dot" style="background:#ffd60a;"></div><strong>SMA 200</strong> · Periode: 200 · Methode: Simple · Farbe: Gelb</div>
+      <div class="check-item"><div class="check-dot" style="background:#dce8f5;"></div><strong>Bollinger Bands</strong> · Periode: 20 · Abweichung: 2 · Farbe: Weiß</div>
+      <div class="check-item"><div class="check-dot" style="background:#00e5ff;"></div><strong>RSI</strong> · Periode: 2 · Farbe: Blau</div>
+      <div class="check-item"><div class="check-dot" style="background:#4a6580;"></div><strong>MACD</strong> · Schnell: 12 · Langsam: 26 · Signal: 9</div>
+      <div class="check-item"><div class="check-dot" style="background:#39ff14;"></div><strong>ADX</strong> · Periode: 14</div>
+    </div>
+  </div>
+</div>
+
+<!-- VOLLZEIT BEDINGUNGEN -->
+<div class="section">
+  <div class="section-title">Wann bin ich bereit für Vollzeit?</div>
+  <div class="card">
+    <div class="card-header"><span>🏆</span><div class="card-title" style="color:#ffd60a">3 Bedingungen — alle müssen erfüllt sein</div></div>
+    <div class="card-body">
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(255,214,10,0.1);color:#ffd60a;">1</div>
+        <div class="rule-text">Monatlich über 5.000€ durch Trading verdienen
+          <div class="rule-sub">Konstant — nicht einmalig</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(255,214,10,0.1);color:#ffd60a;">2</div>
+        <div class="rule-text">Konto wächst trotzdem weiter
+          <div class="rule-sub">Gewinne entnehmen UND Kapital aufbauen</div>
+        </div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num" style="background:rgba(255,214,10,0.1);color:#ffd60a;">3</div>
+        <div class="rule-text">Mindestens 12 Monate konstant profitabel
+          <div class="rule-sub">Nicht 3 Monate. Nicht 6. Zwölf.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ Dieses Dokument dient ausschließlich zu persönlichen Bildungszwecken. Kein Finanzprodukt. Kein Finanzberater. Vergangene Ergebnisse garantieren keine zukünftigen Gewinne. Handle niemals mit Geld das du dir nicht leisten kannst zu verlieren.
+</div>
+
+</div>
+</body>
+</html>

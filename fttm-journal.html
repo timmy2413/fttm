@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM Journal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080b;color:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px 14px 80px;}
+.wrap{max-width:600px;margin:0 auto;}
+h1{font-size:40px;font-weight:900;letter-spacing:4px;text-align:center;color:#00e5ff;margin-bottom:4px;}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:#4a6580;margin-bottom:8px;text-transform:uppercase;}
+.date{text-align:center;font-size:12px;color:#00e5ff;letter-spacing:2px;margin-bottom:24px;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat{background:#0d1520;border:1px solid #1a2535;border-radius:10px;padding:14px;text-align:center;}
+.stat-val{font-size:30px;font-weight:900;display:block;line-height:1;}
+.stat-lbl{font-size:9px;color:#4a6580;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.streak{background:#0d1520;border:1px solid #1a2535;border-radius:12px;padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;}
+.streak-fire{font-size:32px;}
+.streak-val{font-size:28px;font-weight:900;color:#ffd60a;}
+.streak-lbl{font-size:11px;color:#4a6580;letter-spacing:1px;margin-top:2px;}
+.card{background:#0d1520;border:1px solid #1a2535;border-radius:12px;overflow:hidden;margin-bottom:12px;}
+.ch{padding:12px 16px;border-bottom:1px solid #1a2535;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);}
+.ct{font-size:14px;font-weight:800;letter-spacing:1px;flex:1;}
+.cb{padding:14px 16px;}
+.mood-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.mood-btn{padding:10px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:12px;cursor:pointer;text-align:center;transition:all .2s;}
+.mood-btn.sel{border-color:#b57bee;background:rgba(181,123,238,0.1);color:#b57bee;}
+.disc-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;}
+.disc-item:last-child{border-bottom:none;}
+.disc-check{width:26px;height:26px;border-radius:6px;border:2px solid #1a2535;background:#0b0f14;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .2s;}
+.disc-item.checked .disc-check{background:rgba(57,255,20,0.12);border-color:#39ff14;color:#39ff14;}
+.disc-text{font-size:13px;line-height:1.4;flex:1;}
+.relapse-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rel-btn{padding:12px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .2s;}
+.rel-btn.sel-no{border-color:#39ff14;background:rgba(57,255,20,0.08);color:#39ff14;}
+.rel-btn.sel-yes{border-color:#ff4060;background:rgba(255,64,96,0.08);color:#ff4060;}
+.trade-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.tt{padding:12px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .2s;color:#4a6580;}
+.tt.sel-yes{border-color:#39ff14;background:rgba(57,255,20,0.08);color:#39ff14;}
+.tt.sel-no{border-color:#00e5ff;background:rgba(0,229,255,0.08);color:#00e5ff;}
+.trade-fields{display:none;}
+.trade-fields.show{display:block;}
+.no-trade-fields{display:none;}
+.no-trade-fields.show{display:block;}
+textarea,select,input[type=number]{width:100%;background:#0b0f14;border:1px solid #1a2535;border-radius:8px;padding:10px 12px;color:#dce8f5;font-size:13px;outline:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;-webkit-appearance:none;appearance:none;}
+textarea{resize:vertical;min-height:80px;}
+textarea:focus,select:focus,input:focus{border-color:#00e5ff;}
+.field-label{font-size:10px;color:#4a6580;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;margin-top:12px;display:block;}
+.field-label:first-child{margin-top:0;}
+.result-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.res-btn{padding:12px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;font-size:14px;font-weight:900;letter-spacing:2px;cursor:pointer;text-align:center;transition:all .2s;color:#4a6580;}
+.res-btn.sel-win{border-color:#39ff14;background:rgba(57,255,20,0.08);color:#39ff14;}
+.res-btn.sel-loss{border-color:#ff4060;background:rgba(255,64,96,0.08);color:#ff4060;}
+.res-btn.sel-be{border-color:#ffd60a;background:rgba(255,214,10,0.08);color:#ffd60a;}
+.emotion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.em-btn{padding:9px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:11px;cursor:pointer;text-align:center;transition:all .2s;}
+.em-btn.sel{border-color:#ff9f1c;background:rgba(255,159,28,0.1);color:#ff9f1c;}
+.save-btn{width:100%;padding:16px;border-radius:12px;border:1px solid #00e5ff;background:rgba(0,229,255,0.08);color:#00e5ff;font-size:16px;font-weight:900;letter-spacing:4px;cursor:pointer;margin-top:8px;text-transform:uppercase;}
+.edit-badge{display:inline-block;background:rgba(255,214,10,0.1);border:1px solid #ffd60a;color:#ffd60a;font-size:10px;letter-spacing:2px;padding:3px 10px;border-radius:4px;margin-bottom:12px;}
+
+/* HISTORY */
+.hist-item{background:#0b0f14;border:1px solid #1a2535;border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;}
+.hist-item:hover{border-color:#00e5ff;}
+.hist-item.today-item{border-color:rgba(255,214,10,0.4);}
+.hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.hist-date{font-size:10px;color:#4a6580;letter-spacing:2px;}
+.hist-badge{font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:4px;}
+.hist-mood{font-size:12px;color:#b57bee;margin-bottom:4px;}
+.hist-lesson{font-size:12px;color:#4a6580;line-height:1.4;}
+.hist-tap{font-size:10px;color:#2a3545;text-align:right;margin-top:6px;letter-spacing:1px;}
+.no-hist{text-align:center;color:#4a6580;font-size:11px;padding:24px;letter-spacing:2px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal{background:#0d1520;border:1px solid #1a2535;border-radius:14px;width:100%;max-width:560px;overflow:hidden;margin:auto;}
+.modal-header{padding:14px 18px;border-bottom:1px solid #1a2535;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);}
+.modal-title{font-size:13px;font-weight:800;letter-spacing:2px;color:#00e5ff;text-transform:uppercase;}
+.modal-close{width:28px;height:28px;border-radius:50%;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:16px 18px;}
+.modal-section{margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.04);padding-bottom:16px;}
+.modal-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.modal-section-title{font-size:9px;color:#4a6580;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.modal-row{display:flex;gap:10px;margin-bottom:8px;}
+.modal-row:last-child{margin-bottom:0;}
+.modal-key{font-size:10px;color:#4a6580;letter-spacing:1px;width:110px;flex-shrink:0;padding-top:2px;}
+.modal-val{font-size:13px;line-height:1.5;flex:1;color:#dce8f5;}
+.modal-edit-btn{width:100%;padding:12px;border-radius:8px;border:1px solid #ffd60a;background:rgba(255,214,10,0.08);color:#ffd60a;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:16px;text-transform:uppercase;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#39ff14;color:#000;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;border-radius:8px;transition:transform .3s;z-index:2000;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FTTM JOURNAL</h1>
+<div class="sub">Dein täglicher Psychologie-Check</div>
+<div class="date" id="dateEl"></div>
+
+<div class="stats">
+  <div class="stat"><span class="stat-val" id="statDays" style="color:#00e5ff">0</span><div class="stat-lbl">Tage geloggt</div></div>
+  <div class="stat"><span class="stat-val" id="statWin" style="color:#39ff14">0%</span><div class="stat-lbl">Win-Rate</div></div>
+  <div class="stat"><span class="stat-val" id="statPnl" style="color:#ffd60a">0€</span><div class="stat-lbl">Gesamt P&L</div></div>
+</div>
+
+<div class="streak">
+  <div class="streak-fire">🔥</div>
+  <div>
+    <div class="streak-val" id="streakVal">0 Tage</div>
+    <div class="streak-lbl">Regel-Streak — kein impulsiver Trade</div>
+  </div>
+</div>
+
+<div id="editBadgeWrap" style="display:none;margin-bottom:12px;">
+  <div class="edit-badge">✏️ BEARBEITUNGSMODUS — Heutiger Eintrag wird aktualisiert</div>
+</div>
+
+<!-- STIMMUNG -->
+<div class="card">
+  <div class="ch"><span>😊</span><div class="ct" style="color:#b57bee">Wie geht es dir heute?</div></div>
+  <div class="cb">
+    <div class="mood-grid">
+      <div class="mood-btn" onclick="selMood(this,'Fokussiert 🎯')">Fokussiert 🎯</div>
+      <div class="mood-btn" onclick="selMood(this,'Ruhig 😌')">Ruhig 😌</div>
+      <div class="mood-btn" onclick="selMood(this,'Nervös 😰')">Nervös 😰</div>
+      <div class="mood-btn" onclick="selMood(this,'Gestresst 😤')">Gestresst 😤</div>
+      <div class="mood-btn" onclick="selMood(this,'Müde 😴')">Müde 😴</div>
+      <div class="mood-btn" onclick="selMood(this,'Euphorisch 🚀')">Euphorisch 🚀</div>
+    </div>
+  </div>
+</div>
+
+<!-- RÜCKFALL -->
+<div class="card">
+  <div class="ch"><span>🛡️</span><div class="ct" style="color:#ff4060">Rückfall Check</div></div>
+  <div class="cb">
+    <span class="field-label" style="margin-top:0">Hatte ich in den letzten 48 Stunden einen Rückfall?</span>
+    <div class="relapse-row">
+      <div class="rel-btn" id="relNo" onclick="selRelapse('no')">✅ Nein — sauber</div>
+      <div class="rel-btn" id="relYes" onclick="selRelapse('yes')">❌ Ja — war schwach</div>
+    </div>
+    <div id="relapseWarning" style="display:none;margin-top:12px;background:rgba(255,64,96,0.08);border:1px solid #ff4060;border-radius:8px;padding:12px;font-size:12px;line-height:1.6;color:#ff4060;">
+      ⚠️ Kein Trading heute. 48 Stunden Pause. Ruf deine Therapeutin an.
+    </div>
+  </div>
+</div>
+
+<!-- DISZIPLIN -->
+<div class="card">
+  <div class="ch"><span>📋</span><div class="ct" style="color:#ffd60a">Disziplin Check</div></div>
+  <div class="cb">
+    <div class="disc-item" onclick="toggleDisc(this)"><div class="disc-check"></div><div class="disc-text">Ich hatte heute den Drang zu traden obwohl kein Setup da war — und habe es gelassen</div></div>
+    <div class="disc-item" onclick="toggleDisc(this)"><div class="disc-check"></div><div class="disc-text">Ich habe den Chart maximal 3x am Tag angeschaut</div></div>
+    <div class="disc-item" onclick="toggleDisc(this)"><div class="disc-check"></div><div class="disc-text">Ich war heute emotional stabil — keine Panik, kein Übermut</div></div>
+    <div class="disc-item" onclick="toggleDisc(this)"><div class="disc-check"></div><div class="disc-text">Meine Freundin war heute informiert über mein Trading</div></div>
+    <div class="disc-item" onclick="toggleDisc(this)"><div class="disc-check"></div><div class="disc-text">Ich bin stolz auf meine Disziplin heute</div></div>
+  </div>
+</div>
+
+<!-- TRADE -->
+<div class="card">
+  <div class="ch"><span>💱</span><div class="ct" style="color:#39ff14">Habe ich heute getradet?</div></div>
+  <div class="cb">
+    <div class="trade-toggle">
+      <div class="tt" id="ttYes" onclick="toggleTrade(true)">✅ Ja — Trade gesetzt</div>
+      <div class="tt" id="ttNo" onclick="toggleTrade(false)">🚫 Nein — kein Setup</div>
+    </div>
+    <div class="no-trade-fields" id="noTradeFields">
+      <span class="field-label">Was habe ich heute im Chart beobachtet?</span>
+      <textarea id="observationText" placeholder="Was hat der Markt gemacht? Was habe ich gesehen?"></textarea>
+      <span class="field-label">Wie war meine Geduld heute?</span>
+      <select id="patienceLevel">
+        <option value="">Auswählen...</option>
+        <option value="sehr-gut">😌 Sehr gut — kein Drang gespürt</option>
+        <option value="gut">🙂 Gut — kleiner Drang aber widerstanden</option>
+        <option value="schwer">😰 Schwer — hatte starken Drang</option>
+        <option value="fast">😤 Fast getradet ohne Setup</option>
+      </select>
+    </div>
+    <div class="trade-fields" id="tradeFields">
+      <span class="field-label">Richtung</span>
+      <select id="tradeDir"><option value="">Auswählen...</option><option value="long">📈 LONG (Buy)</option><option value="short">📉 SHORT (Sell)</option></select>
+      <span class="field-label">Alle 6 Checker-Bedingungen erfüllt?</span>
+      <select id="checkerOk"><option value="">Auswählen...</option><option value="yes">✅ Ja — alle grün</option><option value="no">❌ Nein — trotzdem getradet</option></select>
+      <span class="field-label">Ergebnis</span>
+      <div class="result-row">
+        <div class="res-btn" onclick="selResult('win',this)">WIN</div>
+        <div class="res-btn" onclick="selResult('loss',this)">LOSS</div>
+        <div class="res-btn" onclick="selResult('be',this)">BE</div>
+      </div>
+      <span class="field-label">Ergebnis in Euro</span>
+      <input type="number" id="pnlVal" placeholder="z.B. +4 oder -2" step="0.01">
+      <span class="field-label">Stop-Loss angefasst?</span>
+      <select id="slTouched"><option value="no">✅ Nein — Regel eingehalten</option><option value="yes">❌ Ja — Regel gebrochen</option></select>
+      <span class="field-label">Wie habe ich mich WÄHREND des Trades gefühlt?</span>
+      <div class="emotion-grid">
+        <div class="em-btn" onclick="selEmotion(this)">😌 Ruhig</div>
+        <div class="em-btn" onclick="selEmotion(this)">😰 Nervös</div>
+        <div class="em-btn" onclick="selEmotion(this)">🎯 Fokussiert</div>
+        <div class="em-btn" onclick="selEmotion(this)">😤 Ungeduldig</div>
+        <div class="em-btn" onclick="selEmotion(this)">🚀 Euphorisch</div>
+        <div class="em-btn" onclick="selEmotion(this)">😬 Angst</div>
+      </div>
+      <span class="field-label">Was lief gut / was lief schlecht?</span>
+      <textarea id="tradeReview" placeholder="Habe ich die Regeln eingehalten? Was nehme ich mit?"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- LEKTION -->
+<div class="card">
+  <div class="ch"><span>💡</span><div class="ct" style="color:#ff9f1c">Lektion & Reflexion</div></div>
+  <div class="cb">
+    <span class="field-label" style="margin-top:0">Was nehme ich heute mit?</span>
+    <textarea id="lessonText" placeholder="Was habe ich heute über mich gelernt? Was mache ich morgen besser?"></textarea>
+    <span class="field-label">Bin ich heute stolz auf mich?</span>
+    <select id="proudLevel">
+      <option value="">Auswählen...</option>
+      <option value="sehr">🌟 Ja sehr — ich war diszipliniert</option>
+      <option value="ja">😊 Ja — war okay</option>
+      <option value="nein">😕 Nicht wirklich</option>
+      <option value="nein2">😔 Nein — hätte besser machen können</option>
+    </select>
+  </div>
+</div>
+
+<button class="save-btn" id="saveBtn" onclick="saveEntry()">EINTRAG SPEICHERN</button>
+
+<!-- VERLAUF -->
+<div class="card" style="margin-top:20px;">
+  <div class="ch"><span>📅</span><div class="ct" style="color:#4a6580">Verlauf — Tippe zum Öffnen</div></div>
+  <div class="cb" id="histList"><div class="no-hist">NOCH KEINE EINTRÄGE</div></div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Eintrag</div>
+      <div class="modal-close" onclick="closeModalDirect()">✕</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">GESPEICHERT ✓</div>
+
+<script>
+var mood='',relapse='',traded=null,result='',emotion='';
+var entries=[];
+var editingIndex=-1;
+var todayStr=new Date().toLocaleDateString('de-DE');
+
+var now=new Date();
+document.getElementById('dateEl').textContent=
+  now.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+
+async function loadData() {
+  try {
+    var result = await window.storage.get('fttm-journal-v2');
+    if (result && result.value) {
+      entries = JSON.parse(result.value);
+      entries.sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0);});
+    }
+  } catch(e) { entries = []; }
+  updateStats();
+  renderHistory();
+  var todayIdx = entries.findIndex(function(e){return e.date===todayStr;});
+  if (todayIdx >= 0) { loadEntryForEdit(todayIdx, false); }
+}
+loadData();
+
+function selMood(btn,val){
+  document.querySelectorAll('.mood-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');mood=val;
+}
+function selRelapse(val){
+  relapse=val;
+  document.getElementById('relNo').className='rel-btn'+(val==='no'?' sel-no':'');
+  document.getElementById('relYes').className='rel-btn'+(val==='yes'?' sel-yes':'');
+  document.getElementById('relapseWarning').style.display=val==='yes'?'block':'none';
+}
+function toggleDisc(item){
+  item.classList.toggle('checked');
+  var c=item.querySelector('.disc-check');
+  c.textContent=item.classList.contains('checked')?'✓':'';
+}
+function toggleTrade(yes){
+  traded=yes;
+  document.getElementById('ttYes').className='tt'+(yes?' sel-yes':'');
+  document.getElementById('ttNo').className='tt'+(!yes?' sel-no':'');
+  document.getElementById('tradeFields').className='trade-fields'+(yes?' show':'');
+  document.getElementById('noTradeFields').className='no-trade-fields'+(!yes?' show':'');
+}
+function selResult(val,btn){
+  result=val;
+  document.querySelectorAll('.res-btn').forEach(function(b){b.className='res-btn';});
+  btn.classList.add('sel-'+val);
+}
+function selEmotion(btn){
+  document.querySelectorAll('.em-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');emotion=btn.textContent;
+}
+
+function loadEntryForEdit(idx, showBadge){
+  var e=entries[idx];
+  editingIndex=idx;
+  mood=e.mood||'';
+  relapse=e.relapse||'';
+  traded=e.traded;
+  result=e.result||'';
+  emotion=e.emotion||'';
+
+  if(mood){
+    document.querySelectorAll('.mood-btn').forEach(function(b){
+      if(b.textContent.trim()===mood)b.classList.add('sel');
+    });
+  }
+  if(relapse)selRelapse(relapse);
+  if(e.discipline){
+    var items=document.querySelectorAll('.disc-item');
+    for(var i=0;i<e.discipline&&i<items.length;i++){
+      items[i].classList.add('checked');
+      items[i].querySelector('.disc-check').textContent='✓';
+    }
+  }
+  if(traded!==null)toggleTrade(traded);
+  document.getElementById('observationText').value=e.observation||'';
+  if(e.patience)document.getElementById('patienceLevel').value=e.patience;
+  if(e.tradeDir)document.getElementById('tradeDir').value=e.tradeDir;
+  if(e.checkerOk)document.getElementById('checkerOk').value=e.checkerOk;
+  if(result){
+    document.querySelectorAll('.res-btn').forEach(function(b){
+      if(b.textContent.toLowerCase()===result||b.classList.contains('sel-'+result))b.classList.add('sel-'+result);
+    });
+  }
+  document.getElementById('pnlVal').value=e.pnl||'';
+  if(e.slTouched)document.getElementById('slTouched').value=e.slTouched;
+  if(emotion){
+    document.querySelectorAll('.em-btn').forEach(function(b){
+      if(b.textContent.trim()===emotion)b.classList.add('sel');
+    });
+  }
+  document.getElementById('tradeReview').value=e.tradeReview||'';
+  document.getElementById('lessonText').value=e.lesson||'';
+  if(e.proud)document.getElementById('proudLevel').value=e.proud;
+
+  if(showBadge){
+    document.getElementById('editBadgeWrap').style.display='block';
+    document.getElementById('saveBtn').textContent='EINTRAG AKTUALISIEREN';
+    document.getElementById('saveBtn').style.borderColor='#ffd60a';
+    document.getElementById('saveBtn').style.color='#ffd60a';
+  }
+}
+
+function saveEntry(){
+  var discChecked=document.querySelectorAll('.disc-item.checked').length;
+  var entry={
+    date:editingIndex>=0?entries[editingIndex].date:todayStr,
+    timestamp:editingIndex>=0?entries[editingIndex].timestamp:Date.now(),
+    updatedAt:Date.now(),
+    mood:mood,relapse:relapse,discipline:discChecked,
+    traded:traded,
+    observation:document.getElementById('observationText').value,
+    patience:document.getElementById('patienceLevel').value,
+    tradeDir:document.getElementById('tradeDir').value,
+    checkerOk:document.getElementById('checkerOk').value,
+    result:result,
+    pnl:parseFloat(document.getElementById('pnlVal').value)||0,
+    slTouched:document.getElementById('slTouched').value,
+    emotion:emotion,
+    tradeReview:document.getElementById('tradeReview').value,
+    lesson:document.getElementById('lessonText').value,
+    proud:document.getElementById('proudLevel').value
+  };
+
+  if(editingIndex>=0){
+    entries[editingIndex]=entry;
+  } else {
+    entries.unshift(entry);
+    editingIndex=0;
+  }
+
+  try{window.storage.set('fttm-journal-v2',JSON.stringify(entries));}catch(ex){}
+  updateStats();renderHistory();
+
+  document.getElementById('editBadgeWrap').style.display='block';
+  document.getElementById('saveBtn').textContent='EINTRAG AKTUALISIEREN';
+  document.getElementById('saveBtn').style.borderColor='#ffd60a';
+  document.getElementById('saveBtn').style.color='#ffd60a';
+
+  var t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+function updateStats(){
+  var trades=entries.filter(function(e){return e.traded;});
+  var wins=trades.filter(function(e){return e.result==='win';});
+  var pnl=trades.reduce(function(s,e){return s+(e.pnl||0);},0);
+  var streak=0;
+  for(var i=0;i<entries.length;i++){
+    if(entries[i].relapse!=='yes'&&entries[i].patience!=='fast')streak++;
+    else break;
+  }
+  document.getElementById('statDays').textContent=entries.length;
+  document.getElementById('statWin').textContent=trades.length>0?Math.round(wins.length/trades.length*100)+'%':'0%';
+  var pnlEl=document.getElementById('statPnl');
+  pnlEl.textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+'€';
+  pnlEl.style.color=pnl>0?'#39ff14':pnl<0?'#ff4060':'#ffd60a';
+  document.getElementById('streakVal').textContent=streak+' Tage';
+}
+
+function renderHistory(){
+  var list=document.getElementById('histList');
+  if(entries.length===0){list.innerHTML='<div class="no-hist">NOCH KEINE EINTRÄGE</div>';return;}
+  list.innerHTML=entries.slice(0,20).map(function(e,i){
+    var bc=e.traded?(e.result==='win'?'#39ff14':e.result==='loss'?'#ff4060':'#ffd60a'):'#4a6580';
+    var bt=e.traded?(e.result==='win'?'WIN':e.result==='loss'?'LOSS':'BE'):'KEIN TRADE';
+    var rt=e.relapse==='yes'?' · ⚠️ Rückfall':'';
+    var isToday=e.date===todayStr;
+    return '<div class="hist-item'+(isToday?' today-item':'')+'" onclick="openEntry('+i+')">' +
+      '<div class="hist-top">' +
+        '<div class="hist-date">'+e.date+(isToday?' · HEUTE':'')+'</div>' +
+        '<div class="hist-badge" style="background:rgba(0,0,0,0.3);color:'+bc+';border:1px solid '+bc+'">'+bt+'</div>' +
+      '</div>' +
+      '<div class="hist-mood">'+(e.mood||'—')+rt+'</div>' +
+      '<div class="hist-lesson">'+(e.lesson?e.lesson.substring(0,80)+'...':'—')+'</div>' +
+      '<div class="hist-tap">'+(isToday?'✏️ Tippen zum Bearbeiten':'Tippen zum Öffnen')+' →</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openEntry(i){
+  var e=entries[i];
+  var isToday=e.date===todayStr;
+
+  if(isToday){
+    // Load into form for editing
+    closeModalDirect();
+    loadEntryForEdit(i,true);
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
+
+  // Show read-only modal for old entries
+  document.getElementById('modalTitle').textContent=e.date;
+  var proud={'sehr':'🌟 Ja sehr','ja':'😊 Ja','nein':'😕 Nicht wirklich','nein2':'😔 Nein'};
+  var patience={'sehr-gut':'😌 Sehr gut','gut':'🙂 Gut','schwer':'😰 Schwer','fast':'😤 Fast getradet'};
+
+  var html='';
+  html+='<div class="modal-section">';
+  html+='<div class="modal-section-title">Allgemein</div>';
+  html+='<div class="modal-row"><div class="modal-key">Stimmung</div><div class="modal-val">'+(e.mood||'—')+'</div></div>';
+  html+='<div class="modal-row"><div class="modal-key">Rückfall</div><div class="modal-val" style="color:'+(e.relapse==='yes'?'#ff4060':'#39ff14')+'">'+(e.relapse==='yes'?'❌ Ja':'✅ Nein')+'</div></div>';
+  html+='<div class="modal-row"><div class="modal-key">Disziplin</div><div class="modal-val">'+(e.discipline||0)+' / 5 Punkte</div></div>';
+  html+='<div class="modal-row"><div class="modal-key">Stolz</div><div class="modal-val">'+(proud[e.proud]||'—')+'</div></div>';
+  html+='</div>';
+
+  if(e.traded){
+    html+='<div class="modal-section">';
+    html+='<div class="modal-section-title">Trade</div>';
+    html+='<div class="modal-row"><div class="modal-key">Richtung</div><div class="modal-val">'+(e.tradeDir==='long'?'📈 LONG':e.tradeDir==='short'?'📉 SHORT':'—')+'</div></div>';
+    html+='<div class="modal-row"><div class="modal-key">Checker</div><div class="modal-val">'+(e.checkerOk==='yes'?'✅ Alle grün':'❌ Nicht alle grün')+'</div></div>';
+    var rc=e.result==='win'?'#39ff14':e.result==='loss'?'#ff4060':'#ffd60a';
+    var rt2=e.result==='win'?'WIN':e.result==='loss'?'LOSS':'BE';
+    html+='<div class="modal-row"><div class="modal-key">Ergebnis</div><div class="modal-val" style="color:'+rc+'">'+rt2+' — '+(e.pnl>=0?'+':'')+e.pnl.toFixed(2)+'€</div></div>';
+    html+='<div class="modal-row"><div class="modal-key">Stop-Loss</div><div class="modal-val">'+(e.slTouched==='yes'?'❌ Angefasst':'✅ Nicht angefasst')+'</div></div>';
+    html+='<div class="modal-row"><div class="modal-key">Emotion</div><div class="modal-val">'+(e.emotion||'—')+'</div></div>';
+    if(e.tradeReview)html+='<div class="modal-row"><div class="modal-key">Review</div><div class="modal-val">'+e.tradeReview+'</div></div>';
+    html+='</div>';
+  } else {
+    html+='<div class="modal-section">';
+    html+='<div class="modal-section-title">Kein Trade</div>';
+    html+='<div class="modal-row"><div class="modal-key">Geduld</div><div class="modal-val">'+(patience[e.patience]||'—')+'</div></div>';
+    if(e.observation)html+='<div class="modal-row"><div class="modal-key">Beobachtung</div><div class="modal-val">'+e.observation+'</div></div>';
+    html+='</div>';
+  }
+
+  html+='<div class="modal-section">';
+  html+='<div class="modal-section-title">Lektion</div>';
+  html+='<div class="modal-row"><div class="modal-key">Mitgenommen</div><div class="modal-val">'+(e.lesson||'—')+'</div></div>';
+  html+='</div>';
+
+  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(event){
+  if(event.target===document.getElementById('modalOverlay')){
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+function closeModalDirect(){
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

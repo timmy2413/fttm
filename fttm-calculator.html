@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM Calculator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#06080b;color:#dce8f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;padding:28px 16px 80px;}
+.wrap{max-width:480px;margin:0 auto;}
+h1{font-size:36px;font-weight:900;letter-spacing:4px;text-align:center;color:#00e5ff;margin-bottom:4px;}
+.sub{text-align:center;font-size:11px;letter-spacing:2px;color:#4a6580;margin-bottom:28px;text-transform:uppercase;}
+
+.card{background:#0d1520;border:1px solid #1a2535;border-radius:14px;overflow:hidden;margin-bottom:14px;}
+.ch{padding:13px 18px;border-bottom:1px solid #1a2535;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);}
+.ct{font-size:14px;font-weight:800;letter-spacing:1px;}
+.cb{padding:18px;}
+
+/* ASSET */
+.asset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.asset-btn{padding:11px 8px;border-radius:10px;border:1px solid #1a2535;background:#0b0f14;cursor:pointer;text-align:center;transition:all .2s;}
+.asset-btn.sel{border-color:#00e5ff;background:rgba(0,229,255,0.08);}
+.asset-name{font-size:13px;font-weight:800;color:#dce8f5;display:block;}
+.asset-detail{font-size:10px;color:#4a6580;margin-top:2px;}
+.asset-btn.sel .asset-name{color:#00e5ff;}
+
+/* INPUTS */
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+.field-label{font-size:10px;color:#4a6580;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:block;}
+.input-row{display:flex;align-items:stretch;gap:0;}
+.big-input{flex:1;background:#0b0f14;border:2px solid #1a2535;border-radius:10px 0 0 10px;padding:13px 14px;color:#dce8f5;font-size:22px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;width:100%;}
+.big-input:focus{border-color:#00e5ff;}
+.input-unit{background:#111d2a;border:2px solid #1a2535;border-left:none;border-radius:0 10px 10px 0;padding:13px 14px;font-size:13px;font-weight:700;color:#4a6580;white-space:nowrap;display:flex;align-items:center;}
+
+/* RISK BTNS */
+.risk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.risk-btn{padding:10px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;}
+.risk-btn.sel{border-color:#00e5ff;background:rgba(0,229,255,0.1);color:#00e5ff;}
+
+/* SL MODE TOGGLE */
+.sl-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sl-mode-btn{padding:10px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:1px;}
+.sl-mode-btn.sel{border-color:#ff9f1c;background:rgba(255,159,28,0.1);color:#ff9f1c;}
+
+/* RR BTNS */
+.rr-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.rr-btn{padding:10px 6px;border-radius:8px;border:1px solid #1a2535;background:#0b0f14;color:#4a6580;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;}
+.rr-btn.sel{border-color:#39ff14;background:rgba(57,255,20,0.1);color:#39ff14;}
+
+/* RESULT */
+.result-card{background:#0d1520;border:2px solid #1a2535;border-radius:14px;overflow:hidden;margin-bottom:14px;transition:all .3s;display:none;}
+.result-card.show{display:block;}
+.result-card.green{border-color:rgba(57,255,20,0.5);}
+.result-card.red{border-color:rgba(255,64,96,0.5);}
+.result-card.yellow{border-color:rgba(255,214,10,0.5);}
+
+.result-main{padding:24px 18px;text-align:center;border-bottom:1px solid #1a2535;}
+.result-label{font-size:10px;color:#4a6580;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.result-lot{font-size:64px;font-weight:900;line-height:1;margin-bottom:4px;}
+.result-lot-sub{font-size:12px;color:#4a6580;letter-spacing:2px;text-transform:uppercase;}
+
+.result-grid{display:grid;grid-template-columns:repeat(2,1fr);}
+.result-grid-4{display:grid;grid-template-columns:repeat(4,1fr);}
+.ri{padding:14px 10px;border-right:1px solid #1a2535;text-align:center;}
+.ri:last-child{border-right:none;}
+.ri-val{font-size:18px;font-weight:900;display:block;line-height:1;margin-bottom:4px;}
+.ri-lbl{font-size:9px;color:#4a6580;letter-spacing:1px;text-transform:uppercase;}
+
+/* RR DISPLAY */
+.rr-display{padding:20px 18px;text-align:center;border-top:1px solid #1a2535;}
+.rr-big{font-size:48px;font-weight:900;line-height:1;margin-bottom:6px;}
+.rr-verdict{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+
+/* EXPLAIN */
+.explain{background:#0b0f14;border:1px solid #1a2535;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.8;color:#4a6580;text-align:center;display:none;margin-bottom:14px;}
+.explain strong{color:#dce8f5;}
+
+/* WARNING */
+.warning{background:rgba(255,64,96,0.08);border:1px solid #ff4060;border-radius:10px;padding:12px 16px;font-size:12px;color:#ff4060;text-align:center;line-height:1.6;margin-bottom:14px;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>POSITION<br>CALCULATOR</h1>
+<div class="sub">FTTM System — Lotsize & Risk-Reward</div>
+
+<!-- ASSET -->
+<div class="card">
+  <div class="ch"><span>🌍</span><div class="ct" style="color:#b57bee">Schritt 1 — Asset</div></div>
+  <div class="cb">
+    <div class="asset-grid">
+      <div class="asset-btn sel" onclick="selAsset(this,'EURUSD',10,'Pips')"><span class="asset-name">EUR/USD</span><span class="asset-detail">Forex · $10/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'GBPUSD',10,'Pips')"><span class="asset-name">GBP/USD</span><span class="asset-detail">Forex · $10/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'USDJPY',9.1,'Pips')"><span class="asset-name">USD/JPY</span><span class="asset-detail">Forex · ~$9/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'USDCHF',11,'Pips')"><span class="asset-name">USD/CHF</span><span class="asset-detail">Forex · ~$11/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'AUDUSD',10,'Pips')"><span class="asset-name">AUD/USD</span><span class="asset-detail">Forex · $10/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'DAX',1,'Punkte')"><span class="asset-name">DAX</span><span class="asset-detail">Index · €1/Punkt</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'SP500',1,'Punkte')"><span class="asset-name">S&P 500</span><span class="asset-detail">Index · $1/Punkt</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'GOLD',10,'Pips')"><span class="asset-name">GOLD</span><span class="asset-detail">Rohstoff · $10/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'OIL',10,'Pips')"><span class="asset-name">ÖL (WTI)</span><span class="asset-detail">Rohstoff · $10/pip</span></div>
+      <div class="asset-btn" onclick="selAsset(this,'BTC',10,'Pips')"><span class="asset-name">BITCOIN ⚠️</span><span class="asset-detail">Krypto · variabel</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- KONTO & RISIKO -->
+<div class="card">
+  <div class="ch"><span>💰</span><div class="ct" style="color:#ffd60a">Schritt 2 — Konto & Risiko</div></div>
+  <div class="cb">
+    <div class="field">
+      <span class="field-label">Kontogröße</span>
+      <div class="input-row">
+        <input type="number" class="big-input" id="accountSize" oninput="calc()" onchange="calc()">
+        <div class="input-unit">EUR</div>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-label">Risiko</span>
+      <div class="input-row">
+        <input type="number" class="big-input" id="riskPct" oninput="calc()" onchange="calc()" min="0.1" max="5" step="0.1">
+        <div class="input-unit">%</div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-btn" onclick="setRisk(0.5)">0.5%</div>
+        <div class="risk-btn sel" onclick="setRisk(1)">1%</div>
+        <div class="risk-btn" onclick="setRisk(1.5)">1.5%</div>
+        <div class="risk-btn" onclick="setRisk(2)">2%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STOP LOSS -->
+<div class="card">
+  <div class="ch"><span>🛡️</span><div class="ct" style="color:#ff4060">Schritt 3 — Stop-Loss</div></div>
+  <div class="cb">
+    <div class="sl-toggle">
+      <div class="sl-mode-btn sel" id="btnPips" onclick="setSLMode('pips')">In Pips/Punkten</div>
+      <div class="sl-mode-btn" id="btnEuro" onclick="setSLMode('euro')">In Euro (€)</div>
+    </div>
+    <div class="input-row">
+      <input type="number" class="big-input" id="slVal" oninput="calc()" onchange="calc()">
+      <div class="input-unit" id="slUnit">PIPS</div>
+    </div>
+  </div>
+</div>
+
+<!-- RISK REWARD -->
+<div class="card">
+  <div class="ch"><span>🎯</span><div class="ct" style="color:#39ff14">Schritt 4 — Risk-Reward</div></div>
+  <div class="cb">
+    <div class="field">
+      <span class="field-label">Dein gewünschtes Risk-Reward (1:?)</span>
+      <div class="input-row">
+        <div class="input-unit" style="border-radius:10px 0 0 10px;border-right:none;border-left:2px solid #1a2535;">1 :</div>
+        <input type="number" class="big-input" id="rrInput" style="border-radius:0 10px 10px 0;" oninput="calc()" onchange="calc()" min="0.5" step="0.5">
+      </div>
+      <div class="rr-row">
+        <div class="rr-btn" onclick="setRR(1.5)">1:1.5</div>
+        <div class="rr-btn sel" onclick="setRR(2)">1:2</div>
+        <div class="rr-btn" onclick="setRR(3)">1:3</div>
+        <div class="rr-btn" onclick="setRR(5)">1:5</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="warning" id="warningBox">⚠️ <strong>FTTM Regel:</strong> Nie mehr als 1% riskieren!</div>
+
+<!-- RESULT -->
+<div class="result-card" id="resultCard">
+  <div class="result-main">
+    <div class="result-label">Empfohlene Lotsize</div>
+    <div class="result-lot" id="lotDisplay" style="color:#39ff14">0.01</div>
+    <div class="result-lot-sub" id="assetDisplay">LOT — EUR/USD</div>
+  </div>
+  <div class="result-grid-4">
+    <div class="ri">
+      <span class="ri-val" id="riskEurDisplay" style="color:#ff4060">0€</span>
+      <div class="ri-lbl">Verlust</div>
+    </div>
+    <div class="ri">
+      <span class="ri-val" id="profitDisplay" style="color:#39ff14">0€</span>
+      <div class="ri-lbl">Gewinn</div>
+    </div>
+    <div class="ri">
+      <span class="ri-val" id="slPipsDisplay" style="color:#ffd60a">0</span>
+      <div class="ri-lbl" id="slPipsLabel">SL Pips</div>
+    </div>
+    <div class="ri">
+      <span class="ri-val" id="tpPipsDisplay" style="color:#00e5ff">0</span>
+      <div class="ri-lbl" id="tpPipsLabel">TP Pips</div>
+    </div>
+  </div>
+  <div class="rr-display">
+    <div class="result-label">Risk-Reward</div>
+    <div class="rr-big" id="rrDisplay">1:2</div>
+    <div class="rr-verdict" id="rrVerdictDisplay">✅ TRADE ERLAUBT</div>
+  </div>
+</div>
+
+<div class="explain" id="explainBox"></div>
+
+</div>
+<script>
+var asset='EURUSD', pipVal=10, pipUnit='Pips';
+var slMode='pips', rr=2;
+
+function selAsset(btn,a,pv,pu){
+  document.querySelectorAll('.asset-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+  asset=a; pipVal=pv; pipUnit=pu;
+  document.getElementById('slUnit').textContent=slMode==='pips'?pu:'EUR';
+  calc();
+}
+
+function setSLMode(mode){
+  slMode=mode;
+  document.getElementById('btnPips').className='sl-mode-btn'+(mode==='pips'?' sel':'');
+  document.getElementById('btnEuro').className='sl-mode-btn'+(mode==='euro'?' sel':'');
+  document.getElementById('slUnit').textContent=mode==='pips'?pipUnit:'EUR';
+  document.getElementById('slVal').value='';
+  calc();
+}
+
+function setRisk(val){
+  document.getElementById('riskPct').value=val;
+  document.querySelectorAll('.risk-btn').forEach(function(b){
+    b.classList.remove('sel');
+    if(parseFloat(b.textContent)===val)b.classList.add('sel');
+  });
+  calc();
+}
+
+function setRR(val){
+  rr=val;
+  document.getElementById('rrInput').value=val;
+  document.querySelectorAll('.rr-btn').forEach(function(b){
+    b.classList.remove('sel');
+    if(b.textContent==='1:'+val)b.classList.add('sel');
+  });
+  calc();
+}
+
+function calc(){
+  var account=parseFloat(document.getElementById('accountSize').value);
+  var risk=parseFloat(document.getElementById('riskPct').value);
+  var slRaw=parseFloat(document.getElementById('slVal').value);
+  var rrVal=parseFloat(document.getElementById('rrInput').value);
+  if(!isNaN(rrVal)&&rrVal>0)rr=rrVal;
+
+  if(isNaN(account)||account<=0||isNaN(risk)||risk<=0||isNaN(slRaw)||slRaw<=0){
+    document.getElementById('resultCard').className='result-card';
+    document.getElementById('explainBox').style.display='none';
+    document.getElementById('warningBox').style.display='none';
+    return;
+  }
+
+  var riskEur=account*(risk/100);
+
+  // Calculate SL in pips
+  var slPips;
+  if(slMode==='euro'){
+    // SL in euro → convert to pips
+    // riskEur = lot * pipVal * slPips
+    // but we need slPips from euro amount
+    slPips=slRaw/(0.01*pipVal); // how many pips = slRaw€ at 0.01 lot
+  } else {
+    slPips=slRaw;
+  }
+
+  // Lot size
+  var rawLot=riskEur/(slPips*pipVal);
+  var lot=Math.floor(rawLot*100)/100;
+  if(lot<0.01)lot=0.01;
+
+  // Actual risk with rounded lot
+  var actualRisk=lot*pipVal*slPips;
+
+  // TP in pips
+  var tpPips=slPips*rr;
+
+  // Potential profit
+  var potProfit=lot*pipVal*tpPips;
+
+  // Update result
+  var card=document.getElementById('resultCard');
+  card.className='result-card show '+(rr>=2?'green':rr>=1?'yellow':'red');
+
+  document.getElementById('lotDisplay').textContent=lot.toFixed(2);
+  document.getElementById('assetDisplay').textContent='LOT — '+asset;
+  document.getElementById('riskEurDisplay').textContent='-'+actualRisk.toFixed(2)+'€';
+  document.getElementById('profitDisplay').textContent='+'+potProfit.toFixed(2)+'€';
+  document.getElementById('slPipsDisplay').textContent=Math.round(slPips);
+  document.getElementById('tpPipsDisplay').textContent=Math.round(tpPips);
+  document.getElementById('slPipsLabel').textContent='SL '+pipUnit;
+  document.getElementById('tpPipsLabel').textContent='TP '+pipUnit;
+  document.getElementById('rrDisplay').textContent='1:'+rr.toFixed(1);
+
+  var verdict=document.getElementById('rrVerdictDisplay');
+  if(rr>=2){
+    verdict.textContent='✅ TRADE ERLAUBT';
+    verdict.style.color='#39ff14';
+    document.getElementById('rrDisplay').style.color='#39ff14';
+  } else if(rr>=1){
+    verdict.textContent='⚠️ ZU NIEDRIG — Min. 1:2 erforderlich';
+    verdict.style.color='#ffd60a';
+    document.getElementById('rrDisplay').style.color='#ffd60a';
+  } else {
+    verdict.textContent='❌ KEIN TRADE — R:R unter 1:1';
+    verdict.style.color='#ff4060';
+    document.getElementById('rrDisplay').style.color='#ff4060';
+  }
+
+  // Warning
+  document.getElementById('warningBox').style.display=risk>1?'block':'none';
+
+  // Explain
+  var ex=document.getElementById('explainBox');
+  ex.style.display='block';
+  ex.innerHTML='Mit <strong>'+account.toFixed(0)+'€</strong> Konto und <strong>'+risk+'% Risiko</strong> → max. <strong>'+riskEur.toFixed(2)+'€</strong> Verlust.<br>'+
+    'Stop-Loss: <strong>'+Math.round(slPips)+' '+pipUnit+'</strong> · Take-Profit: <strong>'+Math.round(tpPips)+' '+pipUnit+'</strong><br>'+
+    'Lotsize: <strong>'+lot.toFixed(2)+' Lot</strong> · Pot. Gewinn: <strong>+'+potProfit.toFixed(2)+'€</strong>';
+}
+
+// Init
+document.getElementById('riskPct').value=1;
+document.getElementById('rrInput').value=2;
+</script>
+</body>
+</html>
