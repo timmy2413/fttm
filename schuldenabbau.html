@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Schuldenabbau"/>
+  <meta name="theme-color" content="#020817"/>
+  <title>Schuldenabbau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #020817; font-family: 'Sora', sans-serif; color: #f1f5f9; }
+    input, select, button, textarea { font-family: 'Sora', sans-serif; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    #app { min-height: 100vh; display: flex; flex-direction: column; }
+    #header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-bottom: 1px solid #1e293b;
+      padding: 14px 18px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    #header-inner { max-width: 720px; margin: 0 auto; }
+    #header-top { display: flex; justify-content: space-between; align-items: center; }
+    #app-title { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+    #app-sub   { font-size: 11px; color: #64748b; margin-top: 2px; }
+    #tab-bar   { display: flex; gap: 4px; margin-top: 14px; flex-wrap: wrap; }
+    .tab-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 10px; border: none;
+      cursor: pointer; font-weight: 600; font-size: 13px;
+      transition: all 0.2s; background: transparent; color: #64748b;
+    }
+    .tab-btn.active { background: #3b82f6; color: #fff; }
+    .tab-btn svg { flex-shrink: 0; }
+    #content { max-width: 720px; margin: 0 auto; padding: 20px 14px; flex: 1; width: 100%; }
+    .card {
+      background: #0f172a; border: 1px solid #1e293b;
+      border-radius: 16px; padding: 20px;
+    }
+    .row {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: 10px; border: none;
+      cursor: pointer; font-weight: 600; font-size: 13px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.85; }
+    .btn-blue   { background: #3b82f6; color: #fff; }
+    .btn-green  { background: #10b981; color: #fff; }
+    .btn-gray   { background: #1e293b; color: #94a3b8; }
+    .btn-sm     { padding: 6px 10px; }
+    .icon-btn {
+      background: transparent; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; padding: 5px; border-radius: 6px;
+      color: #64748b; transition: color 0.15s;
+    }
+    .icon-btn:active { opacity: 0.7; }
+    .field { margin-bottom: 15px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 700; color: #94a3b8;
+      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.07em;
+    }
+    .field input, .field select {
+      width: 100%; background: #1e293b; border: 1px solid #334155;
+      border-radius: 10px; padding: 10px 14px; color: #f1f5f9;
+      font-size: 14px; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: #3b82f6; }
+    .field select option { background: #1e293b; }
+    .progress-track {
+      background: #1e293b; border-radius: 99px; overflow: hidden; width: 100%;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      transition: width 0.7s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(5px); display: flex; align-items: center;
+      justify-content: center; z-index: 200; padding: 16px;
+      animation: fadeIn 0.15s ease;
+    }
+    .modal-box {
+      background: #0f172a; border: 1px solid #1e293b; border-radius: 22px;
+      padding: 28px; width: 100%; max-width: 460px;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.85);
+      animation: fadeUp 0.22s ease;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 22px;
+    }
+    .modal-title { font-size: 17​​​​​​​​​​​​​​​​
