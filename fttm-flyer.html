@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FTTM — Trading Flyer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Bebas+Neue&family=Outfit:wght@400;600;700;900&display=swap');
+:root{
+  --bg:#04070d;--s1:#070d16;--s2:#0b1320;--b1:#13243a;--b2:#1a3050;
+  --c:#00f0ff;--g:#00ff9d;--r:#ff2850;--y:#ffe600;--p:#c47fff;--o:#ff7c2a;
+  --tx:#cce4ff;--mu:#2e4d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;
+  min-height:100vh;padding:20px;
+  background-image:
+    linear-gradient(rgba(0,240,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,240,255,.018) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,240,255,.006) 3px,rgba(0,240,255,.006) 4px);
+  z-index:9999;}
+
+/* HEADER */
+.hdr{text-align:center;padding:30px 0 24px;border-bottom:1px solid var(--b1);margin-bottom:28px;}
+.logo{font-family:'Bebas Neue';font-size:72px;letter-spacing:10px;line-height:1;
+  background:linear-gradient(135deg,var(--c),var(--g));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr-sub{font-family:'Bebas Neue';font-size:28px;letter-spacing:4px;color:var(--tx);margin-top:4px;}
+.hdr-tag{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);letter-spacing:3px;
+  margin-top:8px;text-transform:uppercase;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,240,255,.08);
+  border:1px solid rgba(0,240,255,.2);border-radius:100px;padding:6px 16px;
+  font-family:'JetBrains Mono';font-size:10px;color:var(--c);letter-spacing:2px;margin-top:14px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--g);
+  box-shadow:0 0 8px var(--g);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:16px;
+  padding:22px;margin-bottom:16px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.card.cyan::before{background:linear-gradient(90deg,var(--c),transparent);}
+.card.green::before{background:linear-gradient(90deg,var(--g),transparent);}
+.card.red::before{background:linear-gradient(90deg,var(--r),transparent);}
+.card.yellow::before{background:linear-gradient(90deg,var(--y),transparent);}
+.card.purple::before{background:linear-gradient(90deg,var(--p),transparent);}
+.card.orange::before{background:linear-gradient(90deg,var(--o),transparent);}
+
+.card-title{font-family:'JetBrains Mono';font-size:9px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:7px;}
+.card-title::before{content:'//';color:var(--mu);}
+
+/* STEP */
+.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.step:last-child{margin-bottom:0;}
+.step-num{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-family:'Bebas Neue';font-size:18px;flex-shrink:0;margin-top:1px;}
+.step-num.c{background:rgba(0,240,255,.12);color:var(--c);border:1px solid rgba(0,240,255,.3);}
+.step-num.g{background:rgba(0,255,157,.1);color:var(--g);border:1px solid rgba(0,255,157,.3);}
+.step-num.r{background:rgba(255,40,80,.1);color:var(--r);border:1px solid rgba(255,40,80,.3);}
+.step-num.y{background:rgba(255,230,0,.1);color:var(--y);border:1px solid rgba(255,230,0,.3);}
+.step-num.p{background:rgba(196,127,255,.1);color:var(--p);border:1px solid rgba(196,127,255,.3);}
+.step-body h3{font-family:'Outfit';font-size:15px;font-weight:700;margin-bottom:4px;}
+.step-body p{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;}
+.step-body p strong{color:var(--tx);}
+
+/* RULE ROWS */
+.rule{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;
+  background:var(--s2);border-radius:9px;margin-bottom:8px;border:1px solid var(--b1);}
+.rule:last-child{margin-bottom:0;}
+.rule-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.rule-text{font-family:'JetBrains Mono';font-size:11px;line-height:1.5;}
+.rule-text strong{display:block;color:var(--tx);font-size:12px;margin-bottom:2px;}
+
+/* SIGNAL BOXES */
+.signals{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.sig{border-radius:12px;padding:18px;text-align:center;border:2px solid;}
+.sig.long{border-color:var(--g);background:rgba(0,255,157,.06);}
+.sig.short{border-color:var(--r);background:rgba(255,40,80,.06);}
+.sig-arrow{font-family:'Bebas Neue';font-size:40px;line-height:1;margin-bottom:6px;}
+.sig.long .sig-arrow{color:var(--g);}
+.sig.short .sig-arrow{color:var(--r);}
+.sig-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:2px;margin-bottom:8px;}
+.sig.long .sig-title{color:var(--g);}
+.sig.short .sig-title{color:var(--r);}
+.sig-rule{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  text-align:left;padding:5px 8px;background:rgba(0,0,0,.3);border-radius:5px;
+  margin-bottom:5px;line-height:1.4;}
+.sig-rule span{color:var(--tx);}
+
+/* TIME GRID */
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.time-box{border-radius:9px;padding:12px;text-align:center;border:1px solid;}
+.time-box.good{border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.06);}
+.time-box.bad{border-color:rgba(255,40,80,.3);background:rgba(255,40,80,.06);}
+.time-val{font-family:'Bebas Neue';font-size:22px;display:block;margin-bottom:2px;}
+.time-box.good .time-val{color:var(--g);}
+.time-box.bad .time-val{color:var(--r);}
+.time-lbl{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+
+/* STATS ROW */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  padding:14px;text-align:center;}
+.stat-val{font-family:'Bebas Neue';font-size:28px;display:block;margin-bottom:2px;}
+.stat-lbl{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);
+  letter-spacing:1.5px;text-transform:uppercase;}
+
+/* RISK TABLE */
+.rtable{width:100%;border-collapse:collapse;font-family:'JetBrains Mono';font-size:10px;}
+.rtable th{background:var(--s2);padding:8px 10px;text-align:left;
+  color:var(--mu);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;
+  border-bottom:1px solid var(--b1);}
+.rtable td{padding:9px 10px;border-bottom:1px solid rgba(19,36,58,.5);}
+.rtable tr:last-child td{border-bottom:none;}
+.green{color:var(--g);}
+.red{color:var(--r);}
+.cyan{color:var(--c);}
+.yellow{color:var(--y);}
+
+/* FORMULA */
+.formula{background:var(--s2);border:1px solid var(--b2);border-radius:10px;
+  padding:14px;font-family:'JetBrains Mono';font-size:11px;margin-bottom:10px;line-height:1.8;}
+.formula .lbl{color:var(--mu);font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;display:block;}
+
+/* MINDSET */
+.mind{display:flex;align-items:flex-start;gap:12px;padding:13px;
+  background:var(--s2);border-radius:9px;margin-bottom:8px;border-left:3px solid;}
+.mind:last-child{margin-bottom:0;}
+.mind.g{border-color:var(--g);}
+.mind.r{border-color:var(--r);}
+.mind.y{border-color:var(--y);}
+.mind-icon{font-size:18px;flex-shrink:0;}
+.mind-text{font-family:'JetBrains Mono';font-size:11px;color:var(--mu);line-height:1.5;}
+.mind-text strong{color:var(--tx);display:block;margin-bottom:2px;font-size:12px;}
+
+/* FOOTER */
+.footer{text-align:center;padding:24px 0 8px;border-top:1px solid var(--b1);margin-top:8px;}
+.footer p{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  letter-spacing:2px;text-transform:uppercase;line-height:2;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">FTTM</div>
+  <div class="hdr-sub">Auto S/R Bounce Strategy</div>
+  <div class="hdr-tag">// H1 Timeframe · XAUUSD · Forward Test Guide</div>
+  <div class="badge"><span class="dot"></span>Trading Rulebook v1.0</div>
+</div>
+
+<!-- STRATEGY STATS -->
+<div class="card cyan">
+  <div class="card-title" style="color:var(--c)">Backtest Ergebnisse (H1 · XAUUSD)</div>
+  <div class="stats">
+    <div class="stat"><span class="stat-val" style="color:var(--g)">60.8%</span><div class="stat-lbl">Win-Rate</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--y)">4.18</span><div class="stat-lbl">Profit Factor</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--c)">102</span><div class="stat-lbl">Trades</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--p)">60.9%</span><div class="stat-lbl">Walk-Forward</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--g)">1:2</span><div class="stat-lbl">RR Ratio</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--o)">33%</span><div class="stat-lbl">Break-Even WR</div></div>
+  </div>
+  <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);text-align:center;">
+    ⚠ Backtest ≠ Live-Garantie · Forward Test pflicht vor Live-Trading
+  </div>
+</div>
+
+<!-- SIGNAL RULES -->
+<div class="card green">
+  <div class="card-title" style="color:var(--g)">Entry Regeln</div>
+  <div class="signals">
+    <div class="sig long">
+      <div class="sig-arrow">▲</div>
+      <div class="sig-title">LONG</div>
+      <div class="sig-rule">① <span>Fractal ↓ Pfeil</span><br>Pivot-Low der letzten 15 Kerzen</div>
+      <div class="sig-rule">② <span>RSI(14) &lt; 48</span><br>Leicht überverkauft</div>
+      <div class="sig-rule">③ <span>Bullische Kerze</span><br>Grün · Hammer · Engulfing</div>
+    </div>
+    <div class="sig short">
+      <div class="sig-arrow">▼</div>
+      <div class="sig-title">SHORT</div>
+      <div class="sig-rule">① <span>Fractal ↑ Pfeil</span><br>Pivot-High der letzten 15 Kerzen</div>
+      <div class="sig-rule">② <span>RSI(14) &gt; 52</span><br>Leicht überkauft</div>
+      <div class="sig-rule">③ <span>Bärische Kerze</span><br>Rot · Shooting Star · Engulfing</div>
+    </div>
+  </div>
+  <div class="formula">
+    <span class="lbl">Exit Formel (ATR-basiert)</span>
+    <span style="color:var(--g)">LONG:  </span>TP = Entry + <strong>2.4× ATR(14)</strong> · SL = Entry − <strong>1.2× ATR(14)</strong><br>
+    <span style="color:var(--r)">SHORT: </span>TP = Entry − <strong>2.4× ATR(14)</strong> · SL = Entry + <strong>1.2× ATR(14)</strong><br>
+    <span style="color:var(--mu)">MAX HALTEDAUER: </span><strong>30 H1-Kerzen</strong> (= 30 Stunden) dann schließen
+  </div>
+</div>
+
+<!-- MT5 SETUP -->
+<div class="card purple">
+  <div class="card-title" style="color:var(--p)">MT5 Chart Setup</div>
+  <div class="rule">
+    <div class="rule-icon">📊</div>
+    <div class="rule-text">
+      <strong>Timeframe: H1</strong>
+      Nur auf dem 1-Stunden Chart traden — keine anderen TFs
+    </div>
+  </div>
+  <div class="rule">
+    <div class="rule-icon">📈</div>
+    <div class="rule-text">
+      <strong>Indikator 1: RSI(14)</strong>
+      Einfügen → Indikatoren → Oszillatoren → RSI · Periode 14 · Levels: 48 und 52 einzeichnen
+    </div>
+  </div>
+  <div class="rule">
+    <div class="rule-icon">📉</div>
+    <div class="rule-text">
+      <strong>Indikator 2: ATR(14)</strong>
+      Einfügen → Indikatoren → Trend → Average True Range · Periode 14 · Nur zum Ablesen
+    </div>
+  </div>
+  <div class="rule">
+    <div class="rule-icon">🔺</div>
+    <div class="rule-text">
+      <strong>Indikator 3: Fractals (Bill Williams)</strong>
+      Einfügen → Indikatoren → Bill Williams → Fractals · ↓ Pfeil = Long-Signal · ↑ Pfeil = Short-Signal
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:11px 13px;background:rgba(196,127,255,.07);
+    border:1px solid rgba(196,127,255,.2);border-radius:9px;
+    font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;">
+    ⚡ <strong style="color:var(--p)">Wichtig:</strong> Fractal-Pfeil erscheint mit 2 Kerzen Verzögerung —
+    erst wenn 2 Kerzen nach dem Tief/Hoch abgeschlossen sind. Das ist normale Bestätigung, kein Fehler.
+  </div>
+</div>
+
+<!-- BESTE HANDELSZEITEN -->
+<div class="card yellow">
+  <div class="card-title" style="color:var(--y)">Beste Handelszeiten (UTC)</div>
+  <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--g);
+    letter-spacing:1.5px;margin-bottom:8px;text-transform:uppercase;">✓ Bevorzugen</div>
+  <div class="time-grid" style="margin-bottom:14px;">
+    <div class="time-box good"><span class="time-val">9:00</span><div class="time-lbl">UTC · 100% WR</div></div>
+    <div class="time-box good"><span class="time-val">12:00</span><div class="time-lbl">UTC · 100% WR</div></div>
+    <div class="time-box good"><span class="time-val">21:00</span><div class="time-lbl">UTC · 100% WR</div></div>
+  </div>
+  <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--r);
+    letter-spacing:1.5px;margin-bottom:8px;text-transform:uppercase;">✗ Meiden</div>
+  <div class="time-grid">
+    <div class="time-box bad"><span class="time-val">10:00</span><div class="time-lbl">UTC · 20% WR</div></div>
+    <div class="time-box bad"><span class="time-val">6:00</span><div class="time-lbl">UTC · 33% WR</div></div>
+    <div class="time-box bad"><span class="time-val">15:00</span><div class="time-lbl">UTC · 40% WR</div></div>
+  </div>
+</div>
+
+<!-- RISIKO MANAGEMENT -->
+<div class="card orange">
+  <div class="card-title" style="color:var(--o)">Risiko Management</div>
+  <table class="rtable">
+    <thead><tr>
+      <th>Regel</th><th>Wert</th><th>Warum</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>Risiko/Trade</td>
+        <td class="cyan">1%</td>
+        <td style="color:var(--mu)">Max €20 bei €2.000</td>
+      </tr>
+      <tr>
+        <td>RR-Verhältnis</td>
+        <td class="green">1:2</td>
+        <td style="color:var(--mu)">TP = 2× SL</td>
+      </tr>
+      <tr>
+        <td>Max Trades/Tag</td>
+        <td class="yellow">2×</td>
+        <td style="color:var(--mu)">Bei 2 Verlusten → Stopp</td>
+      </tr>
+      <tr>
+        <td>SL verschieben</td>
+        <td class="red">NIEMALS</td>
+        <td style="color:var(--mu)">Strategie bricht zusammen</td>
+      </tr>
+      <tr>
+        <td>TP früher schließen</td>
+        <td class="red">NIEMALS</td>
+        <td style="color:var(--mu)">RR-Ratio wird zerstört</td>
+      </tr>
+      <tr>
+        <td>10% DD-Grenze</td>
+        <td class="red">STOPP</td>
+        <td style="color:var(--mu)">Pause + Analyse</td>
+      </tr>
+      <tr>
+        <td>Spread (XAUUSD)</td>
+        <td class="cyan">3 Pkt</td>
+        <td style="color:var(--mu)">Im Backtest einkalkuliert</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- WORKFLOW -->
+<div class="card cyan">
+  <div class="card-title" style="color:var(--c)">Trading Workflow</div>
+  <div class="step">
+    <div class="step-num c">1</div>
+    <div class="step-body">
+      <h3>Fractal-Signal abwarten</h3>
+      <p>H1 Chart beobachten · Auf ↓ (Long) oder ↑ (Short) Fractal-Pfeil warten · <strong>Erst wenn Pfeil erscheint</strong> weitergehen</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num g">2</div>
+    <div class="step-body">
+      <h3>RSI prüfen</h3>
+      <p>Long: <strong>RSI(14) unter 48?</strong> · Short: <strong>RSI(14) über 52?</strong> · Wenn nicht erfüllt → Trade überspringen</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num y">3</div>
+    <div class="step-body">
+      <h3>Kerze bestätigen</h3>
+      <p>Bullische Kerze für Long? · Bärische Kerze für Short? · <strong>Alle 3 Haken gesetzt?</strong> → Checklist App öffnen</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num p">4</div>
+    <div class="step-body">
+      <h3>Checklist App ausfüllen</h3>
+      <p>Entry Preis + ATR eingeben → <strong>TP und SL werden automatisch berechnet</strong> · Lot-Größe ablesen</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num r">5</div>
+    <div class="step-body">
+      <h3>Trade eingehen + loggen</h3>
+      <p>TP und SL direkt in MT5 eingeben · Max 30 H1 Kerzen halten · <strong>Ergebnis im Log eintragen</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- MINDSET -->
+<div class="card red">
+  <div class="card-title" style="color:var(--r)">Disziplin Regeln</div>
+  <div class="mind g">
+    <div class="mind-icon">✅</div>
+    <div class="mind-text">
+      <strong>Nur traden wenn ALLE 3 Haken gesetzt sind</strong>
+      "Fast erfüllt" zählt nicht. Kein Signal = kein Trade.
+    </div>
+  </div>
+  <div class="mind g">
+    <div class="mind-icon">✅</div>
+    <div class="mind-text">
+      <strong>Forward Test: Erst 20–30 Trades beobachten</strong>
+      Ohne echtes Geld · Live-WR über 55%? → Dann live gehen mit kleiner Position.
+    </div>
+  </div>
+  <div class="mind y">
+    <div class="mind-icon">⚠️</div>
+    <div class="mind-text">
+      <strong>Bei 2 Verlusttrades pro Tag → Stopp</strong>
+      Laptop zu · Kein Revenge-Trading · Morgen wieder frisch anfangen.
+    </div>
+  </div>
+  <div class="mind r">
+    <div class="mind-icon">❌</div>
+    <div class="mind-text">
+      <strong>SL niemals verschieben</strong>
+      Der SL ist Teil der Strategie · Wer ihn verschiebt zerstört die Win-Rate-Mathematik.
+    </div>
+  </div>
+  <div class="mind r">
+    <div class="mind-icon">❌</div>
+    <div class="mind-text">
+      <strong>TP niemals früher schließen</strong>
+      Aus Angst früher schließen = 1:2 RR wird zu 1:0.8 → Strategie nicht mehr profitabel.
+    </div>
+  </div>
+</div>
+
+<!-- FORWARD TEST AUSWERTUNG -->
+<div class="card green">
+  <div class="card-title" style="color:var(--g)">Forward Test Auswertung</div>
+  <div class="rule">
+    <div class="rule-icon">🟢</div>
+    <div class="rule-text">
+      <strong>WR über 55% nach 20–30 Trades</strong>
+      Weiter machen · Lot-Größe leicht erhöhen auf 1.5–2% Risiko
+    </div>
+  </div>
+  <div class="rule">
+    <div class="rule-icon">🟡</div>
+    <div class="rule-text">
+      <strong>WR zwischen 45–55%</strong>
+      Weiter beobachten · Parameter nochmal prüfen · Noch 20 Trades sammeln
+    </div>
+  </div>
+  <div class="rule">
+    <div class="rule-icon">🔴</div>
+    <div class="rule-text">
+      <strong>WR unter 45%</strong>
+      Pause · Neue CSV-Daten in Strategy Engine laden · Strategie neu backtesten
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:12px;background:rgba(0,255,157,.06);
+    border:1px solid rgba(0,255,157,.2);border-radius:9px;
+    font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.7;text-align:center;">
+    Bei 1:2 RR brauchst du nur <span style="color:var(--g);font-size:14px;font-weight:700;">34%</span> Win-Rate um Break-Even zu sein.<br>
+    Alles über 34% ist mathematisch profitabel. 💡
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p style="font-family:'Bebas Neue';font-size:28px;letter-spacing:4px;
+    background:linear-gradient(135deg,var(--c),var(--g));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;margin-bottom:8px;">FTTM Strategy Engine</p>
+  <p>Auto S/R Bounce · H1 · XAUUSD</p>
+  <p style="margin-top:8px;">Kein Flyer ersetzt eigenes Nachdenken · Trade verantwortungsvoll</p>
+</div>
+
+</body>
+</html>
