@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FTTM — Roadmap zur Selbständigkeit</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Bebas+Neue&family=Outfit:wght@400;600;700;900&display=swap');
+:root{
+  --bg:#04070d;--s1:#070d16;--s2:#0b1320;--b1:#13243a;--b2:#1a3050;
+  --c:#00f0ff;--g:#00ff9d;--r:#ff2850;--y:#ffe600;--p:#c47fff;--o:#ff7c2a;
+  --tx:#cce4ff;--mu:#2e4d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100vh;
+  background-image:linear-gradient(rgba(0,240,255,.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,240,255,.015) 1px,transparent 1px);
+  background-size:44px 44px;}
+
+.hdr{text-align:center;padding:28px 20px 20px;border-bottom:1px solid var(--b1);margin-bottom:0;}
+.logo{font-family:'Bebas Neue';font-size:56px;letter-spacing:8px;
+  background:linear-gradient(135deg,var(--c),var(--g));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr h1{font-family:'Bebas Neue';font-size:22px;letter-spacing:3px;margin-top:2px;}
+.hdr-tag{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;margin-top:6px;}
+
+/* OVERALL PROGRESS */
+.overall{padding:20px;background:var(--s1);border-bottom:1px solid var(--b1);}
+.ov-title{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;}
+.ov-bar{background:var(--b1);border-radius:100px;height:8px;overflow:hidden;margin-bottom:8px;}
+.ov-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--c),var(--g));
+  transition:width .4s ease;}
+.ov-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.ov-stat{background:var(--s2);border:1px solid var(--b1);border-radius:8px;
+  padding:10px;text-align:center;}
+.ov-val{font-family:'Bebas Neue';font-size:22px;display:block;}
+.ov-lbl{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);
+  letter-spacing:1px;text-transform:uppercase;}
+
+/* PHASE TABS */
+.phase-tabs{display:flex;overflow-x:auto;gap:6px;padding:14px 20px;
+  border-bottom:1px solid var(--b1);-webkit-overflow-scrolling:touch;}
+.phase-tabs::-webkit-scrollbar{display:none;}
+.ptab{flex-shrink:0;padding:8px 14px;border-radius:8px;border:1px solid var(--b1);
+  background:var(--s1);font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;
+  cursor:pointer;transition:all .18s;color:var(--mu);text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;}
+.ptab.active{border-color:var(--c);color:var(--c);background:rgba(0,240,255,.06);}
+.ptab.done{border-color:var(--g);color:var(--g);background:rgba(0,255,157,.04);}
+.ptab-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* PHASE CONTENT */
+.phase{display:none;padding:16px 20px;}
+.phase.active{display:block;}
+
+.phase-hdr{background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+  padding:18px;margin-bottom:14px;position:relative;overflow:hidden;}
+.phase-hdr::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.ph-timeline{font-family:'Bebas Neue';font-size:13px;letter-spacing:2px;margin-bottom:4px;}
+.ph-title{font-family:'Bebas Neue';font-size:28px;letter-spacing:2px;margin-bottom:6px;}
+.ph-desc{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;}
+.ph-prog{margin-top:12px;}
+.ph-prog-bar{background:var(--b1);border-radius:100px;height:4px;overflow:hidden;}
+.ph-prog-fill{height:100%;border-radius:100px;transition:width .3s;}
+.ph-prog-lbl{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  display:flex;justify-content:space-between;margin-top:5px;}
+
+/* TASKS */
+.task-group{margin-bottom:16px;}
+.tg-title{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;}
+.tg-title::before{content:'//';color:var(--b2);}
+
+.task{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;
+  background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  margin-bottom:7px;cursor:pointer;transition:all .18s;user-select:none;}
+.task.done{background:rgba(0,255,157,.04);border-color:rgba(0,255,157,.2);}
+.task.important{border-left:3px solid var(--r);}
+.task.important.done{border-left:3px solid var(--g);}
+.task-cb{width:22px;height:22px;border-radius:6px;border:2px solid var(--b2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;transition:all .18s;margin-top:1px;}
+.task.done .task-cb{background:var(--g);border-color:var(--g);color:#000;}
+.task-body{flex:1;}
+.task-title{font-family:'Outfit';font-size:13px;font-weight:600;margin-bottom:3px;
+  transition:all .18s;}
+.task.done .task-title{color:var(--mu);text-decoration:line-through;}
+.task-desc{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.5;}
+.task.done .task-desc{color:var(--b2);}
+.task-badge{display:inline-block;padding:2px 7px;border-radius:4px;
+  font-family:'JetBrains Mono';font-size:8px;font-weight:700;letter-spacing:.5px;
+  margin-left:6px;vertical-align:middle;}
+.badge-r{background:rgba(255,40,80,.15);color:var(--r);}
+.badge-y{background:rgba(255,230,0,.15);color:var(--y);}
+.badge-g{background:rgba(0,255,157,.12);color:var(--g);}
+.badge-c{background:rgba(0,240,255,.12);color:var(--c);}
+.badge-p{background:rgba(196,127,255,.15);color:var(--p);}
+
+/* MILESTONE */
+.milestone{background:linear-gradient(135deg,rgba(0,240,255,.07),rgba(0,255,157,.04));
+  border:1px solid rgba(0,240,255,.2);border-radius:12px;padding:16px;
+  margin-bottom:14px;text-align:center;}
+.ms-icon{font-size:32px;margin-bottom:8px;}
+.ms-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--c);margin-bottom:4px;}
+.ms-desc{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.5;}
+
+/* INFO BOX */
+.info{background:var(--s2);border:1px solid var(--b2);border-radius:10px;
+  padding:13px 14px;margin-bottom:10px;}
+.info-title{font-family:'JetBrains Mono';font-size:9px;color:var(--c);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid rgba(19,36,58,.5);
+  font-family:'JetBrains Mono';font-size:10px;}
+.info-row:last-child{border-bottom:none;}
+.info-key{color:var(--mu);}
+.info-val{color:var(--tx);font-weight:600;text-align:right;}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--s1);
+  border-top:1px solid var(--b1);padding:12px 20px;
+  display:flex;gap:10px;z-index:100;}
+.bnav-btn{flex:1;padding:12px;border-radius:10px;border:1px solid var(--b2);
+  background:var(--s2);color:var(--mu);font-family:'JetBrains Mono';font-size:10px;
+  cursor:pointer;text-align:center;letter-spacing:1px;text-transform:uppercase;
+  transition:all .18s;}
+.bnav-btn:hover{border-color:var(--c);color:var(--c);}
+.bnav-btn.primary{background:linear-gradient(135deg,var(--c),var(--g));
+  color:#000;border:none;font-weight:700;}
+
+.spacer{height:80px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">FTTM</div>
+  <h1>Roadmap zur Selbständigkeit</h1>
+  <div class="hdr-tag">// Von Demo-Trading bis Prop Firm & Gewerbe in Deutschland</div>
+</div>
+
+<!-- OVERALL PROGRESS -->
+<div class="overall">
+  <div class="ov-title">
+    <span>Gesamtfortschritt</span>
+    <span id="ov-pct" style="color:var(--c)">0%</span>
+  </div>
+  <div class="ov-bar"><div class="ov-fill" id="ov-fill" style="width:0%"></div></div>
+  <div class="ov-stats">
+    <div class="ov-stat"><span class="ov-val" id="ov-done" style="color:var(--g)">0</span><div class="ov-lbl">Erledigt</div></div>
+    <div class="ov-stat"><span class="ov-val" id="ov-open" style="color:var(--y)">0</span><div class="ov-lbl">Offen</div></div>
+    <div class="ov-stat"><span class="ov-val" id="ov-total" style="color:var(--c)">0</span><div class="ov-lbl">Gesamt</div></div>
+    <div class="ov-stat"><span class="ov-val" id="ov-phase" style="color:var(--p)">1</span><div class="ov-lbl">Phase</div></div>
+  </div>
+</div>
+
+<!-- PHASE TABS -->
+<div class="phase-tabs">
+  <div class="ptab active" id="tab-0" onclick="switchPhase(0)"><span class="ptab-dot"></span>Demo</div>
+  <div class="ptab" id="tab-1" onclick="switchPhase(1)"><span class="ptab-dot"></span>Echtgeld</div>
+  <div class="ptab" id="tab-2" onclick="switchPhase(2)"><span class="ptab-dot"></span>Prop Firm</div>
+  <div class="ptab" id="tab-3" onclick="switchPhase(3)"><span class="ptab-dot"></span>Vorbereitung</div>
+  <div class="ptab" id="tab-4" onclick="switchPhase(4)"><span class="ptab-dot"></span>Selbständig</div>
+  <div class="ptab" id="tab-5" onclick="switchPhase(5)"><span class="ptab-dot"></span>Deutschland</div>
+</div>
+
+<!-- ═══════════ PHASE 0: DEMO ═══════════ -->
+<div class="phase active" id="phase-0">
+  <div class="phase-hdr" style="--ph-color:var(--c)">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c),transparent)"></div>
+    <div class="ph-timeline" style="color:var(--c)">PHASE 1 · MONAT 1</div>
+    <div class="ph-title">Demo Trading</div>
+    <div class="ph-desc">Strategie in der Realität testen · Ohne Risiko · Fehler machen und lernen · Alle Signale dokumentieren</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-0" style="width:0%;background:var(--c)"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-0-lbl">0 / 0 erledigt</span><span id="prog-0-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--c)">Setup</div>
+    <div class="task" id="t0-0" onclick="toggle('t0-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">MT5 Demo-Konto einrichten <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">Broker mit XAUUSD, EURUSD, GER40, NAS100, US30, USDJPY · Mindestens €10.000 Demo-Kapital</div>
+      </div>
+    </div>
+    <div class="task" id="t0-1" onclick="toggle('t0-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">MT5 Chart Setup abschließen <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">H1 Timeframe · RSI(14) mit Levels 48 & 52 · ATR(14) · Fractals (Bill Williams)</div>
+      </div>
+    </div>
+    <div class="task" id="t0-2" onclick="toggle('t0-2')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">FTTM Export Script ausführen</div>
+        <div class="task-desc">Alle 6 Assets H1 exportieren · In Strategy Engine laden · Beste Strategie pro Asset backtesten</div>
+      </div>
+    </div>
+    <div class="task" id="t0-3" onclick="toggle('t0-3')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Checklist App auf Homescreen speichern</div>
+        <div class="task-desc">Browser → Teilen → Zum Homescreen hinzufügen · Immer griffbereit beim Trading</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--c)">Tägliche Routine</div>
+    <div class="task" id="t0-4" onclick="toggle('t0-4')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Tägliche Chart-Analyse etablieren <span class="task-badge badge-y">TÄGLICH</span></div>
+        <div class="task-desc">Jeden Tag zu festen Zeiten Chart öffnen · 9:00, 12:00, 21:00 UTC bevorzugen · Signale suchen</div>
+      </div>
+    </div>
+    <div class="task" id="t0-5" onclick="toggle('t0-5')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Jeden Trade im Log dokumentieren <span class="task-badge badge-y">TÄGLICH</span></div>
+        <div class="task-desc">Checklist App · Screenshot des Charts · Warum genommen · Was danach passiert · WIN/LOSS</div>
+      </div>
+    </div>
+    <div class="task" id="t0-6" onclick="toggle('t0-6')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Wöchentliche Auswertung <span class="task-badge badge-y">WÖCHENTLICH</span></div>
+        <div class="task-desc">WR berechnen · Fehler analysieren · Was hätte ich besser machen können?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--c)">Monatsziel</div>
+    <div class="task" id="t0-7" onclick="toggle('t0-7')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Mindestens 20 Trades dokumentiert</div>
+        <div class="task-desc">Genug Sample-Size für aussagekräftige Auswertung</div>
+      </div>
+    </div>
+    <div class="task" id="t0-8" onclick="toggle('t0-8')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Live-WR über 50% nach 20 Trades</div>
+        <div class="task-desc">Unter 50% → Strategie nochmal prüfen · Über 55% → bereit für Echtgeld</div>
+      </div>
+    </div>
+    <div class="task important" id="t0-9" onclick="toggle('t0-9')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Nie SL verschoben, nie TP früher geschlossen <span class="task-badge badge-r">DISZIPLIN</span></div>
+        <div class="task-desc">Wer das im Demo nicht schafft, schafft es im Echtgeld erst recht nicht</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">🎯</div>
+    <div class="ms-title">Ziel Phase 1</div>
+    <div class="ms-desc">20+ Trades · WR ≥ 55% · Alle Regeln eingehalten<br>→ Dann weiter zu Phase 2</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 1: ECHTGELD ═══════════ -->
+<div class="phase" id="phase-1">
+  <div class="phase-hdr">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--g),transparent)"></div>
+    <div class="ph-timeline" style="color:var(--g)">PHASE 2 · MONAT 2–3</div>
+    <div class="ph-title">Kleines Echtgeld-Konto</div>
+    <div class="ph-desc">Echte Emotionen kennenlernen · Gleiche Regeln wie Demo · Kein anderes Verhalten wegen echtem Geld</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-1" style="width:0%;background:var(--g)"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-1-lbl">0 / 0 erledigt</span><span id="prog-1-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="info-title">Konto Setup</div>
+    <div class="info-row"><span class="info-key">Startkapital</span><span class="info-val" style="color:var(--g)">€200</span></div>
+    <div class="info-row"><span class="info-key">Risiko/Trade</span><span class="info-val">1% = €2</span></div>
+    <div class="info-row"><span class="info-key">Empfohlenes Asset</span><span class="info-val" style="color:var(--c)">EURUSD oder GER40</span></div>
+    <div class="info-row"><span class="info-key">Lot-Größe</span><span class="info-val">0.02 Lot (je nach ATR)</span></div>
+    <div class="info-row"><span class="info-key">Max Verlust/Tag</span><span class="info-val" style="color:var(--r)">€4 (2 Trades)</span></div>
+    <div class="info-row"><span class="info-key">10% DD Grenze</span><span class="info-val" style="color:var(--r)">€20 → Stopp</span></div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--g)">Vorbereitung</div>
+    <div class="task" id="t1-0" onclick="toggle('t1-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Broker auswählen & Konto eröffnen <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">Regulierter EU-Broker · Niedrige Spreads · EURUSD Spread unter 1 Pip · z.B. Pepperstone, IC Markets, Admirals</div>
+      </div>
+    </div>
+    <div class="task" id="t1-1" onclick="toggle('t1-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">€200 einzahlen <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">Nur Geld das du komplett verlieren kannst · Kein Kredit · Kein Notgroschen</div>
+      </div>
+    </div>
+    <div class="task" id="t1-2" onclick="toggle('t1-2')">
+      <div class="task-body">
+        <div class="task-title">EURUSD H1 Backtest abschließen</div>
+        <div class="task-desc">CSV exportieren · In Strategy Engine laden · Beste Strategie finden · WR ≥ 55%?</div>
+      </div>
+      <div class="task-cb">✓</div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--g)">Monat 2</div>
+    <div class="task" id="t1-3" onclick="toggle('t1-3')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Erste 10 Echtgeld-Trades dokumentieren</div>
+        <div class="task-desc">Extra sorgfältig · Emotionen notieren · "Wie hat sich der Trade angefühlt?"</div>
+      </div>
+    </div>
+    <div class="task" id="t1-4" onclick="toggle('t1-4')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Break-Even Regel konsequent anwenden <span class="task-badge badge-r">DISZIPLIN</span></div>
+        <div class="task-desc">Bei 50% des Weges zum TP → SL auf Entry · Immer · Keine Ausnahmen</div>
+      </div>
+    </div>
+    <div class="task" id="t1-5" onclick="toggle('t1-5')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Konto nie unter €180 fallen lassen</div>
+        <div class="task-desc">-10% = €20 Verlust → Sofort Pause · Strategie analysieren · Nicht weitermachen aus Trotz</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--g)">Monat 3</div>
+    <div class="task" id="t1-6" onclick="toggle('t1-6')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">30 Trades dokumentiert — Auswertung</div>
+        <div class="task-desc">WR berechnen · Profit Factor · Vergleich mit Backtest · Stimmt es überein?</div>
+      </div>
+    </div>
+    <div class="task" id="t1-7" onclick="toggle('t1-7')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Live-WR ≥ 55% nach 30 Trades <span class="task-badge badge-g">ZIEL</span></div>
+        <div class="task-desc">Wenn ja → bereit für Prop Firm · Wenn nein → weiter testen mit Demo</div>
+      </div>
+    </div>
+    <div class="task important" id="t1-8" onclick="toggle('t1-8')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Trading Journal aufgebaut <span class="task-badge badge-y">WICHTIG</span></div>
+        <div class="task-desc">Prop Firms wollen oft Nachweise · Journal = Beweis für konsistentes Trading</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">💰</div>
+    <div class="ms-title">Ziel Phase 2</div>
+    <div class="ms-desc">30 Echtgeld-Trades · WR ≥ 55% · Konto nicht unter €180<br>→ Dann weiter zu Phase 3</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 2: PROP FIRM ═══════════ -->
+<div class="phase" id="phase-2">
+  <div class="phase-hdr">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--p),transparent)"></div>
+    <div class="ph-timeline" style="color:var(--p)">PHASE 3 · MONAT 4–5</div>
+    <div class="ph-title">Prop Firm Challenge</div>
+    <div class="ph-desc">Mit bewiesener Live-WR die Challenge angehen · Diszipliniert wie immer · Kein anderes Verhalten</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-2" style="width:0%;background:var(--p)"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-2-lbl">0 / 0 erledigt</span><span id="prog-2-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="info-title">FTMO €10.000 Challenge (Empfehlung)</div>
+    <div class="info-row"><span class="info-key">Challenge Kosten</span><span class="info-val" style="color:var(--y)">~€155</span></div>
+    <div class="info-row"><span class="info-key">Profit Ziel Phase 1</span><span class="info-val">+10% = €1.000</span></div>
+    <div class="info-row"><span class="info-key">Profit Ziel Phase 2</span><span class="info-val">+5% = €500</span></div>
+    <div class="info-row"><span class="info-key">Max Daily Loss</span><span class="info-val" style="color:var(--r)">5% = €500</span></div>
+    <div class="info-row"><span class="info-key">Max Total Loss</span><span class="info-val" style="color:var(--r)">10% = €1.000</span></div>
+    <div class="info-row"><span class="info-key">Min Trading Days</span><span class="info-val">4 Tage</span></div>
+    <div class="info-row"><span class="info-key">Gewinnbeteiligung</span><span class="info-val" style="color:var(--g)">80% für dich</span></div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--p)">Vorbereitung</div>
+    <div class="task" id="t2-0" onclick="toggle('t2-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Prop Firm auswählen <span class="task-badge badge-r">WICHTIG</span></div>
+        <div class="task-desc">FTMO · The Funded Trader · MyFundedFX · Regeln genau lesen · Auf versteckte Regeln achten</div>
+      </div>
+    </div>
+    <div class="task" id="t2-1" onclick="toggle('t2-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Challenge Regeln auswendig kennen <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">Daily Loss Limit · Max Drawdown · Profit Target · Min Days · Verbotene Strategien?</div>
+      </div>
+    </div>
+    <div class="task" id="t2-2" onclick="toggle('t2-2')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Lot-Größe für €10.000 Konto berechnen</div>
+        <div class="task-desc">1% Risiko = €100 · Bei EURUSD ATR ~12 Pip SL → ca. 0.80 Lot · Checklist App nutzen</div>
+      </div>
+    </div>
+    <div class="task" id="t2-3" onclick="toggle('t2-3')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Challenge kaufen & starten</div>
+        <div class="task-desc">~€155 für €10.000 Challenge · Nur kaufen wenn 30+ Live-Trades ≥ 55% WR</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--p)">Während der Challenge</div>
+    <div class="task important" id="t2-4" onclick="toggle('t2-4')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Daily Loss Limit NIE überschreiten <span class="task-badge badge-r">KRITISCH</span></div>
+        <div class="task-desc">Bei €500 Tagesverlust → STOPP · Egal was · Challenge sofort verloren wenn überschritten</div>
+      </div>
+    </div>
+    <div class="task" id="t2-5" onclick="toggle('t2-5')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Gleiches Trading wie immer <span class="task-badge badge-y">MINDSET</span></div>
+        <div class="task-desc">Nicht aggressiver wegen Profit-Ziel · Nicht ängstlicher wegen Regeln · Einfach das Gleiche wie immer</div>
+      </div>
+    </div>
+    <div class="task" id="t2-6" onclick="toggle('t2-6')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Phase 1 bestanden: +10% erreicht</div>
+        <div class="task-desc">€10.000 → €11.000 · Kein Stress · Kann Wochen dauern · Geduld</div>
+      </div>
+    </div>
+    <div class="task" id="t2-7" onclick="toggle('t2-7')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Phase 2 bestanden: +5% erreicht</div>
+        <div class="task-desc">€10.000 → €10.500 · Verifizierungsphase · Gleiche Regeln · Weniger Druck</div>
+      </div>
+    </div>
+    <div class="task" id="t2-8" onclick="toggle('t2-8')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Funded Account erhalten 🎉 <span class="task-badge badge-g">MEILENSTEIN</span></div>
+        <div class="task-desc">Glückwunsch! Jetzt tradet du mit echtem Prop Firm Kapital · 80% Gewinnbeteiligung</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">🏆</div>
+    <div class="ms-title">Ziel Phase 3</div>
+    <div class="ms-desc">Funded Account erhalten · €10.000 Kapital<br>Realistisch: €300–800/Monat möglich<br>→ Dann weiter zu Phase 4</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 3: VORBEREITUNG SELBSTÄNDIGKEIT ═══════════ -->
+<div class="phase" id="phase-3">
+  <div class="phase-hdr">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--y),transparent)"></div>
+    <div class="ph-timeline" style="color:var(--y)">PHASE 4 · MONAT 6–12</div>
+    <div class="ph-title">Vorbereitung Selbständigkeit</div>
+    <div class="ph-desc">Funded Account läuft · Einkommen aufbauen · Parallel alles für Selbständigkeit vorbereiten · Noch kein Sprung ins kalte Wasser</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-3" style="width:0%;background:var(--y)"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-3-lbl">0 / 0 erledigt</span><span id="prog-3-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--y)">Finanzielles Polster aufbauen</div>
+    <div class="task important" id="t3-0" onclick="toggle('t3-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">6 Monate Lebenshaltungskosten gespart <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">Mindestens 6 Monate ohne Einkommen überleben können · Erst dann Hauptjob kündigen</div>
+      </div>
+    </div>
+    <div class="task" id="t3-1" onclick="toggle('t3-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">3 Monate konsistente Prop Firm Gewinne</div>
+        <div class="task-desc">Mindestens 3 Monate positiv · Zeigt dass es kein Glück war · Vor Selbständigkeit</div>
+      </div>
+    </div>
+    <div class="task" id="t3-2" onclick="toggle('t3-2')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Mehrere Prop Firm Accounts aufbauen</div>
+        <div class="task-desc">FTMO + The Funded Trader + weitere · Mehr Kapital = mehr Ertrag · Risiko auf mehrere verteilen</div>
+      </div>
+    </div>
+    <div class="task" id="t3-3" onclick="toggle('t3-3')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Steuerberater aufsuchen <span class="task-badge badge-y">WICHTIG</span></div>
+        <div class="task-desc">Trading-Einkommen verstehen · Wie wird Prop Firm Einkommen versteuert? · Gewerbe oder Freiberufler?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--y)">Strategie skalieren</div>
+    <div class="task" id="t3-4" onclick="toggle('t3-4')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Alle 6 Assets live getestet</div>
+        <div class="task-desc">EURUSD · GBPUSD · GER40 · NAS100 · US30 · USDJPY · Beste 2–3 ausgewählt</div>
+      </div>
+    </div>
+    <div class="task" id="t3-5" onclick="toggle('t3-5')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">FTTM Strategy Engine regelmäßig updaten</div>
+        <div class="task-desc">Alle 3 Monate neue CSV-Daten laden · Prüfen ob Strategie noch funktioniert · Marktbedingungen ändern sich</div>
+      </div>
+    </div>
+    <div class="task" id="t3-6" onclick="toggle('t3-6')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Größeres Prop Firm Konto anstreben</div>
+        <div class="task-desc">€25.000 oder €50.000 Challenge · Mehr Kapital = mehr Gewinn pro Trade · Skalierung</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">🚀</div>
+    <div class="ms-title">Ziel Phase 4</div>
+    <div class="ms-desc">6 Monate Polster gespart · 3 Monate konsistente Gewinne<br>Mehrere Prop Accounts · Steuerberater konsultiert<br>→ Bereit für Selbständigkeit</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 4: SELBSTÄNDIG ═══════════ -->
+<div class="phase" id="phase-4">
+  <div class="phase-hdr">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--g),var(--c))"></div>
+    <div class="ph-timeline" style="color:var(--g)">PHASE 5 · AB MONAT 12+</div>
+    <div class="ph-title">Selbständig als Trader</div>
+    <div class="ph-desc">Der Sprung ins kalte Wasser · Nur wenn Polster vorhanden und Einkommen konsistent · Kein Stress nötig</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-4" style="width:0%;background:linear-gradient(90deg,var(--g),var(--c))"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-4-lbl">0 / 0 erledigt</span><span id="prog-4-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="info-title">Realistisches Einkommensziel (Prop Trading)</div>
+    <div class="info-row"><span class="info-key">€10K Account (80%)</span><span class="info-val" style="color:var(--y)">€300–800/Monat</span></div>
+    <div class="info-row"><span class="info-key">€25K Account (80%)</span><span class="info-val" style="color:var(--g)">€700–2.000/Monat</span></div>
+    <div class="info-row"><span class="info-key">€50K Account (80%)</span><span class="info-val" style="color:var(--g)">€1.500–4.000/Monat</span></div>
+    <div class="info-row"><span class="info-key">Mehrere Accounts</span><span class="info-val" style="color:var(--c)">Skalierbar</span></div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--g)">Der Sprung</div>
+    <div class="task important" id="t4-0" onclick="toggle('t4-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Hauptjob kündigen (mit Bedacht) <span class="task-badge badge-r">NUR WENN BEREIT</span></div>
+        <div class="task-desc">Erst kündigen wenn: 6 Monate Polster ✓ · 3 Monate konsistente Gewinne ✓ · Gewerbe angemeldet ✓</div>
+      </div>
+    </div>
+    <div class="task" id="t4-1" onclick="toggle('t4-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Feste Arbeitszeiten definieren</div>
+        <div class="task-desc">Trading ist ein Job · Feste Zeiten · Kein "den ganzen Tag Charts schauen" · 2–3 Stunden reichen auf H1</div>
+      </div>
+    </div>
+    <div class="task" id="t4-2" onclick="toggle('t4-2')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Monatliches Einkommen tracken</div>
+        <div class="task-desc">Alle Auszahlungen dokumentieren · Für Steuer wichtig · Schwankungen einplanen</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">🎉</div>
+    <div class="ms-title">Selbständig!</div>
+    <div class="ms-desc">Du bist jetzt hauptberuflicher Trader<br>→ Weiter zu Phase 6: Deutschland Formalitäten</div>
+  </div>
+</div>
+
+<!-- ═══════════ PHASE 5: DEUTSCHLAND ═══════════ -->
+<div class="phase" id="phase-5">
+  <div class="phase-hdr">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--o),transparent)"></div>
+    <div class="ph-timeline" style="color:var(--o)">PHASE 6 · PARALLEL ZU PHASE 4–5</div>
+    <div class="ph-title">Deutschland — Formalitäten</div>
+    <div class="ph-desc">Was du in Deutschland als selbständiger Trader brauchst · Rechtzeitig vorbereiten · Am besten Steuerberater hinzuziehen</div>
+    <div class="ph-prog">
+      <div class="ph-prog-bar"><div class="ph-prog-fill" id="prog-5" style="width:0%;background:var(--o)"></div></div>
+      <div class="ph-prog-lbl"><span id="prog-5-lbl">0 / 0 erledigt</span><span id="prog-5-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--o)">Gewerbe & Steuern</div>
+    <div class="task important" id="t5-0" onclick="toggle('t5-0')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Steuerberater aufsuchen — Trading Spezialist <span class="task-badge badge-r">ZUERST</span></div>
+        <div class="task-desc">Vor allem anderen · Trading-Einkommen ist komplex · Prop Firm = Einkommen aus dem Ausland · Braucht Experten</div>
+      </div>
+    </div>
+    <div class="task" id="t5-1" onclick="toggle('t5-1')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Gewerbe anmelden beim Gewerbeamt <span class="task-badge badge-y">WICHTIG</span></div>
+        <div class="task-desc">Gewerbeamt deiner Stadt · Kosten ca. €20–60 · "Devisenhandel" oder "Finanzdienstleistungen" · Steuerberater fragt vorher was besser ist</div>
+      </div>
+    </div>
+    <div class="task" id="t5-2" onclick="toggle('t5-2')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Steuernummer beim Finanzamt beantragen</div>
+        <div class="task-desc">Nach Gewerbeanmeldung automatisch · Oder direkt beim Finanzamt · Für Steuererklärung nötig</div>
+      </div>
+    </div>
+    <div class="task" id="t5-3" onclick="toggle('t5-3')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Einnahmen-Überschuss-Rechnung (EÜR) verstehen</div>
+        <div class="task-desc">Als Einzelunternehmer · Einfachste Form der Buchführung · Alle Einnahmen & Ausgaben dokumentieren</div>
+      </div>
+    </div>
+    <div class="task" id="t5-4" onclick="toggle('t5-4')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Gewerbesteuer ab €24.500/Jahr beachten</div>
+        <div class="task-desc">Unter €24.500 Gewinn/Jahr → keine Gewerbesteuer · Darüber → Gewerbesteuer · Steuerberater kalkuliert</div>
+      </div>
+    </div>
+    <div class="task" id="t5-5" onclick="toggle('t5-5')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Umsatzsteuer prüfen lassen</div>
+        <div class="task-desc">Kleinunternehmerregelung bis €22.000/Jahr → keine USt · Darüber → Umsatzsteuer anmelden · Steuerberater entscheidet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--o)">Krankenversicherung</div>
+    <div class="task important" id="t5-6" onclick="toggle('t5-6')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Krankenversicherung als Selbständiger wählen <span class="task-badge badge-r">PFLICHT</span></div>
+        <div class="task-desc">In Deutschland Pflicht · Zwei Optionen: Gesetzlich (GKV) oder Privat (PKV)</div>
+      </div>
+    </div>
+    <div class="task" id="t5-7" onclick="toggle('t5-7')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Option A: Gesetzliche KV (GKV) prüfen</div>
+        <div class="task-desc">Mindestbeitrag ~€215/Monat · Einkommensabhängig · Bis ca. €1.131 Einkommen/Monat → Mindestbeitrag · Einfacher Einstieg</div>
+      </div>
+    </div>
+    <div class="task" id="t5-8" onclick="toggle('t5-8')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Option B: Private KV (PKV) prüfen</div>
+        <div class="task-desc">Oft günstiger bei gutem Einkommen · Mehr Leistungen · Aber: Rückkehr zur GKV schwierig · Erst ab stabilem Einkommen</div>
+      </div>
+    </div>
+    <div class="task" id="t5-9" onclick="toggle('t5-9')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Pflegeversicherung anmelden</div>
+        <div class="task-desc">Immer zusammen mit Krankenversicherung · Automatisch bei GKV · Bei PKV separat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--o)">Altersvorsorge & Absicherung</div>
+    <div class="task" id="t5-10" onclick="toggle('t5-10')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Rentenversicherung prüfen <span class="task-badge badge-y">WICHTIG</span></div>
+        <div class="task-desc">Als Selbständiger nicht automatisch in der gesetzlichen RV · Freiwillig einzahlen möglich · Oder private Altersvorsorge</div>
+      </div>
+    </div>
+    <div class="task" id="t5-11" onclick="toggle('t5-11')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Berufsunfähigkeitsversicherung abschließen</div>
+        <div class="task-desc">Wenn du nicht mehr arbeiten kannst · Als Selbständiger besonders wichtig · Kein Arbeitgeber der einspringt</div>
+      </div>
+    </div>
+    <div class="task" id="t5-12" onclick="toggle('t5-12')">
+      <div class="task-body">
+        <div class="task-title">Rücklagen für Steuernachzahlung bilden</div>
+        <div class="task-desc">Mindestens 25–30% jedes Gewinns zur Seite legen · Steuer kommt immer · Lieber zu viel als zu wenig</div>
+      </div>
+      <div class="task-cb">✓</div>
+    </div>
+  </div>
+
+  <div class="task-group">
+    <div class="tg-title" style="color:var(--o)">Geschäftskonto & Organisation</div>
+    <div class="task" id="t5-13" onclick="toggle('t5-13')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Separates Geschäftskonto eröffnen</div>
+        <div class="task-desc">Privat und Geschäft strikt trennen · Pflicht für saubere Buchhaltung · Viele Banken kostenlos</div>
+      </div>
+    </div>
+    <div class="task" id="t5-14" onclick="toggle('t5-14')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Buchhaltungssoftware einrichten</div>
+        <div class="task-desc">z.B. Lexoffice · SevDesk · DATEV · Alle Einnahmen & Ausgaben erfassen · Für Steuerberater</div>
+      </div>
+    </div>
+    <div class="task" id="t5-15" onclick="toggle('t5-15')">
+      <div class="task-cb">✓</div>
+      <div class="task-body">
+        <div class="task-title">Alle Prop Firm Auszahlungen dokumentieren</div>
+        <div class="task-desc">Datum · Betrag · Von welcher Firma · In welcher Währung · Umrechnungskurs · Für Steuer wichtig</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info" style="border-color:rgba(255,230,0,.2);">
+    <div class="info-title" style="color:var(--y)">Monatliche Fixkosten als Selbständiger (ca.)</div>
+    <div class="info-row"><span class="info-key">Krankenversicherung GKV</span><span class="info-val" style="color:var(--r)">~€215/Monat</span></div>
+    <div class="info-row"><span class="info-key">Pflegeversicherung</span><span class="info-val" style="color:var(--r)">~€45/Monat</span></div>
+    <div class="info-row"><span class="info-key">Steuerberater</span><span class="info-val" style="color:var(--y)">~€100–200/Monat</span></div>
+    <div class="info-row"><span class="info-key">Buchhaltungssoftware</span><span class="info-val" style="color:var(--y)">~€15–30/Monat</span></div>
+    <div class="info-row"><span class="info-key">Rücklagen Steuer (25%)</span><span class="info-val" style="color:var(--r)">Variabel</span></div>
+    <div class="info-row"><span class="info-key">Gesamt Fixkosten ca.</span><span class="info-val" style="color:var(--r)">~€375–490/Monat</span></div>
+    <div class="info-row"><span class="info-key">Mindest-Einkommen Break-Even</span><span class="info-val" style="color:var(--g)">~€500–700/Monat</span></div>
+  </div>
+
+  <div class="milestone">
+    <div class="ms-icon">🇩🇪</div>
+    <div class="ms-title">Alles erledigt!</div>
+    <div class="ms-desc">Gewerbe · Steuern · KV · Altersvorsorge · Buchhaltung<br>Du bist offiziell selbständiger Trader in Deutschland 💪</div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bnav-btn" onclick="prevPhase()">‹ Zurück</button>
+  <button class="bnav-btn" onclick="resetAll()" style="flex:0.5;">↺</button>
+  <button class="bnav-btn primary" onclick="nextPhase()">Weiter ›</button>
+</div>
+
+<script>
+'use strict';
+
+const PHASES = 6;
+let currentPhase = 0;
+
+// Load state
+let state = JSON.parse(localStorage.getItem('fttm_roadmap') || '{}');
+
+// Task definitions per phase
+const phaseTasks = {
+  0: ['t0-0','t0-1','t0-2','t0-3','t0-4','t0-5','t0-6','t0-7','t0-8','t0-9'],
+  1: ['t1-0','t1-1','t1-2','t1-3','t1-4','t1-5','t1-6','t1-7','t1-8'],
+  2: ['t2-0','t2-1','t2-2','t2-3','t2-4','t2-5','t2-6','t2-7','t2-8'],
+  3: ['t3-0','t3-1','t3-2','t3-3','t3-4','t3-5','t3-6'],
+  4: ['t4-0','t4-1','t4-2'],
+  5: ['t5-0','t5-1','t5-2','t5-3','t5-4','t5-5','t5-6','t5-7','t5-8','t5-9','t5-10','t5-11','t5-12','t5-13','t5-14','t5-15'],
+};
+
+const phaseColors = ['var(--c)','var(--g)','var(--p)','var(--y)','var(--g)','var(--o)'];
+
+// Init
+function init(){
+  // Apply saved state
+  Object.keys(state).forEach(id => {
+    if(state[id]){
+      const el = document.getElementById(id);
+      if(el) applyDone(el, true);
+    }
+  });
+  updateAll();
+}
+
+function toggle(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  state[id] = !state[id];
+  localStorage.setItem('fttm_roadmap', JSON.stringify(state));
+  applyDone(el, state[id]);
+  updateAll();
+}
+
+function applyDone(el, done){
+  if(done){
+    el.classList.add('done');
+    el.querySelector('.task-cb').textContent = '✓';
+  } else {
+    el.classList.remove('done');
+    el.querySelector('.task-cb').textContent = '✓';
+  }
+}
+
+function updateAll(){
+  let totalDone = 0, totalAll = 0;
+
+  for(let p=0; p<PHASES; p++){
+    const tasks = phaseTasks[p] || [];
+    const done = tasks.filter(id => state[id]).length;
+    const pct  = tasks.length ? Math.round(done/tasks.length*100) : 0;
+    totalDone += done;
+    totalAll  += tasks.length;
+
+    const progEl = document.getElementById('prog-'+p);
+    const lblEl  = document.getElementById('prog-'+p+'-lbl');
+    const pctEl  = document.getElementById('prog-'+p+'-pct');
+    if(progEl) progEl.style.width = pct+'%';
+    if(lblEl)  lblEl.textContent  = done+' / '+tasks.length+' erledigt';
+    if(pctEl)  pctEl.textContent  = pct+'%';
+
+    // Tab state
+    const tabEl = document.getElementById('tab-'+p);
+    if(tabEl){
+      if(pct === 100) tabEl.classList.add('done');
+      else tabEl.classList.remove('done');
+    }
+  }
+
+  // Overall
+  const ovPct = totalAll ? Math.round(totalDone/totalAll*100) : 0;
+  document.getElementById('ov-fill').style.width = ovPct+'%';
+  document.getElementById('ov-pct').textContent  = ovPct+'%';
+  document.getElementById('ov-done').textContent = totalDone;
+  document.getElementById('ov-open').textContent = totalAll - totalDone;
+  document.getElementById('ov-total').textContent= totalAll;
+  document.getElementById('ov-phase').textContent= currentPhase+1;
+}
+
+function switchPhase(p){
+  for(let i=0; i<PHASES; i++){
+    const ph = document.getElementById('phase-'+i);
+    const tab = document.getElementById('tab-'+i);
+    if(ph) ph.classList.toggle('active', i===p);
+    if(tab) tab.classList.toggle('active', i===p);
+  }
+  currentPhase = p;
+  document.getElementById('ov-phase').textContent = p+1;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function nextPhase(){ if(currentPhase < PHASES-1) switchPhase(currentPhase+1); }
+function prevPhase(){ if(currentPhase > 0) switchPhase(currentPhase-1); }
+
+function resetAll(){
+  if(confirm('Alle Fortschritte zurücksetzen?')){
+    state = {};
+    localStorage.setItem('fttm_roadmap','{}');
+    document.querySelectorAll('.task').forEach(el=>{
+      el.classList.remove('done');
+    });
+    updateAll();
+  }
+}
+
+init();
+</script>
+</body>
+</html>

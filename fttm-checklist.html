@@ -230,7 +230,55 @@ body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-he
     </div>
   </div>
 
-  <!-- Account -->
+  <!-- Break-Even Box LONG -->
+  <div class="sec" id="l-be-box" style="display:none;border-color:rgba(255,230,0,.25);
+    background:linear-gradient(135deg,rgba(255,230,0,.06),rgba(255,124,42,.04));">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--y),var(--o));"></div>
+    <div class="sec-title" style="color:var(--y)">Break-Even Management</div>
+
+    <!-- BE Preise -->
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+      letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">
+      SL auf Entry verschieben wenn Preis erreicht:
+    </div>
+    <div class="calc-grid" style="margin-bottom:12px;">
+      <div class="cv" style="border-color:rgba(255,230,0,.2);">
+        <span class="cv-val" id="l-be-price" style="color:var(--y);font-size:20px;">—</span>
+        <div class="cv-lbl">Break-Even Preis</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">50% des Weges zum TP</div>
+      </div>
+      <div class="cv" style="border-color:rgba(255,124,42,.2);">
+        <span class="cv-val" id="l-be-pkt" style="color:var(--o);font-size:20px;">—</span>
+        <div class="cv-lbl">Punkte bis BE</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">ab Entry</div>
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:12px;">
+      <div class="cv" style="border-color:rgba(0,255,157,.2);">
+        <span class="cv-val" id="l-be-eur" style="color:var(--g);font-size:20px;">—</span>
+        <div class="cv-lbl">Profit bei BE-Trigger</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">in € (bei deinem Lot)</div>
+      </div>
+      <div class="cv" style="border-color:rgba(196,127,255,.2);">
+        <span class="cv-val" id="l-be-r" style="color:var(--p);font-size:20px;">—</span>
+        <div class="cv-lbl">In R-Multiplen</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">= wieviel R im Plus</div>
+      </div>
+    </div>
+
+    <!-- Stufenplan -->
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+      letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Stufenplan:</div>
+    <div id="l-be-steps" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(255,230,0,.06);
+      border:1px solid rgba(255,230,0,.15);border-radius:8px;
+      font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;">
+      ⚡ <strong style="color:var(--y)">Regel:</strong> SL nur vorwärts verschieben — niemals zurück!<br>
+      SL auf Entry = du kannst nicht mehr verlieren. Trade läuft risikolos.
+    </div>
+  </div>
   <div class="sec result">
     <div class="sec-title" style="color:var(--p)">Positionsgröße</div>
     <div class="inp-row">
@@ -347,7 +395,50 @@ body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-he
     </div>
   </div>
 
-  <div class="sec result">
+  <!-- Break-Even Box SHORT -->
+  <div class="sec" id="s-be-box" style="display:none;border-color:rgba(255,230,0,.25);
+    background:linear-gradient(135deg,rgba(255,230,0,.06),rgba(255,124,42,.04));">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--y),var(--o));"></div>
+    <div class="sec-title" style="color:var(--y)">Break-Even Management</div>
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+      letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">
+      SL auf Entry verschieben wenn Preis erreicht:
+    </div>
+    <div class="calc-grid" style="margin-bottom:12px;">
+      <div class="cv" style="border-color:rgba(255,230,0,.2);">
+        <span class="cv-val" id="s-be-price" style="color:var(--y);font-size:20px;">—</span>
+        <div class="cv-lbl">Break-Even Preis</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">50% des Weges zum TP</div>
+      </div>
+      <div class="cv" style="border-color:rgba(255,124,42,.2);">
+        <span class="cv-val" id="s-be-pkt" style="color:var(--o);font-size:20px;">—</span>
+        <div class="cv-lbl">Punkte bis BE</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">ab Entry</div>
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:12px;">
+      <div class="cv" style="border-color:rgba(0,255,157,.2);">
+        <span class="cv-val" id="s-be-eur" style="color:var(--g);font-size:20px;">—</span>
+        <div class="cv-lbl">Profit bei BE-Trigger</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">in € (bei deinem Lot)</div>
+      </div>
+      <div class="cv" style="border-color:rgba(196,127,255,.2);">
+        <span class="cv-val" id="s-be-r" style="color:var(--p);font-size:20px;">—</span>
+        <div class="cv-lbl">In R-Multiplen</div>
+        <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu);margin-top:3px;">= wieviel R im Plus</div>
+      </div>
+    </div>
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+      letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Stufenplan:</div>
+    <div id="s-be-steps" style="display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(255,230,0,.06);
+      border:1px solid rgba(255,230,0,.15);border-radius:8px;
+      font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;">
+      ⚡ <strong style="color:var(--y)">Regel:</strong> SL nur vorwärts verschieben — niemals zurück!<br>
+      SL auf Entry = du kannst nicht mehr verlieren. Trade läuft risikolos.
+    </div>
+  </div>
     <div class="sec-title" style="color:var(--p)">Positionsgröße</div>
     <div class="inp-row">
       <div class="fld">
@@ -495,7 +586,6 @@ function calcLong(){
   const risk  = +document.getElementById('l-risk').value||0;
   const slpM  = +document.getElementById('l-slp').value||0;
   const spread= +document.getElementById('l-spread').value||0;
-
   const calcEl = document.getElementById('l-calc');
 
   if(entry && atr){
@@ -508,10 +598,50 @@ function calcLong(){
     document.getElementById('l-tp-pkt').textContent = '+'+tpPkt.toFixed(1)+' Pkt';
     document.getElementById('l-sl-pkt').textContent = '-'+slPkt.toFixed(1)+' Pkt';
     calcEl.style.opacity='1';
-    // Auto-fill SL punkte
     if(!slpM) document.getElementById('l-slp').value = slPkt.toFixed(1);
+
+    // ── BREAK-EVEN CALCULATION ──
+    const beBox = document.getElementById('l-be-box');
+    beBox.style.display = 'block';
+    const totalRange = atr*2.4; // distance from entry to TP
+    const bePrice = entry + totalRange*0.5; // 50% of way to TP
+    const bePkt   = totalRange*0.5;
+
+    document.getElementById('l-be-price').textContent = bePrice.toFixed(2);
+    document.getElementById('l-be-pkt').textContent   = '+'+bePkt.toFixed(1)+' Pkt';
+
+    // Stufenplan: 25%, 50%, 75%
+    const steps = [
+      {pct:25, label:'Stufe 1 — Aufmerksam werden', col:'var(--mu)'},
+      {pct:50, label:'Stufe 2 — SL auf Break-Even', col:'var(--y)'},
+      {pct:75, label:'Stufe 3 — SL auf +1R ziehen', col:'var(--g)'},
+    ];
+    document.getElementById('l-be-steps').innerHTML = steps.map(s=>{
+      const price = entry + totalRange*(s.pct/100);
+      const pkt   = totalRange*(s.pct/100);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:9px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b1);">
+        <div style="font-family:'JetBrains Mono';font-size:10px;color:${s.col}">${s.label}</div>
+        <div style="text-align:right;">
+          <div style="font-family:'Bebas Neue';font-size:16px;color:${s.col}">${price.toFixed(2)}</div>
+          <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu)">+${pkt.toFixed(1)} Pkt</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // EUR values if account filled
+    const slpFinal = +document.getElementById('l-slp').value||0;
+    if(acc && risk && slpFinal){
+      const riskEUR = acc*risk/100;
+      const lot = Math.max(0.01, Math.round(riskEUR/slpFinal*100)/100);
+      const beEUR = bePkt * lot;
+      const beR   = bePkt / slpFinal;
+      document.getElementById('l-be-eur').textContent = '€'+beEUR.toFixed(2);
+      document.getElementById('l-be-r').textContent   = '+'+beR.toFixed(2)+'R';
+    }
   } else {
     calcEl.style.opacity='.4';
+    document.getElementById('l-be-box').style.display='none';
   }
 
   const slpFinal = +document.getElementById('l-slp').value||0;
@@ -520,9 +650,9 @@ function calcLong(){
     const lot = Math.max(0.01, Math.round(riskEUR/slpFinal*100)/100);
     const tpEUR = riskEUR*2;
     document.getElementById('l-risk-eur').textContent = '€'+riskEUR.toFixed(2);
-    document.getElementById('l-tp-eur').textContent = '€'+tpEUR.toFixed(2);
-    document.getElementById('l-lot').textContent = lot.toFixed(2)+' Lot';
-    document.getElementById('l-be').textContent = Math.round(1/(1+2)*100)+'%';
+    document.getElementById('l-tp-eur').textContent   = '€'+tpEUR.toFixed(2);
+    document.getElementById('l-lot').textContent      = lot.toFixed(2)+' Lot';
+    document.getElementById('l-be').textContent       = Math.round(1/(1+2)*100)+'%';
   }
 }
 
@@ -534,7 +664,6 @@ function calcShort(){
   const risk  = +document.getElementById('s-risk').value||0;
   const slpM  = +document.getElementById('s-slp').value||0;
   const spread= +document.getElementById('s-spread').value||0;
-
   const calcEl = document.getElementById('s-calc');
 
   if(entry && atr){
@@ -548,8 +677,47 @@ function calcShort(){
     document.getElementById('s-sl-pkt').textContent = '-'+slPkt.toFixed(1)+' Pkt';
     calcEl.style.opacity='1';
     if(!slpM) document.getElementById('s-slp').value = slPkt.toFixed(1);
+
+    // ── BREAK-EVEN CALCULATION ──
+    const beBox = document.getElementById('s-be-box');
+    beBox.style.display = 'block';
+    const totalRange = atr*2.4;
+    const bePrice = entry - totalRange*0.5; // SHORT goes down
+    const bePkt   = totalRange*0.5;
+
+    document.getElementById('s-be-price').textContent = bePrice.toFixed(2);
+    document.getElementById('s-be-pkt').textContent   = '+'+bePkt.toFixed(1)+' Pkt';
+
+    const steps = [
+      {pct:25, label:'Stufe 1 — Aufmerksam werden', col:'var(--mu)'},
+      {pct:50, label:'Stufe 2 — SL auf Break-Even', col:'var(--y)'},
+      {pct:75, label:'Stufe 3 — SL auf +1R ziehen', col:'var(--g)'},
+    ];
+    document.getElementById('s-be-steps').innerHTML = steps.map(s=>{
+      const price = entry - totalRange*(s.pct/100);
+      const pkt   = totalRange*(s.pct/100);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;
+        padding:9px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--b1);">
+        <div style="font-family:'JetBrains Mono';font-size:10px;color:${s.col}">${s.label}</div>
+        <div style="text-align:right;">
+          <div style="font-family:'Bebas Neue';font-size:16px;color:${s.col}">${price.toFixed(2)}</div>
+          <div style="font-family:'JetBrains Mono';font-size:8px;color:var(--mu)">+${pkt.toFixed(1)} Pkt</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const slpFinal = +document.getElementById('s-slp').value||0;
+    if(acc && risk && slpFinal){
+      const riskEUR = acc*risk/100;
+      const lot = Math.max(0.01, Math.round(riskEUR/slpFinal*100)/100);
+      const beEUR = bePkt * lot;
+      const beR   = bePkt / slpFinal;
+      document.getElementById('s-be-eur').textContent = '€'+beEUR.toFixed(2);
+      document.getElementById('s-be-r').textContent   = '+'+beR.toFixed(2)+'R';
+    }
   } else {
     calcEl.style.opacity='.4';
+    document.getElementById('s-be-box').style.display='none';
   }
 
   const slpFinal = +document.getElementById('s-slp').value||0;
@@ -558,9 +726,9 @@ function calcShort(){
     const lot = Math.max(0.01, Math.round(riskEUR/slpFinal*100)/100);
     const tpEUR = riskEUR*2;
     document.getElementById('s-risk-eur').textContent = '€'+riskEUR.toFixed(2);
-    document.getElementById('s-tp-eur').textContent = '€'+tpEUR.toFixed(2);
-    document.getElementById('s-lot').textContent = lot.toFixed(2)+' Lot';
-    document.getElementById('s-be').textContent = Math.round(1/(1+2)*100)+'%';
+    document.getElementById('s-tp-eur').textContent   = '€'+tpEUR.toFixed(2);
+    document.getElementById('s-lot').textContent      = lot.toFixed(2)+' Lot';
+    document.getElementById('s-be').textContent       = Math.round(1/(1+2)*100)+'%';
   }
 }
 
