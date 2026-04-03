@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FTTM — Autonomous AI Trader</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Bebas+Neue&family=Outfit:wght@400;600;700;900&display=swap');
+:root{
+  --bg:#04070d;--s1:#070d16;--s2:#0b1320;--b1:#13243a;--b2:#1a3050;
+  --c:#00f0ff;--g:#00ff9d;--r:#ff2850;--y:#ffe600;--p:#c47fff;--o:#ff7c2a;
+  --tx:#cce4ff;--mu:#2e4d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100vh;
+  background-image:linear-gradient(rgba(0,240,255,.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,240,255,.015) 1px,transparent 1px);
+  background-size:44px 44px;}
+.nav{display:flex;border-bottom:1px solid var(--b1);background:var(--s1);position:sticky;top:0;z-index:100;}
+.nav-tab{flex:1;padding:14px 4px;text-align:center;font-family:'JetBrains Mono';font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .18s;}
+.nav-tab.active{color:var(--c);border-color:var(--c);}
+.nav-tab.nt.active{color:var(--p);border-color:var(--p);}
+.nav-tab.nr.active{color:var(--g);border-color:var(--g);}
+.hdr{text-align:center;padding:20px 20px 14px;}
+.logo{font-family:'Bebas Neue';font-size:48px;letter-spacing:8px;
+  background:linear-gradient(135deg,var(--c),var(--g));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr h1{font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;margin-top:2px;}
+.hdr-tag{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;margin-top:3px;}
+.wrap{padding:0 16px 40px;}
+.page{display:none;}.page.active{display:block;}
+/* UPLOAD */
+.upload-zone{display:block;border:2px dashed var(--b2);border-radius:16px;padding:24px 16px;
+  text-align:center;cursor:pointer;transition:all .2s;background:var(--s1);
+  margin-bottom:12px;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--c);background:rgba(0,240,255,.04);}
+.upload-zone.has-img{border-style:solid;border-color:var(--c);padding:0;overflow:hidden;}
+.upload-icon{font-size:32px;margin-bottom:8px;}
+.upload-title{font-family:'Bebas Neue';font-size:18px;letter-spacing:2px;color:var(--c);margin-bottom:3px;}
+.upload-sub{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);}
+#chart-preview{width:100%;border-radius:14px;display:block;}
+.upload-overlay{position:absolute;top:8px;right:8px;background:rgba(4,7,13,.85);
+  border:1px solid var(--b2);border-radius:7px;padding:4px 9px;
+  font-family:'JetBrains Mono';font-size:9px;color:var(--mu);cursor:pointer;}
+.upload-overlay:hover{border-color:var(--r);color:var(--r);}
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:14px;margin-bottom:12px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.card.c::before{background:linear-gradient(90deg,var(--c),transparent);}
+.card.p::before{background:linear-gradient(90deg,var(--p),transparent);}
+.card.y::before{background:linear-gradient(90deg,var(--y),transparent);}
+.card.g::before{background:linear-gradient(90deg,var(--g),transparent);}
+.ct{font-family:'JetBrains Mono';font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:10px;color:var(--mu);display:flex;align-items:center;gap:6px;}
+.ct::before{content:'//';color:var(--b2);}
+/* TOGGLES */
+.tog-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tog{flex:1;min-width:80px;padding:10px 6px;border-radius:9px;border:1px solid var(--b1);
+  background:var(--s2);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;
+  text-align:center;transition:all .18s;color:var(--mu);}
+.tog.on{border-color:var(--p);color:var(--p);background:rgba(196,127,255,.08);}
+.style-desc{padding:8px 10px;background:var(--s2);border-radius:7px;
+  font-family:'JetBrains Mono';font-size:9px;color:var(--mu);line-height:1.6;margin-top:8px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.fld label{display:block;font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.fld input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;
+  color:var(--tx);padding:10px 12px;font-family:'JetBrains Mono';font-size:12px;outline:none;}
+.fld input:focus{border-color:var(--c);}
+/* MONEY RULES */
+.money-rules{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.mr{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;text-align:center;}
+.mr-v{font-family:'Bebas Neue';font-size:19px;display:block;margin-bottom:2px;}
+.mr-l{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+/* ANALYZE BTN */
+.analyze-btn{width:100%;padding:16px;border-radius:14px;border:none;cursor:pointer;
+  font-family:'Bebas Neue';font-size:22px;letter-spacing:4px;transition:all .2s;
+  background:linear-gradient(135deg,var(--c),var(--g));color:#000;
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
+.analyze-btn:disabled{opacity:.3;cursor:not-allowed;background:var(--b1);color:var(--mu);}
+.analyze-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,240,255,.3);}
+/* LOADING */
+.loading{display:none;text-align:center;padding:30px 20px;background:var(--s1);
+  border:1px solid var(--b1);border-radius:14px;margin-bottom:12px;}
+.spin{font-size:28px;animation:spin 1s linear infinite;display:block;margin-bottom:10px;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.load-txt{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.8;}
+/* RESULTS */
+.results{display:none;}
+.ampel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.amp{border-radius:12px;padding:14px 6px;text-align:center;border:2px solid;transition:all .3s;}
+.amp.buy{border-color:var(--g);background:rgba(0,255,157,.1);}
+.amp.sell{border-color:var(--r);background:rgba(255,40,80,.1);}
+.amp.wait{border-color:var(--y);background:rgba(255,230,0,.08);}
+.amp.off{border-color:var(--b1);background:var(--s2);opacity:.25;}
+.amp-dot{width:22px;height:22px;border-radius:50%;margin:0 auto 6px;border:2px solid;}
+.amp.buy .amp-dot{background:var(--g);border-color:var(--g);box-shadow:0 0 10px var(--g);}
+.amp.sell .amp-dot{background:var(--r);border-color:var(--r);box-shadow:0 0 10px var(--r);}
+.amp.wait .amp-dot{background:var(--y);border-color:var(--y);box-shadow:0 0 10px var(--y);}
+.amp.off .amp-dot{background:var(--b1);border-color:var(--b2);}
+.amp-lbl{font-family:'Bebas Neue';font-size:16px;letter-spacing:2px;}
+.amp.buy .amp-lbl{color:var(--g);}.amp.sell .amp-lbl{color:var(--r);}.amp.wait .amp-lbl{color:var(--y);}.amp.off .amp-lbl{color:var(--mu);}
+.conf-bar{background:var(--b1);border-radius:100px;height:6px;margin:6px 0 3px;overflow:hidden;}
+.conf-fill{height:100%;border-radius:100px;transition:width .5s;}
+/* STRATEGY BOX - the AI's own decision */
+.strategy-box{background:linear-gradient(135deg,rgba(0,240,255,.07),rgba(0,255,157,.03));
+  border:1px solid rgba(0,240,255,.25);border-radius:14px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;}
+.strategy-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--c),var(--g));}
+/* IND CHIPS */
+.ind-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.ind-chip{padding:5px 10px;border-radius:20px;font-family:'JetBrains Mono';font-size:9px;
+  border:1px solid;display:flex;align-items:center;gap:5px;}
+.ind-chip.bull{border-color:rgba(0,255,157,.4);color:var(--g);background:rgba(0,255,157,.06);}
+.ind-chip.bear{border-color:rgba(255,40,80,.4);color:var(--r);background:rgba(255,40,80,.06);}
+.ind-chip.neu{border-color:var(--b2);color:var(--mu);background:var(--s2);}
+/* LEVELS */
+.levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;}
+.lv{background:var(--s1);border-radius:9px;padding:10px;text-align:center;border:1px solid;}
+.lv-val{font-family:'Bebas Neue';font-size:18px;display:block;margin-bottom:2px;}
+.lv-lbl{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);letter-spacing:.5px;text-transform:uppercase;}
+/* REASONING */
+.reasoning{background:var(--s2);border-radius:9px;padding:12px;margin-top:10px;}
+.reasoning-title{font-family:'JetBrains Mono';font-size:9px;color:var(--c);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.reasoning-text{font-family:'JetBrains Mono';font-size:10px;color:var(--tx);line-height:1.7;}
+/* MARKET CONTEXT */
+.market-ctx{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.mc-item{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px;}
+.mc-label{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.mc-val{font-family:'Bebas Neue';font-size:17px;}
+/* FEEDBACK */
+.fb-box{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;margin-bottom:12px;}
+.fb-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px;}
+.fb-btn{padding:11px 4px;border-radius:9px;border:2px solid var(--b1);background:var(--s2);
+  font-family:'Bebas Neue';font-size:15px;letter-spacing:1px;cursor:pointer;text-align:center;
+  transition:all .18s;color:var(--mu);}
+.fb-btn.win.sel{border-color:var(--g);color:var(--g);background:rgba(0,255,157,.06);}
+.fb-btn.loss.sel{border-color:var(--r);color:var(--r);background:rgba(255,40,80,.06);}
+.fb-btn.skip.sel{border-color:var(--mu);color:var(--tx);}
+.fb-note{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;
+  color:var(--tx);padding:10px;font-family:'JetBrains Mono';font-size:10px;
+  outline:none;resize:none;min-height:58px;line-height:1.5;margin-bottom:8px;}
+.fb-note:focus{border-color:var(--p);}
+.fb-submit{width:100%;padding:12px;border-radius:9px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--p),rgba(77,184,255,.8));color:#fff;
+  font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;transition:all .2s;}
+.fb-submit:disabled{opacity:.3;cursor:not-allowed;}
+/* TRAINING PAGE */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px;}
+.stat{background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px;text-align:center;}
+.stat-val{font-family:'Bebas Neue';font-size:24px;display:block;margin-bottom:1px;}
+.stat-lbl{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;}
+.trade-item{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
+.t-hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.t-badge{font-family:'Bebas Neue';font-size:15px;min-width:50px;text-align:center;padding:3px 6px;border-radius:6px;flex-shrink:0;}
+.t-badge.win{background:rgba(0,255,157,.12);color:var(--g);}
+.t-badge.loss{background:rgba(255,40,80,.12);color:var(--r);}
+.t-badge.open{background:rgba(255,230,0,.1);color:var(--y);}
+.t-strat{font-family:'Outfit';font-size:12px;font-weight:700;flex:1;color:var(--c);}
+.t-del{background:none;border:none;color:var(--mu);font-size:13px;cursor:pointer;}
+.t-del:hover{color:var(--r);}
+.t-info{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);line-height:1.6;}
+.t-info .highlight{color:var(--p);}
+/* RULES PAGE */
+.rule-item{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:8px;}
+.rule-item.money{border-color:rgba(0,240,255,.2);background:rgba(0,240,255,.02);}
+.rule-item.ai{border-color:rgba(196,127,255,.2);background:rgba(196,127,255,.02);}
+.rule-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.rule-badge{font-family:'JetBrains Mono';font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:1px;}
+.rb-money{background:rgba(0,240,255,.12);color:var(--c);}
+.rb-ai{background:rgba(196,127,255,.15);color:var(--p);}
+.rule-text{font-family:'JetBrains Mono';font-size:10px;color:var(--tx);line-height:1.5;}
+.rule-del{margin-left:auto;background:none;border:none;color:var(--mu);font-size:13px;cursor:pointer;}
+.rule-del:hover{color:var(--r);}
+.btn-sm{padding:8px 13px;border-radius:7px;border:1px solid var(--b2);background:var(--s2);
+  color:var(--mu);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;letter-spacing:1px;
+  text-transform:uppercase;transition:all .18s;}
+.btn-sm:hover{border-color:var(--r);color:var(--r);}
+.empty{text-align:center;padding:28px 16px;font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:2;}
+.divider{border:none;border-top:1px solid var(--b1);margin:14px 0;}
+.rules-badge{display:none;padding:8px 12px;background:rgba(196,127,255,.07);
+  border:1px solid rgba(196,127,255,.2);border-radius:9px;margin-bottom:12px;
+  font-family:'JetBrains Mono';font-size:9px;color:var(--p);text-align:center;}
+/* REASONING STEPS */
+.step-list{list-style:none;margin-top:8px;}
+.step-list li{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(19,36,58,.5);font-family:'JetBrains Mono';font-size:10px;color:var(--tx);line-height:1.5;}
+.step-list li:last-child{border-bottom:none;}
+.step-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="switchPage('a')">🔍 Analyse</div>
+  <div class="nav-tab nt" onclick="switchPage('t')">🧠 Training</div>
+  <div class="nav-tab nr" onclick="switchPage('r')">📋 Regeln</div>
+</div>
+
+<!-- ══ ANALYSE PAGE ══ -->
+<div class="page active" id="page-a">
+<div class="hdr">
+  <div class="logo">FTTM</div>
+  <h1>Autonomous AI Trader</h1>
+  <div class="hdr-tag">// KI entscheidet selbst · Lernt aus Fehlern · Kein fixes System</div>
+</div>
+<div class="wrap">
+
+  <label for="file-input" class="upload-zone" id="upload-zone"
+    ondragover="event.preventDefault();this.classList.add('drag')"
+    ondragleave="this.classList.remove('drag')"
+    ondrop="handleDrop(event)">
+    <div id="upload-placeholder">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">MT5 Chart hochladen</div>
+      <div class="upload-sub">KI analysiert alles was sie sieht — kein fixes Setup</div>
+    </div>
+    <img id="chart-preview" style="display:none;">
+    <div class="upload-overlay" id="change-btn" style="display:none;"
+      onclick="event.preventDefault();event.stopPropagation();resetImage()">✕</div>
+  </label>
+  <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFile(this)">
+
+  <!-- MONEY MANAGEMENT — the only fixed thing -->
+  <div class="card c">
+    <div class="ct" style="color:var(--c)">Money Management — das einzige was fix ist</div>
+    <div class="money-rules">
+      <div class="mr"><span class="mr-v" style="color:var(--p)" id="rr-disp">1 : 2</span><div class="mr-l">RR Ratio</div></div>
+      <div class="mr"><span class="mr-v" style="color:var(--y)" id="risk-disp">1 %</span><div class="mr-l">Risiko/Trade</div></div>
+    </div>
+    <div style="margin-top:8px;padding:7px 10px;background:var(--s2);border-radius:7px;font-family:'JetBrains Mono';font-size:9px;color:var(--mu);">
+      Die KI wählt selbst: welche Indikatoren, welche Strategie, welcher Einstieg — je nachdem was der Markt gerade zeigt.
+    </div>
+  </div>
+
+  <!-- STYLE + ACCOUNT -->
+  <div class="card p">
+    <div class="ct" style="color:var(--p)">Handelsstil & Konto</div>
+    <div class="tog-row">
+      <div class="tog" data-val="Scalping" onclick="setStyle(this)">⚡ Scalping</div>
+      <div class="tog on" data-val="Day Trading" onclick="setStyle(this)">📈 Day Trading</div>
+      <div class="tog" data-val="Investing" onclick="setStyle(this)">🏦 Investing</div>
+    </div>
+    <div class="style-desc" id="style-desc"></div>
+    <div class="frow">
+      <div class="fld"><label>Konto (€)</label><input type="number" id="ctx-acc" placeholder="z.B. 10000" oninput="updateMoneyDisplay()"></div>
+      <div class="fld"><label>Risiko %</label><input type="number" id="ctx-risk" value="1" step="0.1" oninput="updateMoneyDisplay()"></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>RR Ratio (z.B. 2)</label><input type="number" id="ctx-rr" value="2" step="0.5" min="1" oninput="updateMoneyDisplay()"></div>
+      <div class="fld"><label>SL Punkte (Lot-Calc)</label><input type="number" id="ctx-sl" placeholder="z.B. 20" oninput="updateMoneyDisplay()"></div>
+    </div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="card y">
+    <div class="ct" style="color:var(--y)">Gemini API Key</div>
+    <div class="fld"><input type="password" id="api-key" placeholder="AIza..." oninput="saveKey(this.value)" style="font-size:12px;"></div>
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);margin-top:5px;">→ aistudio.google.com → Get API Key · Kostenlos</div>
+  </div>
+
+  <div class="rules-badge" id="rules-badge"></div>
+
+  <button class="analyze-btn" id="analyze-btn" onclick="analyzeChart()" disabled>
+    🤖 KI ANALYSIEREN LASSEN
+  </button>
+
+  <div class="loading" id="loading">
+    <span class="spin">🔄</span>
+    <div class="load-txt" id="load-txt">KI schaut auf den Chart...<br>Entscheidet selbst welche Indikatoren relevant sind...</div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <div class="fb-box" id="fb-box" style="display:none;">
+    <div class="ct" style="color:var(--p)">War die KI-Entscheidung richtig? → Sie lernt daraus</div>
+    <div class="fb-btns">
+      <div class="fb-btn win" onclick="setFB('WIN',this)">✓ WIN</div>
+      <div class="fb-btn loss" onclick="setFB('LOSS',this)">✗ LOSS</div>
+      <div class="fb-btn skip" onclick="setFB('SKIP',this)">— Offen</div>
+    </div>
+    <textarea class="fb-note" id="fb-note" placeholder="Was war falsch an der KI-Entscheidung? z.B. 'Sie hat den Gegentrend nicht erkannt', 'EMA war falsch gewählt', 'Setup war zu schwach'..."></textarea>
+    <button class="fb-submit" id="fb-submit" onclick="submitFeedback()" disabled>🧠 KI TRAINIEREN</button>
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);margin-top:6px;text-align:center;">
+      Die KI extrahiert selbst eine Regel aus deinem Feedback und wendet sie beim nächsten Chart an.
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ TRAINING PAGE ══ -->
+<div class="page" id="page-t">
+<div class="hdr">
+  <div class="logo" style="font-size:36px;letter-spacing:5px;">FTTM</div>
+  <h1>Training History</h1>
+  <div class="hdr-tag">// KI-Entscheidungen · Bewertungen · Lernfortschritt</div>
+</div>
+<div class="wrap">
+  <div class="stats-row" id="train-stats"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;">// Analyse-Log</div>
+    <button class="btn-sm" onclick="clearTraining()">🗑 Alle löschen</button>
+  </div>
+  <div id="train-list"></div>
+</div>
+</div>
+
+<!-- ══ RULES PAGE ══ -->
+<div class="page" id="page-r">
+<div class="hdr">
+  <div class="logo" style="font-size:36px;letter-spacing:5px;">FTTM</div>
+  <h1>KI Gedächtnis</h1>
+  <div class="hdr-tag">// Was die KI gelernt hat · Kein fixes System</div>
+</div>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;">// <span id="rules-count">0</span> Erkenntnisse gespeichert</div>
+    <button class="btn-sm" onclick="clearLearned()">🗑 Alles löschen</button>
+  </div>
+
+  <!-- MONEY MGMT — only fixed thing -->
+  <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--c);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">// Money Management — fix</div>
+  <div id="money-list"></div>
+
+  <hr class="divider">
+
+  <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--p);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">// Gelernt — aus Analyse-Feedback</div>
+  <div id="learned-list"></div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+const LS={
+  get:(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+};
+
+let imgB64=null,imgMime='image/jpeg';
+let currentStyle='Day Trading';
+let currentResult=null,fbResult=null;
+let trades=LS.get('fttm_trades2',[]);
+let learned=LS.get('fttm_learned2',[]);
+
+const STYLES={
+  'Scalping':{color:'var(--r)',
+    desc:'Sehr kurze Haltedauer (Minuten) · Enge SL · Schnelle Signale · Nur wenn Markt sehr klar',
+    prompt:'Trading timeframe context: SCALPING. Very short hold time (minutes). Only take crystal-clear, immediate setups.'},
+  'Day Trading':{color:'var(--c)',
+    desc:'Haltedauer Stunden · RR 1:2 Standard · Intraday schließen',
+    prompt:'Trading timeframe context: DAY TRADING. Hold hours, close within the day. Standard risk-reward.'},
+  'Investing':{color:'var(--g)',
+    desc:'Haltedauer Tage/Wochen · Große Moves · Nur starke Trendsetups',
+    prompt:'Trading timeframe context: SWING/INVESTING. Hold days to weeks. Only strong trend continuation setups.'},
+};
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded',()=>{
+  const k=localStorage.getItem('fttm_api_key');
+  if(k)document.getElementById('api-key').value=k;
+  updateStyleDesc();
+  updateBadge();
+  updateMoneyDisplay();
+  renderMoneyRules();
+});
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function saveKey(v){localStorage.setItem('fttm_api_key',v);}
+
+function updateMoneyDisplay(){
+  const rr=+document.getElementById('ctx-rr').value||2;
+  const risk=+document.getElementById('ctx-risk').value||1;
+  document.getElementById('rr-disp').textContent=`1 : ${rr}`;
+  document.getElementById('risk-disp').textContent=`${risk} %`;
+}
+
+// ── NAV ──
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const tabs=document.querySelectorAll('.nav-tab');
+  const idx=['a','t','r'].indexOf(p);
+  if(tabs[idx])tabs[idx].classList.add('active');
+  if(p==='t')renderTraining();
+  if(p==='r')renderRulesPage();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── STYLE ──
+function setStyle(el){
+  document.querySelectorAll('.tog').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  currentStyle=el.dataset.val;
+  updateStyleDesc();
+}
+function updateStyleDesc(){
+  const s=STYLES[currentStyle];
+  const el=document.getElementById('style-desc');
+  if(el&&s)el.innerHTML=`<span style="color:${s.color};font-weight:700">${currentStyle}</span> · ${s.desc}`;
+}
+
+// ── BADGE ──
+function updateBadge(){
+  const b=document.getElementById('rules-badge');
+  if(!b)return;
+  if(!learned.length){b.style.display='none';return;}
+  b.style.display='block';
+  b.innerHTML=`🧠 KI hat ${learned.length} Erkenntnis${learned.length>1?'se':''} gespeichert — fließen in die nächste Analyse ein`;
+}
+
+// ── IMAGE ──
+function handleFile(inp){
+  if(!inp.files||!inp.files[0])return;
+  const f=inp.files[0];
+  imgMime=['image/jpeg','image/png','image/gif','image/webp'].includes(f.type)?f.type:'image/jpeg';
+  const r=new FileReader();
+  r.onload=e=>{imgB64=e.target.result.split(',')[1];showPreview(e.target.result);};
+  r.readAsDataURL(f);
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(!f||!f.type.startsWith('image/'))return;
+  imgMime=f.type;
+  const r=new FileReader();
+  r.onload=ev=>{imgB64=ev.target.result.split(',')[1];showPreview(ev.target.result);};
+  r.readAsDataURL(f);
+}
+function showPreview(src){
+  document.getElementById('upload-placeholder').style.display='none';
+  const p=document.getElementById('chart-preview');
+  p.src=src;p.style.display='block';
+  document.getElementById('upload-zone').classList.add('has-img');
+  document.getElementById('change-btn').style.display='block';
+  document.getElementById('analyze-btn').disabled=false;
+  document.getElementById('fb-box').style.display='none';
+  document.getElementById('results').style.display='none';
+}
+function resetImage(){
+  imgB64=null;
+  document.getElementById('chart-preview').style.display='none';
+  document.getElementById('chart-preview').src='';
+  document.getElementById('upload-placeholder').style.display='block';
+  document.getElementById('upload-zone').classList.remove('has-img');
+  document.getElementById('change-btn').style.display='none';
+  document.getElementById('analyze-btn').disabled=true;
+  document.getElementById('results').style.display='none';
+  document.getElementById('fb-box').style.display='none';
+  document.getElementById('file-input').value='';
+}
+
+// ── BUILD PROMPT ──
+function buildPrompt(){
+  const rr=+document.getElementById('ctx-rr').value||2;
+  const risk=+document.getElementById('ctx-risk').value||1;
+  const s=STYLES[currentStyle];
+
+  // Learned insights from past feedback
+  const learnedBlock=learned.length
+    ?'\nPAST LEARNING (from previous mistakes — apply these):\n'+learned.map((r,i)=>`${i+1}. ${r.text}`).join('\n')
+    :'';
+
+  return `You are an autonomous trading AI. Look at this MT5 chart.
+
+YOUR TASK: Decide completely on your own what to do with this chart.
+- You choose which indicators to use (EMA, SMA, BB, MACD, Fibonacci, Stochastic, ADX, Ichimoku, Fractals, volume, price action, candlestick patterns — whatever fits THIS specific market situation)
+- You choose the strategy that fits THIS moment (trend-following, mean reversion, breakout, support/resistance, momentum...)
+- You explain your reasoning step by step
+- There is NO fixed strategy you must follow — adapt to what the chart shows
+
+ONLY fixed constraints (money management):
+- Risk per trade: ${risk}%
+- RR Ratio: 1:${rr} (SL and TP must respect this ratio)
+- ${s.prompt}
+${learnedBlock}
+
+Identify asset and timeframe from the chart yourself.
+
+IMPORTANT: Also read the last 20 visible candles from the chart as accurately as possible (OHLC values).
+Also give a trend forecast: where is the price likely going in the next 10-15 candles?
+
+Reply with ONLY this JSON (no markdown):
+{
+  "ampel": "BUY",
+  "confidence": 78,
+  "price": "3100",
+  "asset": "XAUUSD",
+  "timeframe": "H1",
+  "marketCondition": "BULLISH",
+  "marketType": "trending",
+  "chosenStrategy": "EMA Pullback + RSI Divergence",
+  "chosenIndicators": [
+    {"name": "EMA 20", "value": "3085", "signal": "bull", "reason": "price above, acting as support"},
+    {"name": "RSI(14)", "value": "42", "signal": "bull", "reason": "oversold, bullish divergence"}
+  ],
+  "reasoning": [
+    "Market is in uptrend — EMA stack 20>50>200 confirms",
+    "Price pulled back to EMA20 support level",
+    "RSI shows bullish divergence at 42",
+    "Hammer candle confirms buyer interest"
+  ],
+  "entry": "3100",
+  "sl": "3076",
+  "tp": "3148",
+  "trendForecast": "Bullish continuation expected toward 3180 resistance. If 3100 holds, next target 3148 then 3180.",
+  "trendTarget": "3180",
+  "candles": [
+    {"o": 3080, "h": 3095, "l": 3075, "c": 3090},
+    {"o": 3090, "h": 3105, "l": 3085, "c": 3100}
+  ],
+  "warning": ""
+}
+
+candles = last 20 candles visible in chart, oldest first, approximate OHLC values.
+Keep all strings under 70 chars. reasoning = 3-5 steps.`;
+}
+
+// ── ANALYZE ──
+async function analyzeChart(){
+  if(!imgB64){alert('Bitte Chart hochladen!');return;}
+  const apiKey=document.getElementById('api-key').value.trim();
+  if(!apiKey){alert('Bitte Gemini API Key eingeben!');return;}
+
+  document.getElementById('loading').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('fb-box').style.display='none';
+  document.getElementById('analyze-btn').disabled=true;
+  fbResult=null;
+
+  try{
+    const KNOWN=['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-flash-8b'];
+    let MODELS=KNOWN;
+    setLT('Suche verfügbare Modelle...');
+    try{
+      const lr=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if(lr.ok){
+        const ld=await lr.json();
+        if(ld.models?.length){
+          const disc=ld.models.map(m=>m.name.replace('models/','')).filter(n=>(n.includes('flash')||n.includes('pro'))&&!n.includes('embed')&&!n.includes('aqa')&&!n.includes('imagen')&&!n.includes('tts'));
+          disc.sort((a,b)=>{const s=n=>n.includes('2.5')?5:n.includes('2.0')?4:n.includes('1.5')?3:1;return s(b)-s(a);});
+          if(disc.length)MODELS=disc;
+        }
+      }
+    }catch(e){}
+
+    setLT('KI analysiert Chart selbständig...<br>Wählt Indikatoren · Bestimmt Strategie...');
+    const prompt=buildPrompt();
+    let data=null,usedModel='';
+
+    for(let mi=0;mi<MODELS.length;mi++){
+      const model=MODELS[mi];
+      setLT(`KI denkt nach...<br><span style="color:var(--c);font-size:8px">${model}</span>`);
+      const resp=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            contents:[{parts:[{inline_data:{mime_type:imgMime,data:imgB64}},{text:prompt}]}],
+            generationConfig:{temperature:0.2,maxOutputTokens:1800}
+          })}
+      );
+      const d=await resp.json();
+      if(resp.status===429||d?.error?.code===429){
+        if(mi<MODELS.length-1){setLT(`Rate Limit → wechsle zu ${MODELS[mi+1]}...`);await sleep(2000);continue;}
+        throw new Error('Rate Limit. Bitte 30s warten.');
+      }
+      if(d.error)throw new Error(`API Fehler: ${d.error.message}`);
+      if(!d.candidates?.length)throw new Error('Keine Antwort von Gemini');
+      data=d;usedModel=model;break;
+    }
+
+    if(!data)throw new Error('Keine Verbindung zu Gemini möglich.');
+
+    const raw=data.candidates[0].content.parts.map(p=>p.text||'').join('').trim();
+    let result=extractJSON(raw);
+    if(!result||typeof result!=='object'){
+      result={ampel:'WAIT',confidence:0,marketCondition:'NEUTRAL',
+        analysis:raw.substring(0,300),chosenIndicators:[],reasoning:[],warning:'Parse Fehler'};
+    }
+    currentResult={...result,style:currentStyle,model:usedModel,timestamp:Date.now()};
+
+    document.getElementById('loading').style.display='none';
+    document.getElementById('analyze-btn').disabled=false;
+    showResults(result,usedModel);
+    document.getElementById('fb-box').style.display='block';
+    document.getElementById('fb-submit').disabled=true;
+    document.getElementById('fb-note').value='';
+    document.querySelectorAll('.fb-btn').forEach(b=>b.classList.remove('sel'));
+
+  }catch(err){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('analyze-btn').disabled=false;
+    const isRL=err.message.includes('Rate Limit')||err.message.includes('429');
+    document.getElementById('results').innerHTML=`
+      <div style="background:${isRL?'rgba(255,230,0,.07)':'rgba(255,40,80,.08)'};
+        border:1px solid ${isRL?'rgba(255,230,0,.3)':'rgba(255,40,80,.3)'};
+        border-radius:12px;padding:18px;font-family:'JetBrains Mono';font-size:11px;
+        color:${isRL?'var(--y)':'var(--r)'};text-align:center;line-height:1.8;">
+        ${isRL?'⏱':'✗'} ${err.message}</div>`;
+    document.getElementById('results').style.display='block';
+  }
+}
+
+function setLT(t){document.getElementById('load-txt').innerHTML=t;}
+
+// ── SHOW RESULTS ──
+function showResults(r,model){
+  const ampel=(r.ampel||'WAIT').toUpperCase();
+  const conf=Math.max(0,Math.min(100,r.confidence||0));
+  const inds=Array.isArray(r.chosenIndicators)?r.chosenIndicators:[];
+  const steps=Array.isArray(r.reasoning)?r.reasoning:[];
+  const condCol=r.marketCondition==='BULLISH'?'var(--g)':r.marketCondition==='BEARISH'?'var(--r)':'var(--mu)';
+  const si=STYLES[currentStyle]||STYLES['Day Trading'];
+  const isLong=ampel==='BUY';
+  const sigCol=isLong?'var(--g)':ampel==='SELL'?'var(--r)':'var(--y)';
+
+  let h='<div class="ampel">';
+  ['BUY','WAIT','SELL'].forEach(a=>{
+    const isA=ampel===a;
+    const cls=isA?(a==='BUY'?'buy':a==='SELL'?'sell':'wait'):'off';
+    h+=`<div class="amp ${cls}"><div class="amp-dot"></div><div class="amp-lbl">${a}</div></div>`;
+  });
+  h+='</div>';
+
+  // CONFIDENCE
+  const cc=conf>=70?'var(--g)':conf>=45?'var(--y)':'var(--r)';
+  h+=`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <span style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;">KI Konfidenz</span>
+      <span style="font-family:'Bebas Neue';font-size:20px;color:${cc}">${conf}%</span>
+    </div>
+    <div class="conf-bar"><div class="conf-fill" style="width:${conf}%;background:${cc}"></div></div>
+  </div>`;
+
+  // PRICE + CONTEXT
+  if(r.price){
+    const mtLabel=r.marketType||'';
+    h+=`<div style="text-align:center;background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:13px;margin-bottom:10px;">
+      <span style="font-family:'Bebas Neue';font-size:34px;color:var(--c);">${r.price}</span>
+      <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:2px;margin-top:3px;">
+        <span style="color:var(--tx)">${r.asset||'—'}</span> ·
+        <span style="color:var(--tx)">${r.timeframe||'—'}</span> ·
+        <span style="color:${condCol}">${r.marketCondition||'NEUTRAL'}</span>
+        ${mtLabel?` · <span style="color:var(--o)">${mtLabel}</span>`:''}
+      </div>
+      <div style="margin-top:5px;display:inline-block;padding:3px 10px;background:rgba(0,0,0,.4);border-radius:5px;font-family:'JetBrains Mono';font-size:9px;color:${si.color};">${currentStyle}</div>
+    </div>`;
+  }
+
+  // STRATEGY BOX — the AI's autonomous decision
+  if(r.chosenStrategy){
+    h+=`<div class="strategy-box">
+      <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--c);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">// KI hat gewählt</div>
+      <div style="font-family:'Bebas Neue';font-size:24px;letter-spacing:2px;color:${sigCol};margin-bottom:10px;">${r.chosenStrategy}</div>`;
+
+    // Chosen indicators as chips
+    if(inds.length){
+      h+='<div class="ind-chips">';
+      inds.forEach(ind=>{
+        const sig=ind.signal||'neu';
+        const cls=sig==='bull'?'bull':sig==='bear'?'bear':'neu';
+        const dot=sig==='bull'?'▲':sig==='bear'?'▼':'●';
+        h+=`<div class="ind-chip ${cls}">${dot} ${ind.name||'?'}: <strong>${ind.value||'?'}</strong></div>`;
+      });
+      h+='</div>';
+    }
+
+    // Entry/SL/TP
+    if(r.entry||r.sl||r.tp){
+      h+=`<div class="levels">
+        <div class="lv" style="border-color:rgba(0,240,255,.2);"><span class="lv-val" style="color:var(--c)">${r.entry||'—'}</span><div class="lv-lbl">Entry</div></div>
+        <div class="lv" style="border-color:rgba(255,40,80,.2);"><span class="lv-val" style="color:var(--r)">${r.sl||'—'}</span><div class="lv-lbl">Stop Loss</div></div>
+        <div class="lv" style="border-color:rgba(0,255,157,.2);"><span class="lv-val" style="color:var(--g)">${r.tp||'—'}</span><div class="lv-lbl">Take Profit</div></div>
+      </div>`;
+    }
+
+    // Reasoning steps
+    if(steps.length){
+      h+=`<div class="reasoning">
+        <div class="reasoning-title">// Warum die KI so entschieden hat</div>
+        <ul class="step-list">`;
+      steps.forEach((step,i)=>{
+        h+=`<li><span class="step-dot" style="background:var(--c);opacity:${1-i*0.15}"></span>${step}</li>`;
+      });
+      h+=`</ul></div>`;
+    }
+
+    h+='</div>';
+  }
+
+  // Indicator detail (if no strategy box shown)
+  if(!r.chosenStrategy&&inds.length){
+    h+=`<div style="font-family:'JetBrains Mono';font-size:9px;color:var(--p);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;">// Verwendete Indikatoren</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">`;
+    inds.forEach(ind=>{
+      const sig=ind.signal||'neu';
+      const cls=sig==='bull'?'bull':sig==='bear'?'bear':'neu';
+      h+=`<div class="ind-chip ${cls}">📊 ${ind.name||'?'}: ${ind.value||'?'}</div>`;
+    });
+    h+='</div>';
+  }
+
+  // Warning
+  if(r.warning){
+    h+=`<div style="background:rgba(255,230,0,.06);border:1px solid rgba(255,230,0,.2);border-radius:9px;padding:10px 12px;margin-bottom:10px;font-family:'JetBrains Mono';font-size:10px;color:var(--y);">⚠️ ${r.warning}</div>`;
+  }
+
+  h+=`<div style="margin-top:10px;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:8px;font-family:'JetBrains Mono';font-size:8px;color:var(--mu);text-align:center;">⚠ KI-Analyse ist keine Handelsempfehlung · ${model}</div>`;
+
+  // GENERATED TRADE CHART
+  if((r.entry||r.sl||r.tp) && r.ampel!=='WAIT'){
+    h+=`<div style="background:var(--s1);border:1px solid rgba(0,240,255,.2);border-radius:14px;
+      padding:14px;margin-top:12px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c),var(--g))"></div>
+      <div style="font-family:'JetBrains Mono';font-size:9px;color:var(--c);letter-spacing:2px;
+        text-transform:uppercase;margin-bottom:10px;">// Trade Setup Chart</div>
+      <canvas id="trade-chart" style="width:100%;border-radius:8px;display:block;background:#030509;"></canvas>
+      ${r.trendForecast?`<div style="margin-top:10px;padding:9px 12px;background:var(--s2);border-radius:8px;
+        font-family:'JetBrains Mono';font-size:10px;color:var(--tx);line-height:1.6;border-left:3px solid ${sigCol};">
+        <span style="color:${sigCol};font-weight:700">Trendprognose:</span> ${r.trendForecast}
+      </div>`:''}
+      <button onclick="exportChartPNG()" style="width:100%;margin-top:10px;padding:12px;border-radius:9px;
+        border:none;cursor:pointer;background:linear-gradient(135deg,var(--p),rgba(77,184,255,.8));
+        color:#fff;font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;
+        display:flex;align-items:center;justify-content:center;gap:8px;">
+        📸 ALS PNG SPEICHERN
+      </button>
+    </div>`;
+  }
+
+  const el=document.getElementById('results');
+  el.innerHTML=h;
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Draw chart after DOM update
+  if((r.entry||r.sl||r.tp) && r.ampel!=='WAIT'){
+    setTimeout(()=>drawTradeSetupChart(r), 100);
+  }
+}
+
+// ── TRADE SETUP CHART ──
+function drawTradeSetupChart(r){
+  const canvas=document.getElementById('trade-chart');
+  if(!canvas)return;
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth-28;
+  const H=Math.round(W*0.65);
+  canvas.width=W; canvas.height=H;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#030509'; ctx.fillRect(0,0,W,H);
+
+  const candles=Array.isArray(r.candles)&&r.candles.length>=3?r.candles:null;
+  const entry=parseFloat(r.entry)||0;
+  const sl=parseFloat(r.sl)||0;
+  const tp=parseFloat(r.tp)||0;
+  const isLong=(r.ampel||'BUY').toUpperCase()==='BUY';
+  const trendTarget=parseFloat(r.trendTarget)||0;
+
+  // Price range
+  let prices=[entry,sl,tp];
+  if(candles) candles.forEach(c=>{prices.push(c.h,c.l);});
+  if(trendTarget) prices.push(trendTarget);
+  const pMin=Math.min(...prices)-(Math.max(...prices)-Math.min(...prices))*0.1;
+  const pMax=Math.max(...prices)+(Math.max(...prices)-Math.min(...prices))*0.15;
+  const pRange=pMax-pMin||1;
+
+  const pd={t:16,r:62,b:20,l:8};
+  const cW=W-pd.l-pd.r, cH=H-pd.t-pd.b;
+  const py=p=>pd.t+(1-(p-pMin)/pRange)*cH;
+
+  // Total columns: candles + 8 forecast
+  const totalCols=(candles?candles.length:20)+8;
+  const bw=Math.max(4,Math.floor(cW/totalCols)-2);
+  const cx=i=>pd.l+(i/(totalCols))*cW+bw/2;
+
+  // Grid
+  ctx.strokeStyle='rgba(19,36,58,.8)'; ctx.lineWidth=1;
+  for(let g=0;g<=5;g++){
+    const p=pMin+(g/5)*pRange, y=py(p);
+    ctx.beginPath(); ctx.moveTo(pd.l,y); ctx.lineTo(W-pd.r,y); ctx.stroke();
+    ctx.fillStyle='#2e4d6a'; ctx.font='9px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText(p.toFixed(1),W-pd.r+4,y+3);
+  }
+
+  // Draw candles if available
+  if(candles){
+    candles.forEach((c,i)=>{
+      const x=cx(i);
+      const bull=c.c>=c.o;
+      const oY=py(c.o),cY=py(c.c),hY=py(c.h),lY=py(c.l);
+      const bodyH=Math.max(1,Math.abs(cY-oY));
+      ctx.strokeStyle=bull?'rgba(0,255,157,.7)':'rgba(255,40,80,.7)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x,hY); ctx.lineTo(x,Math.min(oY,cY)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x,lY); ctx.lineTo(x,Math.max(oY,cY)); ctx.stroke();
+      ctx.fillStyle=bull?'rgba(0,255,157,.8)':'rgba(255,40,80,.8)';
+      ctx.fillRect(x-bw/2,Math.min(oY,cY),bw,bodyH);
+    });
+  }
+
+  const entryX=candles?cx(candles.length-1):cx(12);
+  const forecastStartX=entryX+bw;
+
+  // Forecast zone shading
+  ctx.fillStyle='rgba(0,240,255,.025)';
+  ctx.fillRect(forecastStartX,pd.t,W-pd.r-forecastStartX,cH);
+
+  // TP line (dashed green)
+  if(tp){
+    const y=py(tp);
+    ctx.setLineDash([8,4]); ctx.strokeStyle='rgba(0,255,157,.8)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(entryX,y); ctx.lineTo(W-pd.r,y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='var(--g)'; ctx.font='bold 9px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText('TP '+tp,W-pd.r+4,y+3);
+    // TP area fill
+    ctx.fillStyle='rgba(0,255,157,.04)';
+    ctx.fillRect(entryX,y,W-pd.r-entryX,py(entry)-y);
+  }
+
+  // SL line (dashed red)
+  if(sl){
+    const y=py(sl);
+    ctx.setLineDash([8,4]); ctx.strokeStyle='rgba(255,40,80,.8)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(entryX,y); ctx.lineTo(W-pd.r,y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='var(--r)'; ctx.font='bold 9px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText('SL '+sl,W-pd.r+4,y+3);
+    // SL area fill
+    ctx.fillStyle='rgba(255,40,80,.04)';
+    ctx.fillRect(entryX,py(entry),W-pd.r-entryX,y-py(entry));
+  }
+
+  // Entry line (cyan solid)
+  if(entry){
+    const y=py(entry);
+    ctx.strokeStyle='rgba(0,240,255,.9)'; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(entryX-bw,y); ctx.lineTo(W-pd.r,y); ctx.stroke();
+    ctx.fillStyle='var(--c)'; ctx.font='bold 9px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText('Entry '+entry,W-pd.r+4,y+3);
+    // Entry arrow
+    ctx.fillStyle=isLong?'var(--g)':'var(--r)';
+    ctx.font='bold 16px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(isLong?'▲':'▼', entryX, isLong?py(entry)+18:py(entry)-10);
+  }
+
+  // Trend arrow / forecast line
+  if(trendTarget&&tp){
+    const forecastEndX=cx(totalCols-2);
+    ctx.beginPath();
+    ctx.strokeStyle=isLong?'rgba(0,255,157,.4)':'rgba(255,40,80,.4)';
+    ctx.lineWidth=1.5; ctx.setLineDash([4,6]);
+    ctx.moveTo(entryX,py(entry));
+    // Curve through TP toward target
+    ctx.bezierCurveTo(
+      forecastStartX+(forecastEndX-forecastStartX)*0.3, py(entry)+(py(tp)-py(entry))*0.2,
+      forecastStartX+(forecastEndX-forecastStartX)*0.7, py(tp)+(py(trendTarget)-py(tp))*0.3,
+      forecastEndX, py(trendTarget)
+    );
+    ctx.stroke(); ctx.setLineDash([]);
+    // Target dot
+    ctx.beginPath(); ctx.arc(forecastEndX,py(trendTarget),5,0,Math.PI*2);
+    ctx.fillStyle=isLong?'var(--g)':'var(--r)'; ctx.fill();
+    ctx.fillStyle='var(--y)'; ctx.font='bold 8px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText('~'+trendTarget, forecastEndX, py(trendTarget)-10);
+  }
+
+  // "JETZT" label
+  ctx.fillStyle='rgba(0,240,255,.6)'; ctx.font='bold 8px JetBrains Mono';
+  ctx.textAlign='center';
+  ctx.fillText('JETZT', entryX, pd.t+10);
+
+  // FORECAST label
+  ctx.fillStyle='rgba(0,240,255,.25)'; ctx.font='8px JetBrains Mono';
+  ctx.textAlign='center';
+  ctx.fillText('◄── FORECAST ──►', forecastStartX+(W-pd.r-forecastStartX)/2, pd.t+10);
+
+  // Asset + signal label top left
+  ctx.fillStyle='var(--c)'; ctx.font='bold 11px JetBrains Mono';
+  ctx.textAlign='left';
+  ctx.fillText(`${r.asset||''}  ${r.timeframe||''}  ${r.ampel}  ${r.chosenStrategy||''}`, pd.l+4, pd.t+10);
+}
+
+function exportChartPNG(){
+  const canvas=document.getElementById('trade-chart');
+  if(!canvas)return;
+  // Create composite with header
+  const out=document.createElement('canvas');
+  out.width=canvas.width;
+  out.height=canvas.height+44;
+  const ctx=out.getContext('2d');
+  // Header
+  ctx.fillStyle='#04070d'; ctx.fillRect(0,0,out.width,44);
+  ctx.fillStyle='#00f0ff'; ctx.font='bold 13px JetBrains Mono,monospace';
+  ctx.textAlign='left';
+  const r=currentResult||{};
+  ctx.fillText(`FTTM · ${r.asset||''} ${r.timeframe||''} · ${r.ampel||''} · Entry:${r.entry||'?'} SL:${r.sl||'?'} TP:${r.tp||'?'}`, 12, 16);
+  ctx.fillStyle='#2e4d6a'; ctx.font='9px JetBrains Mono';
+  ctx.fillText(`${r.chosenStrategy||''} · Konfidenz: ${r.confidence||0}% · ${new Date().toLocaleDateString('de-DE')}`, 12, 32);
+  // Chart
+  ctx.drawImage(canvas,0,44);
+  // Watermark
+  ctx.fillStyle='rgba(46,77,106,.4)'; ctx.font='8px JetBrains Mono'; ctx.textAlign='right';
+  ctx.fillText('FTTM Analyzer · timmy2413.github.io', out.width-10, out.height-6);
+  // Download
+  const a=document.createElement('a');
+  a.href=out.toDataURL('image/png');
+  a.download=`FTTM_${r.asset||'chart'}_${r.ampel||'setup'}_${Date.now()}.png`;
+  a.click();
+}
+
+// ── FEEDBACK ──
+function setFB(val,el){
+  fbResult=val;
+  document.querySelectorAll('.fb-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('fb-submit').disabled=(val==='SKIP');
+  document.getElementById('fb-note').placeholder=
+    val==='LOSS'?'Was war falsch? z.B. "Gegentrend nicht erkannt", "EMA falsch interpretiert", "Setup zu schwach"...'
+    :val==='WIN'?'Optional: Was hat die KI gut gemacht?':'';
+}
+
+async function submitFeedback(){
+  if(!fbResult||fbResult==='SKIP')return;
+  const note=document.getElementById('fb-note').value.trim();
+  const apiKey=document.getElementById('api-key').value.trim();
+  const btn=document.getElementById('fb-submit');
+  btn.disabled=true;btn.textContent='🔄 Lerne...';
+
+  const trade={
+    id:Date.now(),result:fbResult,note,style:currentStyle,
+    ampel:currentResult?.ampel||'?',
+    asset:currentResult?.asset||'?',
+    tf:currentResult?.timeframe||'?',
+    conf:currentResult?.confidence||0,
+    chosenStrategy:currentResult?.chosenStrategy||'?',
+    reasoning:currentResult?.reasoning||[],
+    timestamp:Date.now()
+  };
+  trades.unshift(trade);
+  LS.set('fttm_trades2',trades);
+
+  if(fbResult==='LOSS'&&note&&apiKey){
+    try{
+      const rp=`A trading AI autonomously chose a strategy and got it wrong.
+
+AI chose: "${currentResult?.chosenStrategy||'unknown'}"
+AI reasoning: ${(currentResult?.reasoning||[]).join(' | ')}
+Result: LOSS
+Trader feedback: "${note}"
+
+Write ONE short insight/rule (max 120 chars) the AI should remember for future charts.
+Focus on WHAT pattern or condition the AI should recognize better.
+Start with "Wenn" or "Kein Trade wenn" or "Vorsicht bei" or "Besser" or "Immer prüfen ob".
+Reply ONLY with the rule text, nothing else.`;
+
+      const resp=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({contents:[{parts:[{text:rp}]}],generationConfig:{temperature:0.1,maxOutputTokens:150}})}
+      );
+      const d=await resp.json();
+      if(d.candidates?.length){
+        const rt=d.candidates[0].content.parts.map(p=>p.text||'').join('').trim().replace(/^["']|["']$/g,'').substring(0,150);
+        if(rt.length>10){
+          learned.unshift({id:Date.now(),text:rt,tradeId:trade.id,
+            strategy:currentResult?.chosenStrategy||'?',note,timestamp:Date.now()});
+          LS.set('fttm_learned2',learned);
+          updateBadge();
+          btn.textContent='✓ Gelernt!';
+          btn.style.background='linear-gradient(135deg,var(--g),#00c96e)';
+          btn.style.color='#000';
+          setTimeout(()=>{
+            document.getElementById('fb-box').style.display='none';
+            btn.style.background='';btn.style.color='';btn.textContent='🧠 KI TRAINIEREN';btn.disabled=true;
+          },2200);
+          return;
+        }
+      }
+    }catch(e){console.log('Rule fail:',e);}
+  }
+  btn.textContent='✓ Gespeichert!';
+  setTimeout(()=>{document.getElementById('fb-box').style.display='none';btn.textContent='🧠 KI TRAINIEREN';btn.disabled=true;},1500);
+}
+
+// ── TRAINING PAGE ──
+function renderTraining(){
+  const w=trades.filter(t=>t.result==='WIN').length;
+  const l=trades.filter(t=>t.result==='LOSS').length;
+  const tot=trades.length;
+  const wr=tot>0?Math.round(w/tot*100):0;
+  document.getElementById('train-stats').innerHTML=`
+    <div class="stat"><span class="stat-val" style="color:var(--g)">${w}</span><div class="stat-lbl">Wins</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--r)">${l}</span><div class="stat-lbl">Losses</div></div>
+    <div class="stat"><span class="stat-val" style="color:${wr>=55?'var(--g)':wr>=40?'var(--y)':'var(--r)'}">${wr}%</span><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat"><span class="stat-val" style="color:var(--p)">${learned.length}</span><div class="stat-lbl">Erkenntn.</div></div>`;
+
+  const el=document.getElementById('train-list');
+  if(!trades.length){el.innerHTML=`<div class="empty">Noch keine Analysen bewertet.<br>Lass die KI einen Chart analysieren → gib Feedback → sie lernt.</div>`;return;}
+  el.innerHTML=trades.map(t=>{
+    const d=new Date(t.timestamp);
+    const ds=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    const bc=t.result==='WIN'?'win':t.result==='LOSS'?'loss':'open';
+    const bl=t.result==='WIN'?'WIN':t.result==='LOSS'?'LOSS':'OFFEN';
+    const steps=(t.reasoning||[]).slice(0,2).join(' · ');
+    return `<div class="trade-item">
+      <div class="t-hdr">
+        <div class="t-badge ${bc}">${bl}</div>
+        <div class="t-strat">${t.chosenStrategy||'—'}</div>
+        <button class="t-del" onclick="delTrade(${t.id})">🗑</button>
+      </div>
+      <div class="t-info">
+        <span>${t.asset||'—'} ${t.tf||''} · ${t.style||''} · ${t.conf}% Konf.</span><br>
+        ${steps?`<span>${steps}</span><br>`:''}
+        ${t.note?`<span class="highlight">💬 "${t.note}"</span><br>`:''}
+        <span>${ds}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function delTrade(id){trades=trades.filter(t=>t.id!==id);LS.set('fttm_trades2',trades);renderTraining();}
+function clearTraining(){if(confirm('Alle löschen?')){trades=[];LS.set('fttm_trades2',[]);renderTraining();}}
+
+// ── RULES / MEMORY PAGE ──
+function renderMoneyRules(){
+  const rr=+document.getElementById('ctx-rr')?.value||2;
+  const risk=+document.getElementById('ctx-risk')?.value||1;
+  const ml=document.getElementById('money-list');
+  if(!ml)return;
+  ml.innerHTML=[
+    `RR Ratio: 1:${rr} — SL und TP müssen dieses Verhältnis einhalten.`,
+    `Risiko pro Trade: ${risk}% des Kontos.`,
+    `SL und TP werden ATR-basiert berechnet.`,
+    `Die KI wählt selbst welche Indikatoren und welche Strategie zum Markt passt.`
+  ].map(t=>`<div class="rule-item money">
+    <div class="rule-hdr"><span class="rule-badge rb-money">MONEY MGMT</span></div>
+    <div class="rule-text">${t}</div>
+  </div>`).join('');
+}
+function renderRulesPage(){
+  renderMoneyRules();
+  const total=4+learned.length;
+  const rc=document.getElementById('rules-count');
+  if(rc)rc.textContent=total;
+  const ll=document.getElementById('learned-list');
+  if(!ll)return;
+  if(!learned.length){ll.innerHTML=`<div class="empty">Noch keine Erkenntnisse.<br>Die KI lernt automatisch wenn du LOSS-Feedback mit Kommentar gibst.</div>`;return;}
+  ll.innerHTML=learned.map(r=>{
+    const d=new Date(r.timestamp);
+    const ds=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    return `<div class="rule-item ai">
+      <div class="rule-hdr">
+        <span class="rule-badge rb-ai">GELERNT</span>
+        <span style="font-family:'JetBrains Mono';font-size:9px;color:var(--mu)">${ds} · aus: ${r.strategy||'?'}</span>
+        <button class="rule-del" onclick="delRule(${r.id})">🗑</button>
+      </div>
+      <div class="rule-text">${r.text}</div>
+      ${r.note?`<div style="margin-top:4px;font-family:'JetBrains Mono';font-size:9px;color:var(--mu);">Feedback: "${r.note}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+function delRule(id){learned=learned.filter(r=>r.id!==id);LS.set('fttm_learned2',learned);updateBadge();renderRulesPage();}
+function clearLearned(){if(confirm('Alle Erkenntnisse löschen?')){learned=[];LS.set('fttm_learned2',[]);updateBadge();renderRulesPage();}}
+
+// ── JSON EXTRACTOR ──
+function extractJSON(raw){
+  let t=raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const s=t.indexOf('{');if(s===-1)return null;
+  t=t.substring(s);
+  let d=0,inS=false,esc=false,end=-1;
+  for(let i=0;i<t.length;i++){const c=t[i];if(esc){esc=false;continue;}if(c==='\\'&&inS){esc=true;continue;}if(c==='"'){inS=!inS;continue;}if(inS)continue;if(c==='{')d++;if(c==='}'){d--;if(d===0){end=i;break;}}}
+  if(end!==-1){try{return JSON.parse(t.substring(0,end+1));}catch(e){}}
+  let p=end!==-1?t.substring(0,end+1):t;
+  let inS2=false,esc2=false;
+  for(let i=0;i<p.length;i++){if(esc2){esc2=false;continue;}if(p[i]==='\\'&&inS2){esc2=true;continue;}if(p[i]==='"')inS2=!inS2;}
+  if(inS2)p+='"';p=p.replace(/,\s*$/,'');
+  let d2=0,a2=0,inS3=false,esc3=false;
+  for(let i=0;i<p.length;i++){if(esc3){esc3=false;continue;}if(p[i]==='\\'&&inS3){esc3=true;continue;}if(p[i]==='"'){inS3=!inS3;continue;}if(inS3)continue;if(p[i]==='{')d2++;if(p[i]==='}')d2--;if(p[i]==='[')a2++;if(p[i]===']')a2--;}
+  while(a2-->0)p+=']';while(d2-->0)p+='}';
+  try{return JSON.parse(p);}catch(e){}
+  const r={ampel:'WAIT',confidence:0,chosenIndicators:[],reasoning:[],marketCondition:'NEUTRAL'};
+  const am=t.match(/"ampel"\s*:\s*"(BUY|SELL|WAIT)"/i);if(am)r.ampel=am[1];
+  const pm=t.match(/"price"\s*:\s*"?([\d.]+)"?/);if(pm)r.price=pm[1];
+  const cm=t.match(/"confidence"\s*:\s*(\d+)/);if(cm)r.confidence=+cm[1];
+  const mc=t.match(/"marketCondition"\s*:\s*"([^"]+)"/);if(mc)r.marketCondition=mc[1];
+  const cs=t.match(/"chosenStrategy"\s*:\s*"([^"]+)"/);if(cs)r.chosenStrategy=cs[1];
+  const as=t.match(/"asset"\s*:\s*"([^"]+)"/);if(as)r.asset=as[1];
+  const tf=t.match(/"timeframe"\s*:\s*"([^"]+)"/);if(tf)r.timeframe=tf[1];
+  const en=t.match(/"entry"\s*:\s*"?([\d.]+)"?/);if(en)r.entry=en[1];
+  const sl=t.match(/"sl"\s*:\s*"?([\d.]+)"?/);if(sl)r.sl=sl[1];
+  const tp=t.match(/"tp"\s*:\s*"?([\d.]+)"?/);if(tp)r.tp=tp[1];
+  return r;
+}
+</script>
+</body>
+</html>
