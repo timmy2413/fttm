@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FTTM — Prop Firm Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Bebas+Neue&family=Outfit:wght@400;600;700;900&display=swap');
+:root{
+  --bg:#04070d;--s1:#070d16;--s2:#0b1320;--b1:#13243a;--b2:#1a3050;
+  --c:#00f0ff;--g:#00ff9d;--r:#ff2850;--y:#ffe600;--p:#c47fff;--o:#ff7c2a;
+  --tx:#cce4ff;--mu:#2e4d6a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;min-height:100vh;
+  background-image:linear-gradient(rgba(0,240,255,.012) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,240,255,.012) 1px,transparent 1px);
+  background-size:44px 44px;padding-bottom:40px;}
+
+.hdr{background:var(--s1);border-bottom:1px solid var(--b1);padding:16px 18px;
+  display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Bebas Neue';font-size:28px;letter-spacing:5px;
+  background:linear-gradient(135deg,var(--c),var(--g));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr-sub{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);letter-spacing:2px;}
+
+.wrap{padding:16px;}
+
+/* AMPEL */
+.ampel-big{border-radius:20px;padding:20px;margin-bottom:14px;text-align:center;
+  border:2px solid;position:relative;overflow:hidden;}
+.ampel-big::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.ampel-big.green{border-color:var(--g);background:rgba(0,255,157,.06);}
+.ampel-big.green::before{background:linear-gradient(90deg,var(--g),var(--c));}
+.ampel-big.yellow{border-color:var(--y);background:rgba(255,230,0,.05);}
+.ampel-big.yellow::before{background:linear-gradient(90deg,var(--y),var(--o));}
+.ampel-big.red{border-color:var(--r);background:rgba(255,40,80,.07);}
+.ampel-big.red::before{background:linear-gradient(90deg,var(--r),var(--o));}
+.ampel-icon{font-size:44px;margin-bottom:8px;}
+.ampel-label{font-family:'Bebas Neue';font-size:32px;letter-spacing:4px;margin-bottom:4px;}
+.ampel-msg{font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:1.6;}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+  padding:14px;margin-bottom:12px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.cc::before{background:linear-gradient(90deg,var(--c),transparent);}
+.cg::before{background:linear-gradient(90deg,var(--g),transparent);}
+.cr::before{background:linear(90deg,var(--r),transparent);}
+.cy::before{background:linear-gradient(90deg,var(--y),transparent);}
+.cp::before{background:linear-gradient(90deg,var(--p),transparent);}
+.ct{font-family:'JetBrains Mono';font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:12px;color:var(--mu);display:flex;align-items:center;gap:6px;}
+.ct::before{content:'//';color:var(--b2);}
+
+/* PROGRESS */
+.prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.prog-label{font-family:'JetBrains Mono';font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+.prog-val{font-family:'Bebas Neue';font-size:18px;}
+.prog-bar{background:var(--b1);border-radius:100px;height:8px;overflow:hidden;margin-bottom:12px;}
+.prog-fill{height:100%;border-radius:100px;transition:width .5s;}
+
+/* STATS GRID */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;}
+.sbox{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px;text-align:center;}
+.sbox-v{font-family:'Bebas Neue';font-size:26px;display:block;margin-bottom:2px;}
+.sbox-l{font-family:'JetBrains Mono';font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+
+/* INPUTS */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.fld label{display:block;font-family:'JetBrains Mono';font-size:9px;color:var(--mu);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.fld input,.fld select{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:8px;
+  color:var(--tx);padding:10px 12px;font-family:'JetBrains Mono';font-size:12px;outline:none;}
+.fld input:focus,.fld select:focus{border-color:var(--c);}
+.fld select option{background:var(--s2);}
+
+/* BUTTONS */
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.btn{padding:12px;border-radius:10px;border:none;cursor:pointer;font-family:'Bebas Neue';
+  font-size:18px;letter-spacing:2px;transition:all .18s;}
+.btn-w{background:linear-gradient(135deg,var(--g),var(--c));color:#000;}
+.btn-l{background:linear-gradient(135deg,var(--r),var(--o));color:#fff;}
+.btn:active{transform:scale(.97);}
+
+.btn-full{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--p),rgba(77,184,255,.8));color:#fff;
+  margin-top:10px;transition:all .18s;}
+.btn-full:active{transform:scale(.98);}
+
+/* TRADE LOG */
+.titem{background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.tbadge{font-family:'Bebas Neue';font-size:13px;min-width:50px;text-align:center;
+  padding:3px 6px;border-radius:6px;flex-shrink:0;}
+.tbadge.w{background:rgba(0,255,157,.12);color:var(--g);}
+.tbadge.l{background:rgba(255,40,80,.12);color:var(--r);}
+.tbadge.o{background:rgba(255,230,0,.1);color:var(--y);}
+.tinfo{flex:1;font-family:'JetBrains Mono';font-size:9px;color:var(--mu);line-height:1.5;}
+.tpnl{font-family:'Bebas Neue';font-size:16px;}
+.tdel{background:none;border:none;color:var(--mu);cursor:pointer;font-size:14px;padding:4px;}
+.tdel:hover{color:var(--r);}
+
+.empty{text-align:center;padding:24px;font-family:'JetBrains Mono';font-size:10px;color:var(--mu);line-height:2;}
+
+/* RESET */
+.reset-btn{width:100%;padding:10px;border-radius:8px;border:1px solid var(--b2);
+  background:var(--s2);color:var(--mu);font-family:'JetBrains Mono';font-size:9px;
+  cursor:pointer;letter-spacing:2px;text-transform:uppercase;margin-top:8px;}
+.reset-btn:hover{border-color:var(--r);color:var(--r);}
+
+/* EQUITY CHART */
+#eq-canvas{width:100%;border-radius:8px;background:#030509;display:block;}
+
+/* DAY BADGE */
+.day-badge{display:inline-block;padding:3px 10px;border-radius:5px;
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="logo">FTTM</div>
+    <div class="hdr-sub">Prop Firm Tracker</div>
+  </div>
+  <div style="text-align:right;">
+    <div id="hdr-date" style="font-family:'JetBrains Mono';font-size:10px;color:var(--c);"></div>
+    <div id="hdr-time" style="font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--tx);"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- AMPEL -->
+  <div class="ampel-big green" id="ampel-box">
+    <div class="ampel-icon" id="ampel-icon">🟢</div>
+    <div class="ampel-label" id="ampel-label">BEREIT</div>
+    <div class="ampel-msg" id="ampel-msg">Kein Trade heute noch. Viel Erfolg!</div>
+  </div>
+
+  <!-- DAILY LOSS -->
+  <div class="card cc">
+    <div class="ct" style="color:var(--c)">Daily Loss Limit</div>
+    <div class="prog-row">
+      <div class="prog-label">Verbraucht heute</div>
+      <div class="prog-val" id="dl-used" style="color:var(--g)">$0</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="dl-bar" style="width:0%;background:var(--g)"></div></div>
+    <div class="sgrid">
+      <div class="sbox">
+        <span class="sbox-v" id="dl-remain" style="color:var(--g)">$500</span>
+        <div class="sbox-l">Noch verfügbar</div>
+      </div>
+      <div class="sbox">
+        <span class="sbox-v" id="dl-limit" style="color:var(--r)">$500</span>
+        <div class="sbox-l">Tages-Limit (5%)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFIT TARGET -->
+  <div class="card cg">
+    <div class="ct" style="color:var(--g)">Profit Target</div>
+    <div class="prog-row">
+      <div class="prog-label">Erreicht</div>
+      <div class="prog-val" id="pt-reached" style="color:var(--g)">$0</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="pt-bar" style="width:0%;background:var(--g)"></div></div>
+    <div class="sgrid">
+      <div class="sbox">
+        <span class="sbox-v" id="pt-remain" style="color:var(--c)">$500</span>
+        <div class="sbox-l">Noch benötigt</div>
+      </div>
+      <div class="sbox">
+        <span class="sbox-v" id="pt-target" style="color:var(--g)">$500</span>
+        <div class="sbox-l">Ziel (5%)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAX LOSS -->
+  <div class="card cy">
+    <div class="ct" style="color:var(--y)">Max Loss (Gesamt)</div>
+    <div class="prog-row">
+      <div class="prog-label">Gesamtverlust</div>
+      <div class="prog-val" id="ml-used" style="color:var(--g)">$0</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="ml-bar" style="width:0%;background:var(--g)"></div></div>
+    <div class="sgrid">
+      <div class="sbox">
+        <span class="sbox-v" id="ml-remain" style="color:var(--g)">$1000</span>
+        <div class="sbox-l">Noch verfügbar</div>
+      </div>
+      <div class="sbox">
+        <span class="sbox-v" id="ml-limit" style="color:var(--r)">$1000</span>
+        <div class="sbox-l">Max Loss (10%)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EQUITY CHART -->
+  <div class="card cc">
+    <div class="ct" style="color:var(--c)">Equity Kurve</div>
+    <canvas id="eq-canvas" height="120"></canvas>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="card cp">
+    <div class="ct" style="color:var(--p)">Konto Einstellungen</div>
+    <div class="frow">
+      <div class="fld"><label>Startkapital ($)</label>
+        <input type="number" id="cfg-bal" value="10000" min="1000" onchange="saveConfig()"></div>
+      <div class="fld"><label>Challenge Typ</label>
+        <select id="cfg-type" onchange="saveConfig()">
+          <option value="2step">2-Step (5% Ziel)</option>
+          <option value="1step">1-Step (10% Ziel)</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>Risiko % / Trade</label>
+        <input type="number" id="cfg-risk" value="1" step="0.1" min="0.1" onchange="saveConfig()"></div>
+      <div class="fld"><label>Handelsphase</label>
+        <select id="cfg-phase" onchange="saveConfig()">
+          <option value="challenge">Phase 1 — Challenge</option>
+          <option value="verification">Phase 2 — Verification</option>
+          <option value="account">FTMO Account</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TRADE -->
+  <div class="card cc">
+    <div class="ct" style="color:var(--c)">Trade eintragen</div>
+    <div class="frow">
+      <div class="fld"><label>Asset</label>
+        <input type="text" id="tr-asset" placeholder="XAUUSD" value="XAUUSD"></div>
+      <div class="fld"><label>Ergebnis</label>
+        <select id="tr-result">
+          <option value="WIN">WIN</option>
+          <option value="LOSS">LOSS</option>
+          <option value="OPEN">OFFEN</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>P&L ($)</label>
+        <input type="number" id="tr-pnl" placeholder="z.B. 85 oder -42" step="0.01"></div>
+      <div class="fld"><label>Lots</label>
+        <input type="number" id="tr-lots" placeholder="z.B. 0.03" step="0.01" value="0.03"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-w" onclick="addTrade('WIN')">✓ WIN</button>
+      <button class="btn btn-l" onclick="addTrade('LOSS')">✗ LOSS</button>
+    </div>
+    <button class="btn-full" onclick="addTrade('OPEN')">— OFFEN (noch läuft)</button>
+  </div>
+
+  <!-- TRADE LOG -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="ct" style="margin-bottom:0;">Trade Log</div>
+      <button class="reset-btn" style="width:auto;margin:0;padding:5px 10px;" onclick="resetDay()">↺ Neuer Tag</button>
+    </div>
+    <div id="trade-list"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="card cp">
+    <div class="ct" style="color:var(--p)">Session Statistik</div>
+    <div class="sgrid">
+      <div class="sbox"><span class="sbox-v" id="st-wr" style="color:var(--g)">0%</span><div class="sbox-l">Win Rate</div></div>
+      <div class="sbox"><span class="sbox-v" id="st-trades" style="color:var(--c)">0</span><div class="sbox-l">Trades heute</div></div>
+      <div class="sbox"><span class="sbox-v" id="st-pnl" style="color:var(--g)">$0</span><div class="sbox-l">PnL heute</div></div>
+      <div class="sbox"><span class="sbox-v" id="st-total" style="color:var(--p)">$0</span><div class="sbox-l">PnL gesamt</div></div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()" style="border-color:rgba(255,40,80,.3);color:var(--r);">
+    🗑 ALLES ZURÜCKSETZEN (Challenge neu starten)
+  </button>
+
+</div>
+
+<script>
+'use strict';
+
+const S = {
+  g: (k,d) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch(e){return d;} },
+  s: (k,v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+let cfg = S.g('fttm_pt_cfg', { bal:10000, type:'2step', risk:1, phase:'challenge' });
+let trades = S.g('fttm_pt_trades', []);
+let allTrades = S.g('fttm_pt_all', []); // all-time for equity curve
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cfg-bal').value = cfg.bal;
+  document.getElementById('cfg-type').value = cfg.type;
+  document.getElementById('cfg-risk').value = cfg.risk;
+  document.getElementById('cfg-phase').value = cfg.phase;
+  updateClock();
+  setInterval(updateClock, 1000);
+  render();
+});
+
+function saveConfig() {
+  cfg.bal   = +document.getElementById('cfg-bal').value || 10000;
+  cfg.type  = document.getElementById('cfg-type').value;
+  cfg.risk  = +document.getElementById('cfg-risk').value || 1;
+  cfg.phase = document.getElementById('cfg-phase').value;
+  S.s('fttm_pt_cfg', cfg);
+  render();
+}
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hdr-time').textContent =
+    now.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('de-DE', {weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ── ADD TRADE ──
+function addTrade(forceResult) {
+  const asset  = document.getElementById('tr-asset').value.trim() || 'XAUUSD';
+  const result = forceResult || document.getElementById('tr-result').value;
+  const pnl    = parseFloat(document.getElementById('tr-pnl').value) || 0;
+  const lots   = parseFloat(document.getElementById('tr-lots').value) || 0.03;
+
+  const trade = {
+    id: Date.now(),
+    asset, result,
+    pnl: result === 'OPEN' ? 0 : pnl,
+    lots,
+    time: new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}),
+    date: new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'})
+  };
+
+  trades.unshift(trade);
+  allTrades.unshift(trade);
+  S.s('fttm_pt_trades', trades);
+  S.s('fttm_pt_all', allTrades);
+
+  // Reset inputs
+  document.getElementById('tr-pnl').value = '';
+  render();
+}
+
+function delTrade(id) {
+  trades = trades.filter(t => t.id !== id);
+  allTrades = allTrades.filter(t => t.id !== id);
+  S.s('fttm_pt_trades', trades);
+  S.s('fttm_pt_all', allTrades);
+  render();
+}
+
+function resetDay() {
+  if (confirm('Neuer Tag — heutige Trades archivieren?')) {
+    trades = [];
+    S.s('fttm_pt_trades', []);
+    render();
+  }
+}
+
+function resetAll() {
+  if (confirm('ALLES löschen und Challenge neu starten?')) {
+    trades = []; allTrades = [];
+    S.s('fttm_pt_trades', []);
+    S.s('fttm_pt_all', []);
+    render();
+  }
+}
+
+// ── RENDER ──
+function render() {
+  const bal = cfg.bal;
+  const isOneStep = cfg.type === '1step';
+  const isVerification = cfg.phase === 'verification';
+
+  // Limits
+  const dailyLimit   = bal * 0.05;          // 5% daily loss
+  const maxLossLimit = bal * 0.10;          // 10% max loss
+  const profitTarget = bal * (isVerification ? 0.05 : isOneStep ? 0.10 : 0.05);
+
+  // Today's P&L
+  const closedToday = trades.filter(t => t.result !== 'OPEN');
+  const dailyPnL    = closedToday.reduce((a,t) => a + (t.pnl||0), 0);
+  const dailyLoss   = Math.max(0, -dailyPnL);
+  const dailyGain   = Math.max(0, dailyPnL);
+
+  // All-time P&L
+  const totalPnL    = allTrades.filter(t => t.result !== 'OPEN').reduce((a,t) => a + (t.pnl||0), 0);
+  const totalLoss   = Math.max(0, -totalPnL);
+  const totalGain   = Math.max(0, totalPnL);
+
+  // Win rate today
+  const wins   = closedToday.filter(t => t.result === 'WIN').length;
+  const losses = closedToday.filter(t => t.result === 'LOSS').length;
+  const wr     = (wins + losses) > 0 ? Math.round(wins/(wins+losses)*100) : 0;
+
+  // ── DAILY LOSS ──
+  const dlPct  = Math.min(100, (dailyLoss / dailyLimit) * 100);
+  const dlRemain = Math.max(0, dailyLimit - dailyLoss);
+  const dlColor  = dlPct < 50 ? 'var(--g)' : dlPct < 80 ? 'var(--y)' : 'var(--r)';
+
+  document.getElementById('dl-used').textContent    = fmt(dailyLoss);
+  document.getElementById('dl-used').style.color    = dlColor;
+  document.getElementById('dl-bar').style.width     = dlPct + '%';
+  document.getElementById('dl-bar').style.background= dlColor;
+  document.getElementById('dl-remain').textContent  = fmt(dlRemain);
+  document.getElementById('dl-remain').style.color  = dlColor;
+  document.getElementById('dl-limit').textContent   = fmt(dailyLimit);
+
+  // ── PROFIT TARGET ──
+  const ptPct    = Math.min(100, (totalGain / profitTarget) * 100);
+  const ptRemain = Math.max(0, profitTarget - totalGain);
+  const ptColor  = ptPct >= 100 ? 'var(--g)' : ptPct >= 50 ? 'var(--c)' : 'var(--mu)';
+
+  document.getElementById('pt-reached').textContent = fmt(totalGain);
+  document.getElementById('pt-reached').style.color = ptPct >= 100 ? 'var(--g)' : 'var(--c)';
+  document.getElementById('pt-bar').style.width      = ptPct + '%';
+  document.getElementById('pt-bar').style.background = ptColor;
+  document.getElementById('pt-remain').textContent   = fmt(ptRemain);
+  document.getElementById('pt-target').textContent   = fmt(profitTarget);
+
+  // ── MAX LOSS ──
+  const mlPct    = Math.min(100, (totalLoss / maxLossLimit) * 100);
+  const mlRemain = Math.max(0, maxLossLimit - totalLoss);
+  const mlColor  = mlPct < 50 ? 'var(--g)' : mlPct < 80 ? 'var(--y)' : 'var(--r)';
+
+  document.getElementById('ml-used').textContent    = fmt(totalLoss);
+  document.getElementById('ml-used').style.color    = mlColor;
+  document.getElementById('ml-bar').style.width     = mlPct + '%';
+  document.getElementById('ml-bar').style.background= mlColor;
+  document.getElementById('ml-remain').textContent  = fmt(mlRemain);
+  document.getElementById('ml-remain').style.color  = mlColor;
+  document.getElementById('ml-limit').textContent   = fmt(maxLossLimit);
+
+  // ── STATS ──
+  document.getElementById('st-wr').textContent    = wr + '%';
+  document.getElementById('st-wr').style.color    = wr >= 55 ? 'var(--g)' : wr >= 40 ? 'var(--y)' : 'var(--r)';
+  document.getElementById('st-trades').textContent = closedToday.length;
+  document.getElementById('st-pnl').textContent   = fmtSigned(dailyPnL);
+  document.getElementById('st-pnl').style.color   = dailyPnL >= 0 ? 'var(--g)' : 'var(--r)';
+  document.getElementById('st-total').textContent  = fmtSigned(totalPnL);
+  document.getElementById('st-total').style.color  = totalPnL >= 0 ? 'var(--g)' : 'var(--r)';
+
+  // ── AMPEL ──
+  const ampelBox   = document.getElementById('ampel-box');
+  const ampelIcon  = document.getElementById('ampel-icon');
+  const ampelLabel = document.getElementById('ampel-label');
+  const ampelMsg   = document.getElementById('ampel-msg');
+
+  const dailyLossReached = dailyLoss >= dailyLimit;
+  const maxLossReached   = totalLoss >= maxLossLimit;
+  const targetReached    = totalGain >= profitTarget;
+
+  if (maxLossReached) {
+    setAmpel('red', '🔴', 'CHALLENGE VERLOREN', 'Max Loss überschritten. Challenge gescheitert.');
+  } else if (dailyLossReached) {
+    setAmpel('red', '🔴', 'STOPP — HEUTE FERTIG', 'Daily Loss Limit erreicht. Heute keine Trades mehr!');
+  } else if (targetReached) {
+    setAmpel('green', '🏆', 'ZIEL ERREICHT!', 'Profit Target geschafft! Phase ' + (cfg.phase === 'challenge' ? '1' : '2') + ' bestanden!');
+  } else if (dlPct >= 80) {
+    setAmpel('yellow', '🟡', 'VORSICHT', `Daily Loss fast erreicht! Nur noch ${fmt(dlRemain)} übrig. Heute max. 1 Trade.`);
+  } else if (dlPct >= 50) {
+    setAmpel('yellow', '🟡', 'AUFPASSEN', `${fmt(dlRemain)} Daily Loss noch verfügbar. Vorsichtig traden.`);
+  } else if (closedToday.length >= 3) {
+    setAmpel('yellow', '🟡', 'GENUG FÜR HEUTE', `${closedToday.length} Trades heute. Überleg ob ein weiterer nötig ist.`);
+  } else {
+    setAmpel('green', '🟢', 'BEREIT ZU TRADEN', `${fmt(dlRemain)} Daily Loss frei · Ziel noch ${fmt(ptRemain)} · ${cfg.phase === 'challenge' ? 'Phase 1' : 'Phase 2'}`);
+  }
+
+  // ── TRADE LOG ──
+  const tl = document.getElementById('trade-list');
+  if (!trades.length) {
+    tl.innerHTML = '<div class="empty">Noch keine Trades heute.<br>Trag deinen ersten Trade ein!</div>';
+  } else {
+    tl.innerHTML = trades.map(t => {
+      const bc   = t.result === 'WIN' ? 'w' : t.result === 'LOSS' ? 'l' : 'o';
+      const pnlC = t.pnl > 0 ? 'var(--g)' : t.pnl < 0 ? 'var(--r)' : 'var(--mu)';
+      return `<div class="titem">
+        <div class="tbadge ${bc}">${t.result}</div>
+        <div class="tinfo">${t.asset} · ${t.lots} Lots · ${t.time}<br>${t.date}</div>
+        <div class="tpnl" style="color:${pnlC}">${t.result==='OPEN'?'LÄUFT':fmtSigned(t.pnl)}</div>
+        <button class="tdel" onclick="delTrade(${t.id})">🗑</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ── EQUITY CURVE ──
+  drawEquity(bal, allTrades);
+}
+
+function setAmpel(cls, icon, label, msg) {
+  const box = document.getElementById('ampel-box');
+  box.className = 'ampel-big ' + cls;
+  document.getElementById('ampel-icon').textContent  = icon;
+  document.getElementById('ampel-label').textContent = label;
+  document.getElementById('ampel-msg').textContent   = msg;
+}
+
+// ── EQUITY CURVE ──
+function drawEquity(bal, allT) {
+  const canvas = document.getElementById('eq-canvas');
+  canvas.width  = canvas.parentElement.clientWidth - 28;
+  canvas.height = 120;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#030509'; ctx.fillRect(0,0,W,H);
+
+  const closed = [...allT].reverse().filter(t => t.result !== 'OPEN');
+  if (!closed.length) {
+    ctx.fillStyle = 'var(--mu)'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+    ctx.fillText('Noch keine Trades', W/2, H/2);
+    return;
+  }
+
+  let eq = bal;
+  const pts = [eq, ...closed.map(t => { eq += (t.pnl||0); return Math.max(0,eq); })];
+  const mn = Math.min(...pts), mx = Math.max(...pts), rng = mx - mn || 1;
+
+  const pd = {t:14,r:12,b:18,l:52};
+  const cW = W-pd.l-pd.r, cH = H-pd.t-pd.b;
+  const tx = i => pd.l + (i/(pts.length-1||1))*cW;
+  const ty = v => pd.t + (1-(v-mn)/rng)*cH;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(19,36,58,.8)'; ctx.lineWidth = 1;
+  [0,.25,.5,.75,1].forEach(f => {
+    const v = mn+f*rng, y = ty(v);
+    ctx.beginPath(); ctx.moveTo(pd.l,y); ctx.lineTo(W-pd.r,y); ctx.stroke();
+    ctx.fillStyle='#2e4d6a'; ctx.font='8px JetBrains Mono'; ctx.textAlign='right';
+    ctx.fillText('$'+Math.round(v), pd.l-4, y+3);
+  });
+
+  // Start line
+  const zy = ty(bal);
+  ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pd.l,zy); ctx.lineTo(W-pd.r,zy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const last = pts[pts.length-1];
+  const isUp = last >= bal;
+
+  // Fill
+  const gr = ctx.createLinearGradient(0,pd.t,0,pd.t+cH);
+  gr.addColorStop(0, isUp?'rgba(0,255,157,.2)':'rgba(255,40,80,.2)');
+  gr.addColorStop(1, isUp?'rgba(0,255,157,.01)':'rgba(255,40,80,.01)');
+  ctx.beginPath(); ctx.moveTo(tx(0),ty(pts[0]));
+  pts.forEach((p,i) => ctx.lineTo(tx(i),ty(p)));
+  ctx.lineTo(tx(pts.length-1),H-pd.b); ctx.lineTo(tx(0),H-pd.b); ctx.closePath();
+  ctx.fillStyle = gr; ctx.fill();
+
+  // Line
+  ctx.beginPath(); ctx.strokeStyle = isUp?'#00ff9d':'#ff2850'; ctx.lineWidth = 2;
+  pts.forEach((p,i) => i===0?ctx.moveTo(tx(i),ty(p)):ctx.lineTo(tx(i),ty(p)));
+  ctx.stroke();
+}
+
+// ── HELPERS ──
+function fmt(v) { return '$' + Math.abs(v).toFixed(2); }
+function fmtSigned(v) { return (v>=0?'+$':'-$') + Math.abs(v).toFixed(2); }
+</script>
+</body>
+</html>
