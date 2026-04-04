@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Schichtplan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1018;--s1:#141820;--s2:#1a1f2e;--s3:#222840;--border:#252d42;--accent:#f0a500;--blue:#3b82f6;--purple:#8b5cf6;--green:#22c55e;--red:#ef4444;--orange:#f97316;--text:#e8eaf0;--muted:#5a6380;--muted2:#8892aa;--mono:'DM Mono',monospace;--head:'Syne',sans-serif;--body:'DM Sans',sans-serif;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.app-header{background:var(--s1);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:60}
+.app-header h1{font-family:var(--head);font-size:1.15rem}
+.shift-badge{font-family:var(--mono);font-size:0.68rem;color:var(--accent);background:rgba(240,165,0,.12);padding:3px 8px;border-radius:5px;border:1px solid rgba(240,165,0,.25);white-space:nowrap}
+.header-right{margin-left:auto}
+.date-input{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:0.78rem;font-family:var(--mono);outline:none;width:120px}
+
+/* TABS */
+.tab-bar{display:flex;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:50}
+.tab{flex:1;padding:13px 4px;text-align:center;font-size:0.68rem;font-family:var(--mono);letter-spacing:1.5px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;user-select:none}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.page{display:none;padding:14px 14px 90px}
+.page.active{display:block}
+
+/* INPUTS */
+input[type=text],input[type=date],input[type=number],select{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:var(--r);font-family:var(--body);font-size:0.9rem;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue)}
+.field{margin-bottom:12px}
+.fl{font-size:0.72rem;color:var(--muted2);margin-bottom:5px;display:block;letter-spacing:.5px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* BUTTONS */
+.btn{padding:10px 16px;border-radius:var(--r);font-family:var(--body);font-size:0.88rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:7px;user-select:none}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:active{background:#ca8c00}
+.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.btn-ai{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;width:100%;justify-content:center;padding:13px;font-size:0.92rem;border-radius:12px}
+.btn-block{width:100%;justify-content:center}
+
+/* SECTION TITLE */
+.stitle{font-family:var(--mono);font-size:0.62rem;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase;margin:18px 0 10px}
+.stitle:first-child{margin-top:0}
+
+/* MACHINE GRID */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.mcard{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all .15s;user-select:none}
+.mcard.on{border-color:var(--accent);background:rgba(240,165,0,.07)}
+.mcard.on .mn{color:var(--accent)}
+.mn{font-family:var(--mono);font-size:0.92rem;font-weight:500}
+.ms{font-size:0.7rem;color:var(--muted);margin-top:2px}
+.m-status{font-size:0.62rem;margin-top:7px;padding:2px 6px;border-radius:4px;display:inline-block;background:var(--s3);color:var(--muted)}
+.mcard.on .m-status{background:rgba(240,165,0,.15);color:var(--accent)}
+
+/* MACHINE CONFIG BLOCK */
+.mcfg{margin-bottom:12px;background:var(--s2);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.mcfg-head{padding:10px 14px;background:var(--s3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mcfg-title{font-family:var(--mono);font-size:0.82rem;font-weight:600}
+.mcfg-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+/* output badge */
+.obadge{font-family:var(--mono);font-size:0.7rem;padding:3px 9px;border-radius:6px;border:1px solid;white-space:nowrap}
+.ob-hi{background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.3)}
+.ob-md{background:rgba(249,115,22,.12);color:var(--orange);border-color:rgba(249,115,22,.3)}
+.ob-lo{background:rgba(34,197,94,.12);color:var(--green);border-color:rgba(34,197,94,.3)}
+.ob-none{background:var(--s3);color:var(--muted);border-color:var(--border)}
+
+/* inline input row */
+.irow{display:flex;align-items:center;gap:8px}
+.irow label{font-size:0.72rem;color:var(--muted2);white-space:nowrap;flex-shrink:0;min-width:90px}
+.irow input{flex:1;padding:8px 10px;font-family:var(--mono);font-size:0.85rem}
+.irow span{font-size:0.72rem;color:var(--muted2);white-space:nowrap}
+
+/* LENGTH PILLS */
+.lpills{display:flex;gap:6px;flex-wrap:wrap}
+.lpill{padding:5px 10px;border-radius:6px;font-family:var(--mono);font-size:0.72rem;border:1px solid var(--border);background:var(--s3);color:var(--muted2);cursor:pointer;user-select:none;transition:all .15s}
+.lpill.sel{border-color:var(--blue);background:rgba(59,130,246,.13);color:var(--blue)}
+
+/* LENGTH DETAIL */
+.ldetail{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.ldet-row{background:var(--s3);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.ldet-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ldet-name{font-family:var(--mono);font-size:0.78rem;font-weight:500}
+.container-tag{font-size:0.65rem;padding:2px 7px;border-radius:4px;font-family:var(--mono)}
+.ct-hrv{background:rgba(139,92,246,.15);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.ct-ep{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.ldet-calc{font-size:0.72rem;color:var(--muted2);line-height:1.8;margin-top:4px}
+.ldet-calc b{color:var(--text);font-family:var(--mono)}
+
+/* SUMMARY BOX */
+.summary-box{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.sb-title{font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.sb-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.82rem}
+.sb-row:last-child{border-bottom:none}
+.sb-label{color:var(--muted2)}
+.sb-val{font-family:var(--mono);font-weight:500}
+.sb-total{border-top:1px solid var(--border);padding-top:10px;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+.sb-total-lbl{font-size:0.8rem;color:var(--muted2)}
+.sb-total-val{font-family:var(--mono);font-size:1.1rem;font-weight:500;color:var(--accent)}
+
+/* THRESHOLD */
+.thr-box{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.thr-hint{font-size:0.78rem;color:var(--muted2);margin-top:8px;line-height:1.6}
+
+/* STATUS BAR */
+.sbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.sitem{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center}
+.sval{font-family:var(--mono);font-size:1.2rem;font-weight:500}
+.slbl{font-size:0.68rem;color:var(--muted2);margin-top:2px}
+.sv-g{color:var(--green)}.sv-o{color:var(--accent)}.sv-r{color:var(--red)}
+
+/* PLAN STATIONS */
+.station-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.shead{padding:11px 14px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sicon{font-size:1rem}
+.sname{font-family:var(--mono);font-size:0.8rem;font-weight:500;flex:1}
+.npill{font-size:0.65rem;font-family:var(--mono);padding:2px 7px;border-radius:8px}
+.np-ok{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.np-w{background:rgba(240,165,0,.15);color:var(--accent);border:1px solid rgba(240,165,0,.3)}
+.np-e{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.sreason{font-size:0.62rem;color:var(--muted);width:100%;padding-left:26px;margin-top:-2px;padding-bottom:2px}
+.sslots{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.slot{background:var(--s2);border:1.5px dashed var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;min-height:50px;transition:all .2s}
+.slot.filled{border-style:solid;border-color:var(--border)}
+.sl-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;flex-shrink:0}
+.sl-info{flex:1;min-width:0}
+.sl-name{font-size:0.85rem;font-weight:500}
+.sl-sub{font-size:0.68rem;color:var(--muted2)}
+.sl-rm{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:4px 6px}
+.sl-rm:active{color:var(--red)}
+.asgn-sel{background:transparent;border:none;color:var(--text);font-family:var(--body);font-size:0.85rem;flex:1;outline:none;cursor:pointer;-webkit-appearance:none}
+.asgn-sel option{background:var(--s2)}
+
+/* UNASSIGNED */
+.unassigned-box{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:0.78rem;display:flex;align-items:center;gap:6px}
+
+/* AI PANEL */
+.ai-panel{background:var(--s1);border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:14px;margin-top:12px;display:none}
+.ai-panel.show{display:block}
+.aph{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ap-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.ap-lbl{font-family:var(--mono);font-size:0.65rem;letter-spacing:2px;color:var(--blue)}
+.ai-body{font-size:0.85rem;line-height:1.75;color:var(--text);white-space:pre-wrap}
+.ai-btns{display:flex;gap:8px;margin-top:12px}
+
+/* EMP CARDS */
+.emp-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.emp-card:active{background:var(--s3)}
+.emp-card.absent{opacity:.4}
+.avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.78rem;font-weight:700;flex-shrink:0}
+.emp-info{flex:1;min-width:0}
+.enr{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.emp-name{font-size:0.88rem;font-weight:500}
+.rbadge{font-size:0.62rem;font-family:var(--mono);padding:2px 6px;border-radius:4px}
+.rtl{background:rgba(240,165,0,.15);color:var(--accent);border:1px solid rgba(240,165,0,.3)}
+.rtlv{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.rop{background:rgba(139,92,246,.15);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.rhelfer{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.edots{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.sdot{width:7px;height:7px;border-radius:50%}
+.abs-btn{font-size:0.68rem;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.emp-card.absent .abs-btn{border-color:var(--red);color:var(--red)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:flex-end;justify-content:center;z-index:200}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:20px 16px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto}
+.mhandle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
+.modal h3{font-family:var(--head);font-size:1.05rem;margin-bottom:16px}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtns .btn{flex:1;justify-content:center}
+.role-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.role-opt{padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s2);text-align:center;cursor:pointer;user-select:none;transition:all .15s}
+.role-opt.on{border-color:var(--accent);background:rgba(240,165,0,.08)}
+.ro-icon{font-size:1.3rem;margin-bottom:4px}
+.ro-lbl{font-size:0.68rem;font-family:var(--mono);color:var(--muted2)}
+.role-opt.on .ro-lbl{color:var(--accent)}
+.schips{display:flex;gap:6px;flex-wrap:wrap}
+.schip{padding:7px 12px;border-radius:7px;font-size:0.78rem;border:1px solid var(--border);background:var(--s2);color:var(--muted2);cursor:pointer;user-select:none;transition:all .15s;display:flex;align-items:center;gap:5px}
+.schip.on{border-color:var(--blue);background:rgba(59,130,246,.1);color:var(--blue)}
+.info-box{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:0.78rem;color:var(--muted2);line-height:1.6;margin-top:8px}
+
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-hint{text-align:center;color:var(--muted);padding:40px 20px;font-size:0.85rem;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <span style="font-size:1.2rem">⚙️</span>
+  <h1>Schichtplan</h1>
+  <span class="shift-badge" id="shiftBadge">Frühschicht</span>
+  <div class="header-right">
+    <input type="date" class="date-input" id="datePicker"/>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('setup')">Setup</div>
+  <div class="tab" onclick="switchTab('plan')">Einteilung</div>
+  <div class="tab" onclick="switchTab('team')">Team</div>
+</div>
+
+<!-- ══ SETUP ══ -->
+<div class="page active" id="page-setup">
+
+  <div class="field">
+    <label class="fl">Schichttyp</label>
+    <select id="shiftType" onchange="document.getElementById('shiftBadge').textContent=this.value">
+      <option>Frühschicht</option><option>Spätschicht</option><option>Nachtschicht</option>
+    </select>
+  </div>
+
+  <div class="stitle">Aktive Maschinen</div>
+  <div class="mgrid" id="machineGrid"></div>
+
+  <div id="machineConfigs"></div>
+
+</div>
+
+<!-- ══ PLAN ══ -->
+<div class="page" id="page-plan">
+  <div class="sbar" id="statusBar"></div>
+  <div id="outputSummary"></div>
+  <button class="btn btn-ai" id="aiBtn" onclick="runAI()">✨ KI-Einteilung vorschlagen</button>
+  <div class="ai-panel" id="aiPanel">
+    <div class="aph"><div class="ap-dot"></div><span class="ap-lbl">KI-VORSCHLAG</span></div>
+    <div class="ai-body" id="aiText"></div>
+    <div class="ai-btns">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" id="aiApply" onclick="applyAI()">Übernehmen</button>
+      <button class="btn btn-ghost" onclick="this.closest('.ai-panel').classList.remove('show')">✕</button>
+    </div>
+  </div>
+  <div id="unassignedSection"></div>
+  <div id="planGrid"></div>
+</div>
+
+<!-- ══ TEAM ══ -->
+<div class="page" id="page-team">
+  <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openAddEmp()">+ Mitarbeiter hinzufügen</button>
+  <div id="empList"></div>
+</div>
+
+<!-- ══ EMP MODAL ══ -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <h3 id="empModalTitle">Mitarbeiter hinzufügen</h3>
+    <div class="field">
+      <label class="fl">Name</label>
+      <input type="text" id="empNameInput" placeholder="Vor- und Nachname"/>
+    </div>
+    <div class="field">
+      <label class="fl">Rolle</label>
+      <div class="role-opts">
+        <div class="role-opt on" data-role="Helfer" onclick="setRole('Helfer')"><div class="ro-icon">🙋</div><div class="ro-lbl">Helfer</div></div>
+        <div class="role-opt" data-role="OP" onclick="setRole('OP')"><div class="ro-icon">🔩</div><div class="ro-lbl">OP</div></div>
+        <div class="role-opt" data-role="TLV" onclick="setRole('TLV')"><div class="ro-icon">🎖️</div><div class="ro-lbl">TL-Vertretung</div></div>
+        <div class="role-opt" data-role="TL" onclick="setRole('TL')"><div class="ro-icon">👑</div><div class="ro-lbl">Teamlead</div></div>
+      </div>
+      <div id="roleHint"></div>
+    </div>
+    <div class="field">
+      <label class="fl">Fähigkeiten</label>
+      <div class="schips" id="skillChips"></div>
+    </div>
+    <hr/>
+    <div id="delSection" style="display:none;margin-bottom:4px">
+      <button class="btn btn-danger btn-block" id="delBtn">Mitarbeiter löschen</button>
+    </div>
+    <div class="mbtns">
+      <button class="btn btn-ghost" onclick="closeEmpModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveEmp()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SKILLS=['Maschine','PKM','Einpacken','Paletten','Holzplatz'];
+const LENGTHS=['0,5m','1m','1,5m','2m','2,5m','3m'];
+// Länge in Metern (für Berechnung)
+const LEN_M={'0,5m':0.575,'1m':1.075,'1,5m':1.575,'2m':2.075,'2,5m':2.575,'3m':3.075};
+// Container-Typ: 0,5m → Europalette, sonst HRV
+const containerType=l=>l==='0,5m'?'EP':'HRV';
+const SCOL={Maschine:'#3b82f6',PKM:'#8b5cf6',Einpacken:'#22c55e',Paletten:'#f0a500',Holzplatz:'#ef4444'};
+const COLORS=['#f87171','#fb923c','#fbbf24','#a3e635','#34d399','#38bdf8','#818cf8','#e879f9','#f472b6','#94a3b8','#facc15','#4ade80'];
+const col=id=>COLORS[(id-1)%COLORS.length];
+const ini=n=>n.split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2);
+const fmt=n=>n.toLocaleString('de-DE',{maximumFractionDigits:1});
+const SHIFT_MIN=480; // 8h × 60
+
+// ── BERECHNUNG ──────────────────────────────────────────────────────────────
+// Durchschnittslänge = Summe(länge × anzahl) ÷ Gesamtanzahl
+// Stk/min gesamt = Geschwindigkeit ÷ Durchschnittslänge
+// Pro Länge: Anteil = count/totalCount → stkPerMin = stkGesamt × anteil
+// Beispiel: 1×2m + 3×0,5m + 1×1m → Summe=4,5m, Anzahl=5, avg=0,9m
+//   stkPerMin = speed / 0,9
+
+function machineCalc(mc){
+  if(!mc.on||!mc.lengths.length) return{rows:[],stkPerMinTotal:0,avgLen:0,totalCount:0};
+  const speed=parseFloat(String(mc.speed).replace(',','.'))||1;
+  const entries=mc.lengths.map(lk=>{
+    const cnt=parseInt((mc.lenCfg[lk]||{}).count)||1;
+    return{lk,cnt,lenM:LEN_M[lk]||1};
+  });
+  const totalCount=entries.reduce((s,e)=>s+e.cnt,0);
+  const sumLen=entries.reduce((s,e)=>s+(e.lenM*e.cnt),0);
+  const avgLen=sumLen/totalCount;
+  const stkPerMinTotal=speed/avgLen;
+  const rows=entries.map(({lk,cnt,lenM})=>{
+    const share=cnt/totalCount;
+    const stkPerMin=stkPerMinTotal*share;
+    const stkPerShift=stkPerMin*SHIFT_MIN;
+    const cap=parseInt((mc.lenCfg[lk]||{}).capacity)||1;
+    const containerPerShift=stkPerShift/cap;
+    const containerPerHour=containerPerShift/8;
+    return{lk,cnt,stkPerMin,stkPerShift,containerPerShift,containerPerHour};
+  });
+  return{rows,stkPerMinTotal,avgLen,totalCount};
+}
+
+// Gesamt Container/h aller aktiven Maschinen
+function totalContainerPerHour(){
+  let total=0;
+  for(const mc of Object.values(S.machines)){
+    const result=machineCalc(mc);
+    for(const r of (result.rows||[])) total+=r.containerPerHour;
+  }
+  return total;
+}
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let S={
+  employees:[
+    {id:1,name:'Sascha',role:'TL',skills:['Maschine','PKM','Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:2,name:'Ronny',role:'TLV',skills:['Maschine','PKM','Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:3,name:'Marcel',role:'OP',skills:['Maschine','PKM','Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:4,name:'Phillip',role:'OP',skills:['Einpacken','Paletten','Holzplatz','Maschine','PKM'],absent:false},
+    {id:5,name:'Rene',role:'OP',skills:['Einpacken','Paletten','Holzplatz','Maschine','PKM'],absent:false},
+    {id:6,name:'Tim',role:'OP',skills:['Maschine','PKM','Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:7,name:'Hartmut',role:'Helfer',skills:['Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:8,name:'Jacob',role:'Helfer',skills:['Einpacken','Paletten','Holzplatz'],absent:false},
+    {id:9,name:'Manuela',role:'Helfer',skills:['Einpacken','Paletten'],absent:false},
+    {id:10,name:'Monika',role:'Helfer',skills:['Einpacken','Paletten','Holzplatz'],absent:false},
+  ],
+  machines:{
+    1:{on:true,pkm:true,speed:'30',od:'25',lengths:['2m'],lenCfg:{'2m':{count:'1',capacity:'50'}}},
+    2:{on:false,pkm:true,speed:'30',od:'25',lengths:['2m'],lenCfg:{'2m':{count:'1',capacity:'50'}}},
+    3:{on:false,pkm:false,speed:'25',od:'25',lengths:['2m'],lenCfg:{'2m':{count:'1',capacity:'50'}}},
+    4:{on:false,pkm:false,speed:'25',od:'25',lengths:['2m'],lenCfg:{'2m':{count:'1',capacity:'50'}}},
+  },
+  threshold:3,
+  assignments:{},
+  nextId:11,
+  editId:null,
+  mSkills:new Set(),
+  mRole:'Helfer',
+};
+
+// ── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['setup','plan','team'][i]===id));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(id==='plan')renderPlan();
+  if(id==='team')renderTeam();
+}
+
+// ── SETUP ───────────────────────────────────────────────────────────────────
+function renderSetup(){
+  renderMachines();
+  renderMachineConfigs();
+}
+
+function renderMachines(){
+  const g=document.getElementById('machineGrid');
+  g.innerHTML='';
+  for(let m=1;m<=4;m++){
+    const mc=S.machines[m];
+    const d=document.createElement('div');
+    d.className='mcard'+(mc.on?' on':'');
+    d.innerHTML=`<div class="mn">M${m}</div><div class="ms">${mc.pkm?'+ PKM':' '}</div><div class="m-status">${mc.on?'AKTIV':'AUS'}</div>`;
+    d.onclick=()=>{S.machines[m].on=!S.machines[m].on;renderSetup();};
+    g.appendChild(d);
+  }
+}
+
+function renderMachineConfigs(){
+  const sec=document.getElementById('machineConfigs');
+  const active=Object.entries(S.machines).filter(([,v])=>v.on);
+  if(!active.length){sec.innerHTML='';return;}
+
+  sec.innerHTML='<div class="stitle">Konfiguration je Maschine</div>';
+
+  active.forEach(([id,mc])=>{
+    const result=machineCalc(mc);
+    const rows=result.rows||[];
+    const totCph=rows.reduce((s,r)=>s+r.containerPerHour,0);
+    const badgeCls=totCph>=S.threshold?'ob-hi':totCph>=S.threshold*0.6?'ob-md':totCph>0?'ob-lo':'ob-none';
+    const badgeTxt=mc.lengths.length&&totCph>0?fmt(totCph)+' Container/h':'—';
+
+    const div=document.createElement('div');
+    div.className='mcfg';
+    div.innerHTML=`
+      <div class="mcfg-head">
+        <span class="mcfg-title">Maschine ${id}</span>
+        <span class="obadge ${badgeCls}" id="mbadge_${id}">${badgeTxt}</span>
+      </div>
+      <div class="mcfg-body">
+        <div class="irow">
+          <label>Geschwindigkeit</label>
+          <input type="text" inputmode="decimal" value="${mc.speed}" style="width:80px;text-align:right;font-family:var(--mono);padding:8px 10px"
+            onblur="S.machines[${id}].speed=this.value;renderMachineConfigs();renderThresholdHint()"/>
+          <span>m/min</span>
+        </div>
+        <div class="irow">
+          <label>Außendurchmesser</label>
+          <input type="text" inputmode="decimal" value="${mc.od||''}" placeholder="z.B. 25" style="width:80px;text-align:right;font-family:var(--mono);padding:8px 10px"
+            onblur="S.machines[${id}].od=this.value"/>
+          <span>mm</span>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;color:var(--muted2);margin-bottom:6px">Baulängen – Anzahl pro Zyklus:</div>
+          <div class="lpills" id="lpills_${id}"></div>
+        </div>
+        <div id="ldetails_${id}"></div>
+      </div>`;
+    sec.appendChild(div);
+
+    // length steppers: − ANZAHL × lk +
+    const pillsDiv=div.querySelector('#lpills_'+id);
+    LENGTHS.forEach(lk=>{
+      const cnt=parseInt((mc.lenCfg[lk]||{}).count)||0;
+      const isActive=mc.lengths.includes(lk);
+      const wrap=document.createElement('div');
+      wrap.style.cssText='display:flex;align-items:center;gap:4px;margin-bottom:6px';
+      if(isActive){
+        wrap.innerHTML=`
+          <button onclick="changeCount(${id},'${lk}',-1)" style="width:28px;height:28px;border-radius:6px;background:var(--s3);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+          <div style="font-family:var(--mono);font-size:0.78rem;min-width:32px;text-align:center;color:var(--blue)">${cnt}×</div>
+          <div class="lpill sel">${lk}</div>
+          <button onclick="changeCount(${id},'${lk}',+1)" style="width:28px;height:28px;border-radius:6px;background:var(--s3);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>`;
+      } else {
+        wrap.innerHTML=`
+          <div style="width:28px"></div>
+          <div style="font-family:var(--mono);font-size:0.78rem;min-width:32px;text-align:center;color:var(--muted)">0×</div>
+          <div class="lpill" onclick="changeCount(${id},'${lk}',+1)">${lk}</div>`;
+      }
+      pillsDiv.appendChild(wrap);
+    });
+
+    // per-length detail rows
+    renderLenDetails(id, div.querySelector('#ldetails_'+id));
+  });
+}
+
+function renderLenDetails(machineId, container){
+  const mc=S.machines[machineId];
+  if(!mc.lengths.length){container.innerHTML='';return;}
+  const result=machineCalc(mc);
+  const rows=result.rows||[];
+  const stkPerMinTotal=result.stkPerMinTotal||0;
+  const avgLen=result.avgLen||0;
+  const totalCount=result.totalCount||0;
+  container.innerHTML='';
+
+  // Formel-Info
+  const sumStr=mc.lengths.map(lk=>{
+    const cnt=parseInt((mc.lenCfg[lk]||{}).count)||1;
+    return`${cnt}×${lk}`;
+  }).join(' + ');
+  const note=document.createElement('div');
+  note.style.cssText='font-size:0.72rem;color:var(--muted2);margin-bottom:8px;padding:7px 10px;background:var(--s3);border-radius:6px;line-height:1.7';
+  note.innerHTML=`<b style="color:var(--muted2)">${sumStr}</b><br>
+    Ø-Länge: <b style="color:var(--text);font-family:var(--mono)">${fmt(avgLen)}m</b> &nbsp;·&nbsp;
+    Stk/min gesamt: <b style="color:var(--accent);font-family:var(--mono)">${fmt(stkPerMinTotal)}</b>`;
+  container.appendChild(note);
+
+  rows.forEach(({lk,cnt,stkPerMin,stkPerShift,containerPerShift,containerPerHour})=>{
+    if(!mc.lenCfg[lk])mc.lenCfg[lk]={count:'1',capacity:''};
+    const cfg=mc.lenCfg[lk];
+    const ct=containerType(lk);
+    const cph=cfg.capacity?fmt(containerPerHour):'—';
+    const row=document.createElement('div');
+    row.className='ldet-row';
+    row.innerHTML=`
+      <div class="ldet-top">
+        <span class="ldet-name">${cnt}× ${lk}</span>
+        <span class="container-tag ${ct==='HRV'?'ct-hrv':'ct-ep'}">${ct}</span>
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label class="fl">Kapazität (Stk/${ct})</label>
+        <input type="text" inputmode="decimal" placeholder="z.B. 50" value="${cfg.capacity}"
+          onblur="S.machines[${machineId}].lenCfg['${lk}'].capacity=this.value;updateLenCalc(${machineId})"/>
+      </div>
+      <div class="ldet-calc" id="calc_${machineId}_${lk.replace(',','_')}">
+        Stk/min: <b>${fmt(stkPerMin)}</b> &nbsp;·&nbsp;
+        Stk/Schicht: <b>${fmt(stkPerShift)}</b> &nbsp;·&nbsp;
+        ${ct}s/Schicht: <b>${cfg.capacity?fmt(containerPerShift):'—'}</b> &nbsp;·&nbsp;
+        ${ct}s/h: <b>${cph}</b>
+      </div>`;
+    container.appendChild(row);
+  });
+}
+
+// Ändert Anzahl einer Länge (+ oder -)
+function changeCount(machineId, lk, delta){
+  const mc=S.machines[machineId];
+  if(!mc.lenCfg[lk]) mc.lenCfg[lk]={count:'1',capacity:''};
+  let cnt=(parseInt(mc.lenCfg[lk].count)||0)+delta;
+  if(cnt<0) cnt=0;
+  mc.lenCfg[lk].count=String(cnt);
+  if(cnt===0){
+    mc.lengths=mc.lengths.filter(l=>l!==lk);
+    delete mc.lenCfg[lk];
+  } else if(!mc.lengths.includes(lk)){
+    mc.lengths.push(lk);
+  }
+  renderMachineConfigs();
+  renderThresholdHint();
+}
+
+// Aktualisiert Berechnungszeilen + Badge ohne Re-render des Formulars
+function updateLenCalc(machineId){
+  const mc=S.machines[machineId];
+  const result=machineCalc(mc);
+  const rows=result.rows||[];
+  let totCph=0;
+  rows.forEach(({lk,cnt,stkPerMin,stkPerShift,containerPerShift,containerPerHour})=>{
+    const cfg=mc.lenCfg[lk]||{};
+    const ct=containerType(lk);
+    totCph+=containerPerHour;
+    const el=document.getElementById('calc_'+machineId+'_'+lk.replace(',','_'));
+    if(el) el.innerHTML=`Stk/min: <b>${fmt(stkPerMin)}</b> &nbsp;·&nbsp;
+      Stk/Schicht: <b>${fmt(stkPerShift)}</b> &nbsp;·&nbsp;
+      ${ct}s/Schicht: <b>${cfg.capacity?fmt(containerPerShift):'—'}</b> &nbsp;·&nbsp;
+      ${ct}s/h: <b>${cfg.capacity?fmt(containerPerHour):'—'}</b>`;
+  });
+  const badgeEl=document.getElementById('mbadge_'+machineId);
+  if(badgeEl){
+    const cls=totCph>=S.threshold?'ob-hi':totCph>=S.threshold*0.6?'ob-md':totCph>0?'ob-lo':'ob-none';
+    badgeEl.className='obadge '+cls;
+    badgeEl.textContent=totCph>0?fmt(totCph)+' Container/h':'—';
+  }
+  renderThresholdHint();
+}
+
+function renderThresholdHint(){}
+
+// ── TEAM ────────────────────────────────────────────────────────────────────
+function renderTeam(){
+  const list=document.getElementById('empList');
+  list.innerHTML='';
+  const sorted=[...S.employees].sort((a,b)=>{
+    const r=v=>v.role==='TL'?0:v.role==='TLV'?1:v.role==='OP'?2:3;
+    return r(a)-r(b)||a.name.localeCompare(b.name);
+  });
+  if(!sorted.length){list.innerHTML='<div class="empty-hint">Noch keine Mitarbeiter.</div>';return;}
+  sorted.forEach(emp=>{
+    const d=document.createElement('div');
+    d.className='emp-card'+(emp.absent?' absent':'');
+    const rb=roleBadge(emp.role);
+    const dots=emp.skills.map(s=>`<div class="sdot" style="background:${SCOL[s]}" title="${s}"></div>`).join('');
+    d.innerHTML=`
+      <div class="avatar" style="background:${col(emp.id)}22;color:${col(emp.id)}">${ini(emp.name)}</div>
+      <div class="emp-info">
+        <div class="enr"><span class="emp-name">${emp.name}</span>${rb}</div>
+        <div class="edots">${dots}</div>
+      </div>
+      <button class="abs-btn" onclick="event.stopPropagation();toggleAbs(${emp.id})">${emp.absent?'Abwesend':'Anwesend'}</button>`;
+    d.onclick=()=>openEditEmp(emp.id);
+    list.appendChild(d);
+  });
+}
+
+function roleBadge(r){
+  if(r==='TL')return`<span class="rbadge rtl">Teamlead</span>`;
+  if(r==='TLV')return`<span class="rbadge rtlv">TL-Vertretung</span>`;
+  if(r==='OP')return`<span class="rbadge rop">OP</span>`;
+  if(r==='Helfer')return`<span class="rbadge rhelfer">Helfer</span>`;
+  return'';
+}
+function toggleAbs(id){S.employees.find(e=>e.id===id).absent^=true;renderTeam();}
+
+// ── EMP MODAL ───────────────────────────────────────────────────────────────
+const ROLE_HINTS={
+  Helfer:'Unterstützende Tätigkeiten: Einpacken, Paletten, Holzplatz. Keine Maschine oder PKM.',
+  OP:'Primär Maschine & PKM. Bei Personalmangel auch andere Stationen (außer TL/TLV).',
+  TLV:'Vertritt den Teamlead. Übernimmt Koordination bei Abwesenheit.',
+  TL:'Teamleitung. Koordiniert die Schicht und priorisiert Maschinen.',
+};
+function openAddEmp(){
+  S.editId=null;S.mSkills=new Set(['Einpacken']);S.mRole='Helfer';
+  document.getElementById('empModalTitle').textContent='Mitarbeiter hinzufügen';
+  document.getElementById('empNameInput').value='';
+  document.getElementById('delSection').style.display='none';
+  renderEmpModal();
+  document.getElementById('empModal').classList.add('open');
+}
+function openEditEmp(id){
+  const e=S.employees.find(x=>x.id===id);
+  S.editId=id;S.mSkills=new Set(e.skills);S.mRole=e.role||'Helfer';
+  document.getElementById('empModalTitle').textContent='Profil bearbeiten';
+  document.getElementById('empNameInput').value=e.name;
+  document.getElementById('delSection').style.display='block';
+  document.getElementById('delBtn').onclick=()=>deleteEmp(id);
+  renderEmpModal();
+  document.getElementById('empModal').classList.add('open');
+}
+function closeEmpModal(){document.getElementById('empModal').classList.remove('open');}
+function renderEmpModal(){
+  document.querySelectorAll('.role-opt').forEach(el=>el.classList.toggle('on',el.dataset.role===S.mRole));
+  document.getElementById('roleHint').innerHTML=`<div class="info-box">${ROLE_HINTS[S.mRole]||''}</div>`;
+  const c=document.getElementById('skillChips');c.innerHTML='';
+  SKILLS.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='schip'+(S.mSkills.has(s)?' on':'');
+    d.innerHTML=`<span style="color:${SCOL[s]}">●</span>${s}`;
+    d.onclick=()=>{S.mSkills.has(s)?S.mSkills.delete(s):S.mSkills.add(s);renderEmpModal();};
+    c.appendChild(d);
+  });
+}
+function setRole(r){S.mRole=r;renderEmpModal();}
+function saveEmp(){
+  const name=document.getElementById('empNameInput').value.trim();
+  if(!name)return;
+  if(S.editId){const e=S.employees.find(x=>x.id===S.editId);e.name=name;e.role=S.mRole;e.skills=[...S.mSkills];}
+  else S.employees.push({id:S.nextId++,name,role:S.mRole,skills:[...S.mSkills],absent:false});
+  closeEmpModal();renderTeam();
+}
+function deleteEmp(id){
+  if(!confirm('Mitarbeiter wirklich löschen?'))return;
+  S.employees=S.employees.filter(e=>e.id!==id);
+  for(const k in S.assignments)S.assignments[k]=S.assignments[k].filter(i=>i!==id);
+  closeEmpModal();renderTeam();
+}
+
+// ── PLAN ────────────────────────────────────────────────────────────────────
+function present(){return S.employees.filter(e=>!e.absent);}
+
+function getStations(){
+  const st=[];
+  let pkmCount=0;
+  let noPkmMachines=[];
+  for(let m=1;m<=4;m++){
+    const mc=S.machines[m];
+    if(!mc.on)continue;
+    st.push({key:`mac_${m}`,label:`Maschine ${m}`,icon:'🏭',skill:'Maschine',slots:1,reason:''});
+    if(mc.pkm){
+      st.push({key:`pkm_${m}`,label:`PKM – M${m}`,icon:'🔧',skill:'PKM',slots:1,reason:''});
+      pkmCount++;
+    } else {
+      noPkmMachines.push({id:m,mc});
+    }
+  }
+  // ── HOLZPLATZ ──
+  // Standard: 1 Person. 2 Personen erst ab 3 Längen die LÄNGER als 0,5m sind (über alle Maschinen)
+  const allActiveMachines=Object.entries(S.machines).filter(([,v])=>v.on).map(([,mc])=>mc);
+  let longLengthCount=0;
+  allActiveMachines.forEach(mc=>{
+    mc.lengths.forEach(lk=>{
+      const cnt=parseInt((mc.lenCfg[lk]||{}).count)||1;
+      if(lk!=='0,5m') longLengthCount+=cnt; // nur HRV-Längen (≥1m) auf Holzplatz
+    });
+  });
+  const need2Holz=longLengthCount>=3;
+  const holzReason=need2Holz
+    ?`${longLengthCount} HRV-Längen → 2 nötig`
+    :`${longLengthCount} HRV-Länge(n) → 1 reicht`;
+
+  // ── PALETTEN ──
+  // 2 Personen wenn irgendein Container schneller als 10 min voll wird
+  // d.h. containerPerHour > 6  (60min / 10min = 6 Container/h)
+  let fastestCph=0;
+  allActiveMachines.forEach(mc=>{
+    const{rows}=machineCalc(mc);
+    (rows||[]).forEach(r=>{fastestCph=Math.max(fastestCph,r.containerPerHour);});
+  });
+  const need2Paletten=fastestCph>6; // >6 Container/h = voller Container in <10min
+  const minMinPerContainer=fastestCph>0?fmt(60/fastestCph):'—';
+  const palettenReason=need2Paletten
+    ?`Schnellster Container: ${minMinPerContainer} min → 2 nötig`
+    :`Schnellster Container: ${minMinPerContainer} min → 1 reicht`;
+
+  // Einpacken: 2 Personen wenn irgendeine nicht-PKM-Maschine mehr als 1 Länge fährt
+  if(noPkmMachines.length>0){
+    const need2Einpacken=noPkmMachines.some(({mc})=>mc.lengths.length>1);
+    const einpackReason=need2Einpacken
+      ?'mehrere Längen aktiv → 2 nötig'
+      :'nur eine Länge → 1 reicht';
+    st.push({key:'einpacken',label:'Einpacken',icon:'📦',skill:'Einpacken',
+      slots:need2Einpacken?2:1,reason:einpackReason});
+  }
+
+  st.push({key:'paletten',label:'Paletten zumachen',icon:'🪣',skill:'Paletten',
+    slots:need2Paletten?2:1,reason:palettenReason});
+  st.push({key:'holzplatz',label:'Holzplatz',icon:'🪵',skill:'Holzplatz',
+    slots:need2Holz?2:1,reason:holzReason});
+  return st;
+}
+
+function renderPlan(){
+  const stations=getStations();
+  const assignedSet=new Set(Object.values(S.assignments).flat().filter(Boolean));
+  let ok=0,warn=0,err=0;
+  stations.forEach(s=>{
+    const f=(S.assignments[s.key]||[]).filter(Boolean).length;
+    if(f>=s.slots)ok++;else if(f>0)warn++;else err++;
+  });
+  document.getElementById('statusBar').innerHTML=`
+    <div class="sitem"><div class="sval sv-g">${present().length}</div><div class="slbl">Anwesend</div></div>
+    <div class="sitem"><div class="sval sv-g">${ok}</div><div class="slbl">Besetzt</div></div>
+    <div class="sitem"><div class="sval ${err>0?'sv-r':'sv-o'}">${err+warn}</div><div class="slbl">Offen</div></div>`;
+
+  // Output-Summary
+  const active=Object.entries(S.machines).filter(([,v])=>v.on);
+  if(active.length){
+    let rows_html='';
+    let totalStk=0;
+    active.forEach(([id,mc])=>{
+      const result=machineCalc(mc);
+      const rows=result.rows||[];
+      const stkPerMinTotal=result.stkPerMinTotal||0;
+      const avgLen=result.avgLen||0;
+      const od=mc.od?mc.od+'mm':'—';
+      rows.forEach(({lk,cnt,stkPerShift,containerPerShift,containerPerHour})=>{
+        const cfg=mc.lenCfg[lk]||{};
+        const ct=containerType(lk);
+        totalStk+=stkPerShift;
+        rows_html+=`<div class="sb-row">
+          <span class="sb-label">M${id} · ${cnt}×${lk} · OD ${od} · ${ct}</span>
+          <span class="sb-val">${cfg.capacity?fmt(stkPerShift)+' Stk':'—'}</span>
+        </div>`;
+      });
+      if(mc.lengths.length>1){
+        rows_html+=`<div style="font-size:0.7rem;color:var(--muted2);padding:4px 0 6px;border-bottom:1px solid var(--border)">
+          Ø-Länge M${id}: ${fmt(avgLen)}m · Gesamt: <b style="color:var(--text);font-family:var(--mono)">${fmt(stkPerMinTotal)} Stk/min</b>
+        </div>`;
+      }
+    });
+    const tot=totalContainerPerHour();
+    const totColor=tot>=S.threshold?'var(--red)':tot>=S.threshold*0.6?'var(--orange)':'var(--green)';
+    document.getElementById('outputSummary').innerHTML=`<div class="summary-box" style="margin-bottom:12px">
+      <div class="sb-title">Produktionsübersicht – Schicht (8h)</div>
+      ${rows_html}
+      <div class="sb-total">
+        <span class="sb-total-lbl">Gesamt Stk/Schicht</span>
+        <span class="sb-total-val">${fmt(totalStk)}</span>
+      </div>
+      <div style="margin-top:8px;font-size:0.78rem;color:var(--muted2)">
+        Container/h gesamt: <b style="color:${totColor};font-family:var(--mono)">${fmt(tot)}</b>
+        → Personal: <b style="color:${totColor}">${tot>=S.threshold?'2 Personen':'1 Person'}</b>
+      </div>
+    </div>`;
+  } else {
+    document.getElementById('outputSummary').innerHTML='';
+  }
+
+  // Unassigned
+  const ua=present().filter(e=>!assignedSet.has(e.id));
+  document.getElementById('unassignedSection').innerHTML=ua.length?`<div class="unassigned-box">
+    <div style="font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Nicht eingeteilt</div>
+    <div class="chips">${ua.map(e=>`<div class="chip">
+      <div style="width:20px;height:20px;border-radius:50%;background:${col(e.id)}22;color:${col(e.id)};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700">${ini(e.name)}</div>
+      ${e.name}${e.role?` <span style="font-size:0.65rem;color:var(--muted2)">(${e.role})</span>`:''}
+    </div>`).join('')}</div>
+  </div>`:'';
+
+  // Stations
+  const grid=document.getElementById('planGrid');
+  grid.innerHTML='';
+  if(!stations.length){
+    grid.innerHTML='<div class="empty-hint">Keine Maschinen aktiv.<br>Im <b>Setup</b>-Tab Maschinen einschalten.</div>';
+    return;
+  }
+  stations.forEach(station=>{
+    const asgn=S.assignments[station.key]||[];
+    const filled=asgn.filter(Boolean).length;
+    const pillCls=filled>=station.slots?'np-ok':filled>0?'np-w':'np-e';
+    const card=document.createElement('div');
+    card.className='station-card';
+    card.innerHTML=`<div class="shead">
+      <span class="sicon">${station.icon}</span>
+      <span class="sname">${station.label}</span>
+      <span class="npill ${pillCls}">${filled}/${station.slots}</span>
+      ${station.reason?`<span class="sreason">${station.reason}</span>`:''}
+    </div><div class="sslots" id="sl_${station.key}"></div>`;
+    grid.appendChild(card);
+    const slotsDiv=document.getElementById('sl_'+station.key);
+    for(let i=0;i<station.slots;i++){
+      const empId=asgn[i]||null;
+      const emp=empId?S.employees.find(e=>e.id===empId):null;
+      const slot=document.createElement('div');
+      slot.className='slot'+(emp?' filled':'');
+      if(emp){
+        slot.innerHTML=`
+          <div class="sl-av" style="background:${col(emp.id)}22;color:${col(emp.id)}">${ini(emp.name)}</div>
+          <div class="sl-info">
+            <div class="sl-name">${emp.name}${emp.role?` <span style="font-size:0.65rem;color:var(--muted2)">(${emp.role})</span>`:''}</div>
+            <div class="sl-sub">${station.skill}</div>
+          </div>
+          <button class="sl-rm" onclick="removeAsgn('${station.key}',${i})">✕</button>`;
+      } else {
+        const alreadyUsed=new Set(Object.entries(S.assignments).flatMap(([k,arr])=>k===station.key?[]:arr.filter(Boolean)));
+        const sel=document.createElement('select');
+        sel.className='asgn-sel';
+        sel.innerHTML='<option value="">— auswählen —</option>';
+        present().filter(e=>{
+          const hasSkill=e.skills.includes(station.skill);
+          const opFlex=e.role==='OP';
+          return(hasSkill||opFlex)&&!alreadyUsed.has(e.id);
+        }).forEach(e=>{
+          const note=e.role==='OP'&&!e.skills.includes(station.skill)?' (Flex)':'';
+          sel.innerHTML+=`<option value="${e.id}">${e.name}${e.role?' ('+e.role+')':''}${note}</option>`;
+        });
+        sel.onchange=ev=>{if(ev.target.value)assign(station.key,i,+ev.target.value);};
+        slot.innerHTML=`<span style="font-size:1rem;flex-shrink:0">👤</span>`;
+        slot.appendChild(sel);
+      }
+      slotsDiv.appendChild(slot);
+    }
+  });
+}
+
+function assign(key,slot,id){if(!S.assignments[key])S.assignments[key]=[];S.assignments[key][slot]=id;renderPlan();}
+function removeAsgn(key,slot){if(S.assignments[key])S.assignments[key][slot]=null;renderPlan();}
+
+// ── KI-EINTEILUNG (regelbasiert, kein API-Key nötig) ──────────────────────
+function runAI(){
+  const btn=document.getElementById('aiBtn');
+  btn.innerHTML='<span class="spinner"></span> Berechne…';
+  btn.disabled=true;
+
+  setTimeout(()=>{
+    try{
+      const result=smartAssign();
+      const panel=document.getElementById('aiPanel');
+      document.getElementById('aiText').textContent=result.explanation;
+      document.getElementById('aiApply').style.display='inline-flex';
+      window._aiParsed=result.assignments;
+      panel.classList.add('show');
+      panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }catch(e){
+      document.getElementById('aiText').textContent='Fehler: '+e.message;
+      document.getElementById('aiApply').style.display='none';
+      document.getElementById('aiPanel').classList.add('show');
+    }
+    btn.disabled=false;
+    btn.innerHTML='✨ KI-Einteilung vorschlagen';
+  },600);
+}
+
+function smartAssign(){
+  const stations=getStations();
+  const ppl=[...present()];
+  const assignments={};
+  const used=new Set();
+
+  // Stationen-Priorität
+  const priority=['mac_1','mac_2','mac_3','mac_4','pkm_1','pkm_2','pkm_3','pkm_4','holzplatz','paletten','einpacken'];
+  const orderedStations=[
+    ...priority.filter(k=>stations.find(s=>s.key===k)).map(k=>stations.find(s=>s.key===k)),
+    ...stations.filter(s=>!priority.includes(s.key))
+  ];
+
+  // Kandidaten-Suche: Skill-Match zuerst, dann nach Rolle priorisieren
+  // Reihenfolge pro Station:
+  //   Maschine/PKM: OP > TL/TLV > Helfer(nur wenn Skill)
+  //   Andere:       Helfer > OP > TL/TLV (TL/TLV nur Notlösung)
+  function findCandidate(station){
+    const isMachinePKM=['Maschine','PKM'].includes(station.skill);
+    const avail=e=>!used.has(e.id);
+    const hasSkill=e=>e.skills.includes(station.skill);
+
+    if(isMachinePKM){
+      // Maschine/PKM: OP > TLV > TL > Helfer mit Skill
+      const withSkill=ppl.filter(e=>avail(e)&&hasSkill(e));
+      return withSkill.find(e=>e.role==='OP')
+        || withSkill.find(e=>e.role==='TLV')
+        || withSkill.find(e=>e.role==='TL')
+        || withSkill[0]
+        || null;
+    } else {
+      // Nachstationen: NUR Helfer und OP – TL/TLV NIEMALS
+      const withSkill=ppl.filter(e=>avail(e)&&hasSkill(e)&&e.role!=='TL'&&e.role!=='TLV');
+      const opFlex=ppl.filter(e=>avail(e)&&e.role==='OP'&&!hasSkill(e));
+      return withSkill.find(e=>e.role==='Helfer')
+        || withSkill.find(e=>e.role==='OP')
+        || opFlex[0]
+        || null;
+    }
+  }
+
+  const log=[];
+
+  for(const station of orderedStations){
+    assignments[station.key]=[];
+    for(let i=0;i<station.slots;i++){
+      const candidate=findCandidate(station);
+      if(candidate){
+        assignments[station.key].push(candidate.id);
+        used.add(candidate.id);
+        const flex=!candidate.skills.includes(station.skill)?' (Flex)':'';
+        log.push(`${station.label}: ${candidate.name} (${candidate.role||'Helfer'})${flex}`);
+      } else {
+        assignments[station.key].push(null);
+        log.push(`${station.label}: ⚠ niemand verfügbar`);
+      }
+    }
+  }
+
+  const unassigned=ppl.filter(e=>!used.has(e.id));
+  const explanation=
+    `Priorität Maschine/PKM: OP → TLV → TL.\n`+
+    `Nachstationen (Holzplatz/Paletten/Einpacken): nur Helfer & OP.\n`+
+    `TL und TLV werden ausschließlich an Maschine oder PKM eingeteilt.\n\n`+
+    log.join('\n')+
+    (unassigned.length?`\n\nNicht eingeteilt: ${unassigned.map(e=>e.name+' ('+e.role+')').join(', ')}`:'');
+
+  return{assignments,explanation};
+}
+
+
+function applyAI(){
+  if(!window._aiParsed)return;
+  S.assignments={};
+  for(const[k,ids]of Object.entries(window._aiParsed))S.assignments[k]=ids;
+  document.getElementById('aiPanel').classList.remove('show');
+  renderPlan();
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+document.getElementById('datePicker').value=new Date().toISOString().slice(0,10);
+renderSetup();
+renderTeam();
+</script>
+</body>
+</html>
