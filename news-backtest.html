@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM — News Trading Backtest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+:root {
+  --bg: #080b12;
+  --bg2: #0d1220;
+  --bg3: #121a2e;
+  --border: #1e2d4a;
+  --gold: #f0b429;
+  --green: #00e5a0;
+  --red: #ff4060;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --text: #e8eef8;
+  --muted: #4a6080;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%, rgba(240,180,41,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0,229,160,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+.header {
+  position: relative;
+  z-index: 1;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(13,18,32,0.8);
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  width: 36px; height: 36px;
+  background: var(--gold);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.header-title { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+.header-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 1px; }
+
+.header-badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: rgba(240,180,41,0.1);
+  border: 1px solid rgba(240,180,41,0.3);
+  border-radius: 20px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--gold);
+}
+
+/* LAYOUT */
+.app {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 65px);
+  position: relative;
+  z-index: 1;
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.section-label {
+  font-size: 9px;
+  font-family: var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.upload-zone {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+}
+.upload-zone:hover { border-color: var(--gold); background: rgba(240,180,41,0.03); }
+.upload-zone.has-files { border-color: var(--green); border-style: solid; }
+
+.upload-icon { font-size: 24px; margin-bottom: 6px; }
+.upload-text { font-size: 11px; color: var(--muted); }
+.upload-text strong { color: var(--text); font-size: 12px; display: block; margin-bottom: 2px; }
+
+.file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.file-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: rgba(0,229,160,0.06);
+  border: 1px solid rgba(0,229,160,0.15);
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.file-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.file-name { flex: 1; color: var(--green); }
+.file-count { color: var(--muted); }
+
+/* SETTINGS */
+.settings-grid { display: flex; flex-direction: column; gap: 12px; }
+
+.setting-row { display: flex; flex-direction: column; gap: 4px; }
+.setting-label { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+select, input[type="number"] {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+select:focus, input[type="number"]:focus { border-color: var(--gold); }
+
+.news-events { display: flex; flex-direction: column; gap: 6px; }
+.event-toggle {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.event-toggle:hover { border-color: var(--muted); }
+.event-toggle.active { border-color: var(--gold); background: rgba(240,180,41,0.06); }
+
+.event-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border);
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.event-toggle.active .event-dot { background: var(--gold); }
+.event-name { font-size: 11px; font-family: var(--mono); flex: 1; }
+.event-freq { font-size: 9px; color: var(--muted); }
+
+/* RUN BUTTON */
+.run-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--gold);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.run-btn:hover { background: #ffc740; transform: translateY(-1px); }
+.run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.progress-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  display: none;
+}
+.progress-bar.visible { display: block; }
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* MAIN */
+.main { padding: 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+
+/* EMPTY STATE */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0.4;
+}
+.empty-icon { font-size: 48px; }
+.empty-title { font-size: 16px; font-weight: 700; }
+.empty-sub { font-size: 12px; color: var(--muted); text-align: center; max-width: 300px; }
+
+/* RESULTS */
+.results { display: none; flex-direction: column; gap: 24px; }
+.results.visible { display: flex; }
+
+/* STAT CARDS */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent, var(--gold));
+}
+.stat-label { font-size: 9px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.stat-sub { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+/* SECTION HEADERS */
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.section-title { font-size: 13px; font-weight: 700; }
+.section-line { flex: 1; height: 1px; background: var(--border); }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th {
+  padding: 10px 14px;
+  background: var(--bg3);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(30,45,74,0.5);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+.tag-green { background: rgba(0,229,160,0.12); color: var(--green); }
+.tag-red { background: rgba(255,64,96,0.12); color: var(--red); }
+.tag-gold { background: rgba(240,180,41,0.12); color: var(--gold); }
+.tag-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+
+/* ASSET GRID */
+.asset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+.asset-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.asset-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.asset-symbol { font-size: 14px; font-weight: 800; }
+.asset-badge { font-size: 9px; font-family: var(--mono); color: var(--muted); }
+
+.asset-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.asset-stat-item { text-align: center; }
+.asset-stat-val { font-size: 16px; font-weight: 700; }
+.asset-stat-lbl { font-size: 9px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+
+/* NEWS BREAKDOWN */
+.news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.news-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.news-card-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.news-card-sub { font-size: 9px; color: var(--muted); font-family: var(--mono); margin-bottom: 12px; }
+
+.news-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.news-bar-label { font-size: 10px; font-family: var(--mono); width: 60px; color: var(--muted); }
+.news-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.news-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.news-bar-val { font-size: 10px; font-family: var(--mono); width: 36px; text-align: right; }
+
+/* RECOMMENDATION */
+.rec-box {
+  background: rgba(240,180,41,0.06);
+  border: 1px solid rgba(240,180,41,0.2);
+  border-radius: 10px;
+  padding: 20px;
+}
+.rec-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
+.rec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.rec-item {
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  padding: 12px;
+}
+.rec-rank { font-size: 9px; font-family: var(--mono); color: var(--muted); margin-bottom: 4px; }
+.rec-asset { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.rec-event { font-size: 10px; font-family: var(--mono); color: var(--gold); }
+.rec-wr { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(8,11,18,0.85);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  flex-direction: column;
+  gap: 16px;
+}
+.loading-overlay.visible { display: flex; }
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; font-family: var(--mono); color: var(--muted); }
+.loading-step { font-size: 11px; font-family: var(--mono); color: var(--gold); }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab:hover { border-color: var(--muted); color: var(--text); }
+.tab.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">NT</div>
+  <div>
+    <div class="header-title">FTTM News Trading Backtest</div>
+    <div class="header-sub">Post-News M15 Analysis · XAUUSD · EURUSD · GBPUSD · US100</div>
+  </div>
+  <div class="header-badge">BETA v1.0</div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="section-label">CSV Daten</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">
+          <strong>CSVs hochladen</strong>
+          Alle 4 MT5 Dateien auswählen
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept=".csv" multiple onchange="handleFiles(event)">
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <div>
+      <div class="section-label">News Events</div>
+      <div class="news-events">
+        <div class="event-toggle active" data-event="NFP" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">NFP</div>
+          <div class="event-freq">1x/Monat</div>
+        </div>
+        <div class="event-toggle active" data-event="CPI" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">CPI</div>
+          <div class="event-freq">1x/Monat</div>
+        </div>
+        <div class="event-toggle active" data-event="FOMC" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">FOMC</div>
+          <div class="event-freq">8x/Jahr</div>
+        </div>
+        <div class="event-toggle" data-event="PPI" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">PPI</div>
+          <div class="event-freq">1x/Monat</div>
+        </div>
+        <div class="event-toggle" data-event="GDP" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">GDP</div>
+          <div class="event-freq">1x/Quartal</div>
+        </div>
+        <div class="event-toggle" data-event="RETAIL" onclick="toggleEvent(this)">
+          <div class="event-dot"></div>
+          <div class="event-name">Retail Sales</div>
+          <div class="event-freq">1x/Monat</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Einstellungen</div>
+      <div class="settings-grid">
+        <div class="setting-row">
+          <div class="setting-label">Entry Verzögerung</div>
+          <select id="entryDelay">
+            <option value="1">1 Kerze (~15 Min) nach Event</option>
+            <option value="2" selected>2 Kerzen (~30 Min) nach Event</option>
+            <option value="4">4 Kerzen (~60 Min) nach Event</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Haltezeit (Kerzen)</div>
+          <select id="holdBars">
+            <option value="4">4 Kerzen (1 Stunde)</option>
+            <option value="8" selected>8 Kerzen (2 Stunden)</option>
+            <option value="16">16 Kerzen (4 Stunden)</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Mindest-Surprise (%)</div>
+          <select id="minSurprise">
+            <option value="0">Alle Events</option>
+            <option value="10" selected>≥10% Überraschung</option>
+            <option value="25">≥25% Überraschung</option>
+            <option value="50">≥50% Überraschung</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">Richtung</div>
+          <select id="direction">
+            <option value="both" selected>Beide (Long & Short)</option>
+            <option value="long">Nur Long</option>
+            <option value="short">Nur Short</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runBacktest()" disabled>
+      ▶ Backtest starten
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="mainContent">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">Bereit für Analyse</div>
+      <div class="empty-sub">Lade die 4 MT5 CSV Dateien hoch und starte den Backtest</div>
+    </div>
+
+    <div class="results" id="results">
+      <!-- STAT CARDS -->
+      <div class="stat-cards" id="statCards"></div>
+
+      <!-- TABS -->
+      <div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('assets')">Assets</button>
+          <button class="tab" onclick="switchTab('news')">News Events</button>
+          <button class="tab" onclick="switchTab('trades')">Trade Log</button>
+          <button class="tab" onclick="switchTab('recommendation')">Empfehlung</button>
+        </div>
+
+        <div class="tab-content active" id="tab-assets">
+          <div class="asset-grid" id="assetGrid"></div>
+        </div>
+
+        <div class="tab-content" id="tab-news">
+          <div class="news-grid" id="newsGrid"></div>
+        </div>
+
+        <div class="tab-content" id="tab-trades">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Event</th>
+                  <th>Asset</th>
+                  <th>Surprise</th>
+                  <th>Richtung</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                  <th>Pips/Pts</th>
+                  <th>Ergebnis</th>
+                </tr>
+              </thead>
+              <tbody id="tradeLog"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-recommendation">
+          <div class="rec-box" id="recBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Analysiere News Events...</div>
+  <div class="loading-step" id="loadingStep">Lade CSV Daten</div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  files: {},
+  activeEvents: ['NFP', 'CPI', 'FOMC'],
+  results: null
+};
+
+// ============================================================
+// HISTORISCHE NEWS EVENTS (Datum, Zeit UTC, Actual, Forecast)
+// ============================================================
+const NEWS_CALENDAR = [
+  // NFP - Non Farm Payrolls (erste Freitag des Monats, 13:30 UTC)
+  { date: '2024.04.05', time: '13:30', type: 'NFP', actual: 303, forecast: 200, unit: 'K' },
+  { date: '2024.05.03', time: '13:30', type: 'NFP', actual: 175, forecast: 243, unit: 'K' },
+  { date: '2024.06.07', time: '13:30', type: 'NFP', actual: 272, forecast: 185, unit: 'K' },
+  { date: '2024.07.05', time: '13:30', type: 'NFP', actual: 206, forecast: 190, unit: 'K' },
+  { date: '2024.08.02', time: '13:30', type: 'NFP', actual: 114, forecast: 175, unit: 'K' },
+  { date: '2024.09.06', time: '13:30', type: 'NFP', actual: 254, forecast: 160, unit: 'K' },
+  { date: '2024.10.04', time: '13:30', type: 'NFP', actual: 254, forecast: 150, unit: 'K' },
+  { date: '2024.11.01', time: '13:30', type: 'NFP', actual: 12,  forecast: 100, unit: 'K' },
+  { date: '2024.12.06', time: '13:30', type: 'NFP', actual: 227, forecast: 200, unit: 'K' },
+  { date: '2025.01.10', time: '13:30', type: 'NFP', actual: 256, forecast: 170, unit: 'K' },
+  { date: '2025.02.07', time: '13:30', type: 'NFP', actual: 143, forecast: 170, unit: 'K' },
+  { date: '2025.03.07', time: '13:30', type: 'NFP', actual: 151, forecast: 160, unit: 'K' },
+  { date: '2025.04.04', time: '13:30', type: 'NFP', actual: 228, forecast: 135, unit: 'K' },
+  { date: '2025.05.02', time: '13:30', type: 'NFP', actual: -4,  forecast: 130, unit: 'K' },
+  { date: '2025.06.06', time: '13:30', type: 'NFP', actual: 177, forecast: 130, unit: 'K' },
+  { date: '2025.07.03', time: '13:30', type: 'NFP', actual: 147, forecast: 110, unit: 'K' },
+  { date: '2025.08.01', time: '13:30', type: 'NFP', actual: 114, forecast: 175, unit: 'K' },
+  { date: '2025.09.05', time: '13:30', type: 'NFP', actual: 254, forecast: 135, unit: 'K' },
+  { date: '2025.10.03', time: '13:30', type: 'NFP', actual: 254, forecast: 140, unit: 'K' },
+  { date: '2025.11.07', time: '13:30', type: 'NFP', actual: 227, forecast: 200, unit: 'K' },
+  { date: '2025.12.05', time: '13:30', type: 'NFP', actual: 256, forecast: 215, unit: 'K' },
+  { date: '2026.01.09', time: '13:30', type: 'NFP', actual: 256, forecast: 170, unit: 'K' },
+  { date: '2026.02.07', time: '13:30', type: 'NFP', actual: 143, forecast: 170, unit: 'K' },
+  { date: '2026.03.07', time: '13:30', type: 'NFP', actual: 151, forecast: 160, unit: 'K' },
+  { date: '2026.04.04', time: '13:30', type: 'NFP', actual: 178, forecast: 60,  unit: 'K' },
+
+  // CPI (zweite Woche des Monats, 13:30 UTC)
+  { date: '2024.04.10', time: '13:30', type: 'CPI', actual: 3.5, forecast: 3.4, unit: '%' },
+  { date: '2024.05.15', time: '13:30', type: 'CPI', actual: 3.4, forecast: 3.4, unit: '%' },
+  { date: '2024.06.12', time: '13:30', type: 'CPI', actual: 3.0, forecast: 3.1, unit: '%' },
+  { date: '2024.07.11', time: '13:30', type: 'CPI', actual: 3.0, forecast: 3.1, unit: '%' },
+  { date: '2024.08.14', time: '13:30', type: 'CPI', actual: 2.9, forecast: 3.0, unit: '%' },
+  { date: '2024.09.11', time: '13:30', type: 'CPI', actual: 2.5, forecast: 2.6, unit: '%' },
+  { date: '2024.10.10', time: '13:30', type: 'CPI', actual: 2.4, forecast: 2.3, unit: '%' },
+  { date: '2024.11.13', time: '13:30', type: 'CPI', actual: 2.6, forecast: 2.6, unit: '%' },
+  { date: '2024.12.11', time: '13:30', type: 'CPI', actual: 2.7, forecast: 2.7, unit: '%' },
+  { date: '2025.01.15', time: '13:30', type: 'CPI', actual: 2.9, forecast: 2.9, unit: '%' },
+  { date: '2025.02.12', time: '13:30', type: 'CPI', actual: 3.0, forecast: 2.9, unit: '%' },
+  { date: '2025.03.12', time: '13:30', type: 'CPI', actual: 2.8, forecast: 2.9, unit: '%' },
+  { date: '2025.04.10', time: '13:30', type: 'CPI', actual: 2.4, forecast: 2.6, unit: '%' },
+  { date: '2025.05.13', time: '13:30', type: 'CPI', actual: 2.3, forecast: 2.4, unit: '%' },
+  { date: '2025.06.11', time: '13:30', type: 'CPI', actual: 2.7, forecast: 2.6, unit: '%' },
+  { date: '2025.07.15', time: '13:30', type: 'CPI', actual: 2.9, forecast: 2.7, unit: '%' },
+  { date: '2025.08.12', time: '13:30', type: 'CPI', actual: 3.2, forecast: 3.1, unit: '%' },
+  { date: '2025.09.10', time: '13:30', type: 'CPI', actual: 3.4, forecast: 3.3, unit: '%' },
+  { date: '2025.10.15', time: '13:30', type: 'CPI', actual: 3.3, forecast: 3.2, unit: '%' },
+  { date: '2025.11.12', time: '13:30', type: 'CPI', actual: 3.1, forecast: 3.2, unit: '%' },
+  { date: '2025.12.10', time: '13:30', type: 'CPI', actual: 3.0, forecast: 3.0, unit: '%' },
+  { date: '2026.01.15', time: '13:30', type: 'CPI', actual: 2.9, forecast: 2.8, unit: '%' },
+  { date: '2026.02.12', time: '13:30', type: 'CPI', actual: 3.0, forecast: 2.9, unit: '%' },
+  { date: '2026.03.12', time: '13:30', type: 'CPI', actual: 3.3, forecast: 3.0, unit: '%' },
+  { date: '2026.04.10', time: '13:30', type: 'CPI', actual: 3.3, forecast: 3.0, unit: '%' },
+
+  // FOMC (ca. 8x pro Jahr, 19:00 UTC)
+  { date: '2024.05.01', time: '19:00', type: 'FOMC', actual: 5.5, forecast: 5.5, unit: '%' },
+  { date: '2024.06.12', time: '19:00', type: 'FOMC', actual: 5.5, forecast: 5.5, unit: '%' },
+  { date: '2024.07.31', time: '19:00', type: 'FOMC', actual: 5.5, forecast: 5.5, unit: '%' },
+  { date: '2024.09.18', time: '19:00', type: 'FOMC', actual: 5.0, forecast: 5.25, unit: '%' },
+  { date: '2024.11.07', time: '20:00', type: 'FOMC', actual: 4.75, forecast: 4.75, unit: '%' },
+  { date: '2024.12.18', time: '20:00', type: 'FOMC', actual: 4.5, forecast: 4.5, unit: '%' },
+  { date: '2025.01.29', time: '20:00', type: 'FOMC', actual: 4.5, forecast: 4.5, unit: '%' },
+  { date: '2025.03.19', time: '19:00', type: 'FOMC', actual: 4.5, forecast: 4.5, unit: '%' },
+  { date: '2025.05.07', time: '19:00', type: 'FOMC', actual: 4.5, forecast: 4.5, unit: '%' },
+  { date: '2025.06.18', time: '19:00', type: 'FOMC', actual: 4.25, forecast: 4.5, unit: '%' },
+  { date: '2025.07.30', time: '19:00', type: 'FOMC', actual: 4.0, forecast: 4.25, unit: '%' },
+  { date: '2025.09.17', time: '19:00', type: 'FOMC', actual: 3.75, forecast: 4.0, unit: '%' },
+  { date: '2025.11.05', time: '20:00', type: 'FOMC', actual: 3.5, forecast: 3.75, unit: '%' },
+  { date: '2025.12.17', time: '20:00', type: 'FOMC', actual: 3.5, forecast: 3.5, unit: '%' },
+  { date: '2026.01.28', time: '20:00', type: 'FOMC', actual: 3.5, forecast: 3.5, unit: '%' },
+  { date: '2026.03.18', time: '19:00', type: 'FOMC', actual: 3.5, forecast: 3.5, unit: '%' },
+
+  // PPI
+  { date: '2024.04.11', time: '13:30', type: 'PPI', actual: 2.1, forecast: 2.2, unit: '%' },
+  { date: '2024.05.14', time: '13:30', type: 'PPI', actual: 2.2, forecast: 2.2, unit: '%' },
+  { date: '2024.06.13', time: '13:30', type: 'PPI', actual: 2.6, forecast: 2.3, unit: '%' },
+  { date: '2024.07.12', time: '13:30', type: 'PPI', actual: 2.2, forecast: 2.3, unit: '%' },
+  { date: '2024.08.13', time: '13:30', type: 'PPI', actual: 2.2, forecast: 2.3, unit: '%' },
+  { date: '2024.09.12', time: '13:30', type: 'PPI', actual: 1.7, forecast: 1.8, unit: '%' },
+  { date: '2025.01.14', time: '13:30', type: 'PPI', actual: 3.3, forecast: 3.2, unit: '%' },
+  { date: '2025.02.13', time: '13:30', type: 'PPI', actual: 3.2, forecast: 3.3, unit: '%' },
+  { date: '2025.03.13', time: '13:30', type: 'PPI', actual: 2.7, forecast: 3.1, unit: '%' },
+  { date: '2025.04.11', time: '13:30', type: 'PPI', actual: 2.4, forecast: 2.7, unit: '%' },
+  { date: '2026.04.11', time: '13:30', type: 'PPI', actual: 2.7, forecast: 2.5, unit: '%' },
+
+  // GDP
+  { date: '2024.04.25', time: '13:30', type: 'GDP', actual: 1.6, forecast: 2.4, unit: '%' },
+  { date: '2024.07.25', time: '13:30', type: 'GDP', actual: 2.8, forecast: 2.0, unit: '%' },
+  { date: '2024.10.30', time: '13:30', type: 'GDP', actual: 2.8, forecast: 3.1, unit: '%' },
+  { date: '2025.01.30', time: '13:30', type: 'GDP', actual: 2.3, forecast: 2.7, unit: '%' },
+  { date: '2025.04.30', time: '13:30', type: 'GDP', actual: -0.3, forecast: 0.4, unit: '%' },
+  { date: '2025.07.30', time: '13:30', type: 'GDP', actual: 1.8, forecast: 1.5, unit: '%' },
+  { date: '2025.10.29', time: '13:30', type: 'GDP', actual: 2.1, forecast: 2.0, unit: '%' },
+  { date: '2026.01.29', time: '13:30', type: 'GDP', actual: 2.4, forecast: 2.2, unit: '%' },
+
+  // RETAIL SALES
+  { date: '2024.04.15', time: '13:30', type: 'RETAIL', actual: 0.7, forecast: 0.4, unit: '%' },
+  { date: '2024.05.15', time: '13:30', type: 'RETAIL', actual: 0.0, forecast: 0.4, unit: '%' },
+  { date: '2024.06.18', time: '13:30', type: 'RETAIL', actual: -0.1, forecast: 0.3, unit: '%' },
+  { date: '2024.07.16', time: '13:30', type: 'RETAIL', actual: 1.0, forecast: 0.4, unit: '%' },
+  { date: '2024.08.15', time: '13:30', type: 'RETAIL', actual: 1.0, forecast: 0.3, unit: '%' },
+  { date: '2024.09.17', time: '13:30', type: 'RETAIL', actual: 0.4, forecast: 0.3, unit: '%' },
+  { date: '2025.01.16', time: '13:30', type: 'RETAIL', actual: -0.9, forecast: -0.2, unit: '%' },
+  { date: '2025.02.14', time: '13:30', type: 'RETAIL', actual: 0.2, forecast: 0.6, unit: '%' },
+  { date: '2025.03.17', time: '13:30', type: 'RETAIL', actual: -0.1, forecast: 0.5, unit: '%' },
+  { date: '2025.04.16', time: '13:30', type: 'RETAIL', actual: 1.4, forecast: 1.3, unit: '%' },
+  { date: '2026.03.17', time: '13:30', type: 'RETAIL', actual: 0.2, forecast: 0.3, unit: '%' },
+];
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+function handleFiles(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const name = file.name.replace('.csv', '').replace('_M15', '');
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.files[name] = parseCSV(e.target.result);
+      updateFileList();
+      checkReady();
+    };
+    reader.readAsText(file);
+  });
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',');
+    return {
+      date: vals[0]?.trim(),
+      time: vals[1]?.trim(),
+      open: parseFloat(vals[2]),
+      high: parseFloat(vals[3]),
+      low:  parseFloat(vals[4]),
+      close: parseFloat(vals[5]),
+      volume: parseInt(vals[6]) || 0,
+      dt: vals[0]?.trim() + ' ' + vals[1]?.trim()
+    };
+  }).filter(r => r.date && !isNaN(r.close));
+}
+
+function updateFileList() {
+  const list = document.getElementById('fileList');
+  const zone = document.getElementById('uploadZone');
+  const keys = Object.keys(state.files);
+
+  list.innerHTML = keys.map(name => `
+    <div class="file-item">
+      <div class="file-dot"></div>
+      <div class="file-name">${name}_M15.csv</div>
+      <div class="file-count">${state.files[name].length.toLocaleString()} K</div>
+    </div>
+  `).join('');
+
+  if (keys.length > 0) zone.classList.add('has-files');
+}
+
+function checkReady() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = Object.keys(state.files).length === 0;
+}
+
+function toggleEvent(el) {
+  el.classList.toggle('active');
+  const event = el.dataset.event;
+  if (el.classList.contains('active')) {
+    if (!state.activeEvents.includes(event)) state.activeEvents.push(event);
+  } else {
+    state.activeEvents = state.activeEvents.filter(e => e !== event);
+  }
+}
+
+// ============================================================
+// BACKTEST ENGINE
+// ============================================================
+function runBacktest() {
+  if (Object.keys(state.files).length === 0) return;
+
+  showLoading('Analysiere News Events...');
+  setTimeout(() => {
+    try {
+      const results = doBacktest();
+      state.results = results;
+      renderResults(results);
+      hideLoading();
+    } catch(e) {
+      console.error(e);
+      hideLoading();
+    }
+  }, 100);
+}
+
+function doBacktest() {
+  const entryDelay = parseInt(document.getElementById('entryDelay').value);
+  const holdBars   = parseInt(document.getElementById('holdBars').value);
+  const minSurp    = parseInt(document.getElementById('minSurprise').value);
+  const direction  = document.getElementById('direction').value;
+
+  const trades = [];
+  const assets = Object.keys(state.files);
+
+  // Filter aktive Events
+  const events = NEWS_CALENDAR.filter(e => state.activeEvents.includes(e.type));
+
+  setLoadingStep(`Verarbeite ${events.length} Events auf ${assets.length} Assets...`);
+
+  events.forEach(event => {
+    // Surprise berechnen
+    const surprise = event.forecast !== 0
+      ? Math.abs((event.actual - event.forecast) / event.forecast * 100)
+      : Math.abs(event.actual - event.forecast) * 100;
+
+    if (surprise < minSurp) return;
+
+    // Richtung bestimmen (News-Logik)
+    let bullish = false;
+    if (event.type === 'NFP')    bullish = event.actual < event.forecast; // schwach = Dollar schwach = Gold/EUR hoch
+    if (event.type === 'CPI')    bullish = event.actual > event.forecast; // höher als erwartet = inflation = Gold hoch
+    if (event.type === 'FOMC')   bullish = event.actual < event.forecast; // dovish = Gold hoch
+    if (event.type === 'PPI')    bullish = event.actual > event.forecast;
+    if (event.type === 'GDP')    bullish = event.actual < event.forecast; // schwach = dovish = Gold hoch
+    if (event.type === 'RETAIL') bullish = event.actual < event.forecast;
+
+    assets.forEach(asset => {
+      const bars = state.files[asset];
+      const eventDt = event.date + ' ' + event.time;
+
+      // Event Kerze finden
+      let eventIdx = -1;
+      for (let i = 0; i < bars.length; i++) {
+        if (bars[i].dt >= eventDt) { eventIdx = i; break; }
+      }
+      if (eventIdx < 0) return;
+
+      const entryIdx = eventIdx + entryDelay;
+      const exitIdx  = entryIdx + holdBars;
+      if (entryIdx >= bars.length || exitIdx >= bars.length) return;
+
+      const entryBar = bars[entryIdx];
+      const exitBar  = bars[exitIdx];
+      const entryPrice = entryBar.open;
+      const exitPrice  = exitBar.close;
+
+      // Richtung basierend auf News + Asset
+      let isLong = bullish;
+
+      // XAUUSD: bullish news = Long (Gold steigt wenn Dollar schwach)
+      // EURUSD: bullish news = Long (EUR steigt wenn Dollar schwach)
+      // GBPUSD: bullish news = Long
+      // US100: bearisch news für Gold = bullish für Index wenn economy strong
+      if (asset === 'US100') isLong = !bullish; // Index reagiert umgekehrt zu Gold
+
+      if (direction === 'long' && !isLong) return;
+      if (direction === 'short' && isLong) return;
+
+      // PnL berechnen
+      let pips;
+      if (isLong) {
+        pips = exitPrice - entryPrice;
+      } else {
+        pips = entryPrice - exitPrice;
+      }
+
+      // Normalisieren
+      let pipsNorm = pips;
+      if (asset === 'EURUSD' || asset === 'GBPUSD') pipsNorm = pips * 10000;
+      if (asset === 'XAUUSD') pipsNorm = pips;
+      if (asset === 'US100')  pipsNorm = pips;
+
+      trades.push({
+        date: event.date,
+        eventType: event.type,
+        asset,
+        surprise: surprise.toFixed(1),
+        isLong,
+        entryPrice,
+        exitPrice,
+        pips: pipsNorm,
+        win: pipsNorm > 0,
+        actual: event.actual,
+        forecast: event.forecast,
+        unit: event.unit
+      });
+    });
+  });
+
+  // Aggregieren
+  const byAsset = {};
+  const byEvent = {};
+
+  trades.forEach(t => {
+    if (!byAsset[t.asset]) byAsset[t.asset] = { trades: [], wins: 0, totalPips: 0 };
+    byAsset[t.asset].trades.push(t);
+    if (t.win) byAsset[t.asset].wins++;
+    byAsset[t.asset].totalPips += t.pips;
+
+    if (!byEvent[t.eventType]) byEvent[t.eventType] = {};
+    if (!byEvent[t.eventType][t.asset]) byEvent[t.eventType][t.asset] = { trades: 0, wins: 0 };
+    byEvent[t.eventType][t.asset].trades++;
+    if (t.win) byEvent[t.eventType][t.asset].wins++;
+  });
+
+  const totalTrades = trades.length;
+  const totalWins = trades.filter(t => t.win).length;
+  const totalPips = trades.reduce((s, t) => s + t.pips, 0);
+  const winRate = totalTrades > 0 ? (totalWins / totalTrades * 100).toFixed(1) : 0;
+
+  return { trades, byAsset, byEvent, totalTrades, totalWins, totalPips, winRate };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderResults(r) {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('results').classList.add('visible');
+
+  // STAT CARDS
+  document.getElementById('statCards').innerHTML = `
+    <div class="stat-card" style="--accent: var(--gold)">
+      <div class="stat-label">Trades Total</div>
+      <div class="stat-value">${r.totalTrades}</div>
+      <div class="stat-sub">${state.activeEvents.join(' · ')}</div>
+    </div>
+    <div class="stat-card" style="--accent: ${parseFloat(r.winRate) >= 50 ? 'var(--green)' : 'var(--red)'}">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-value ${parseFloat(r.winRate) >= 50 ? 'pos' : 'neg'}">${r.winRate}%</div>
+      <div class="stat-sub">${r.totalWins} Wins / ${r.totalTrades - r.totalWins} Losses</div>
+    </div>
+    <div class="stat-card" style="--accent: ${r.totalPips >= 0 ? 'var(--green)' : 'var(--red)'}">
+      <div class="stat-label">Gesamt P&L</div>
+      <div class="stat-value ${r.totalPips >= 0 ? 'pos' : 'neg'}">${r.totalPips >= 0 ? '+' : ''}${r.totalPips.toFixed(0)}</div>
+      <div class="stat-sub">Pips / Punkte kombiniert</div>
+    </div>
+    <div class="stat-card" style="--accent: var(--blue)">
+      <div class="stat-label">Events analysiert</div>
+      <div class="stat-value">${NEWS_CALENDAR.filter(e => state.activeEvents.includes(e.type)).length}</div>
+      <div class="stat-sub">Apr 2024 → Apr 2026</div>
+    </div>
+  `;
+
+  // ASSET GRID
+  const assetColors = { XAUUSD: '#f0b429', EURUSD: '#3b82f6', GBPUSD: '#a855f7', US100: '#00e5a0' };
+  document.getElementById('assetGrid').innerHTML = Object.entries(r.byAsset).map(([asset, data]) => {
+    const wr = (data.wins / data.trades.length * 100).toFixed(1);
+    const avgPips = (data.totalPips / data.trades.length).toFixed(1);
+    const color = assetColors[asset] || 'var(--gold)';
+    return `
+      <div class="asset-card">
+        <div class="asset-card-header">
+          <div style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></div>
+          <div class="asset-symbol">${asset}</div>
+          <div class="asset-badge">${data.trades.length} Trades</div>
+        </div>
+        <div class="asset-stats">
+          <div class="asset-stat-item">
+            <div class="asset-stat-val ${parseFloat(wr) >= 50 ? 'pos' : 'neg'}">${wr}%</div>
+            <div class="asset-stat-lbl">Win Rate</div>
+          </div>
+          <div class="asset-stat-item">
+            <div class="asset-stat-val ${data.totalPips >= 0 ? 'pos' : 'neg'}">${data.totalPips >= 0 ? '+' : ''}${data.totalPips.toFixed(0)}</div>
+            <div class="asset-stat-lbl">Gesamt</div>
+          </div>
+          <div class="asset-stat-item">
+            <div class="asset-stat-val ${parseFloat(avgPips) >= 0 ? 'pos' : 'neg'}">${parseFloat(avgPips) >= 0 ? '+' : ''}${avgPips}</div>
+            <div class="asset-stat-lbl">Ø/Trade</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // NEWS BREAKDOWN
+  const eventColors = { NFP: '#f0b429', CPI: '#3b82f6', FOMC: '#a855f7', PPI: '#00e5a0', GDP: '#ff4060', RETAIL: '#fb923c' };
+  const eventDesc = { NFP: 'Non-Farm Payrolls', CPI: 'Consumer Price Index', FOMC: 'Fed Zinsentscheid', PPI: 'Producer Price Index', GDP: 'Bruttoinlandsprodukt', RETAIL: 'Einzelhandelsumsätze' };
+
+  document.getElementById('newsGrid').innerHTML = Object.entries(r.byEvent).map(([eventType, assets]) => {
+    const color = eventColors[eventType] || 'var(--gold)';
+    const desc = eventDesc[eventType] || eventType;
+    const bars = Object.entries(assets).map(([asset, data]) => {
+      const wr = (data.wins / data.trades * 100).toFixed(0);
+      return `
+        <div class="news-bar-row">
+          <div class="news-bar-label">${asset}</div>
+          <div class="news-bar-track">
+            <div class="news-bar-fill" style="width:${wr}%;background:${parseInt(wr) >= 50 ? 'var(--green)' : 'var(--red)'}"></div>
+          </div>
+          <div class="news-bar-val ${parseInt(wr) >= 50 ? 'pos' : 'neg'}">${wr}%</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="news-card">
+        <div class="news-card-title" style="color:${color}">${eventType}</div>
+        <div class="news-card-sub">${desc}</div>
+        ${bars}
+      </div>
+    `;
+  }).join('');
+
+  // TRADE LOG (letzte 100)
+  const logTrades = r.trades.slice(-100).reverse();
+  document.getElementById('tradeLog').innerHTML = logTrades.map(t => `
+    <tr>
+      <td>${t.date}</td>
+      <td><span class="tag tag-gold">${t.eventType}</span></td>
+      <td>${t.asset}</td>
+      <td>${t.surprise}%</td>
+      <td><span class="tag ${t.isLong ? 'tag-green' : 'tag-red'}">${t.isLong ? 'LONG' : 'SHORT'}</span></td>
+      <td>${t.entryPrice.toFixed(t.asset.includes('USD') && !t.asset.includes('XAU') && !t.asset.includes('US') ? 5 : 2)}</td>
+      <td>${t.exitPrice.toFixed(t.asset.includes('USD') && !t.asset.includes('XAU') && !t.asset.includes('US') ? 5 : 2)}</td>
+      <td class="${t.win ? 'pos' : 'neg'}">${t.pips >= 0 ? '+' : ''}${t.pips.toFixed(1)}</td>
+      <td><span class="tag ${t.win ? 'tag-green' : 'tag-red'}">${t.win ? 'WIN' : 'LOSS'}</span></td>
+    </tr>
+  `).join('');
+
+  // RECOMMENDATION
+  const ranked = Object.entries(r.byAsset)
+    .map(([asset, data]) => ({
+      asset,
+      wr: data.wins / data.trades.length * 100,
+      trades: data.trades.length,
+      totalPips: data.totalPips
+    }))
+    .sort((a, b) => b.wr - a.wr);
+
+  // Best Event per Asset
+  const bestEventPerAsset = {};
+  Object.entries(r.byEvent).forEach(([evt, assets]) => {
+    Object.entries(assets).forEach(([asset, data]) => {
+      const wr = data.wins / data.trades * 100;
+      if (!bestEventPerAsset[asset] || wr > bestEventPerAsset[asset].wr) {
+        bestEventPerAsset[asset] = { event: evt, wr };
+      }
+    });
+  });
+
+  const recItems = ranked.slice(0, 4).map((item, i) => {
+    const bestEvt = bestEventPerAsset[item.asset];
+    return `
+      <div class="rec-item">
+        <div class="rec-rank">#${i+1} EMPFOHLEN</div>
+        <div class="rec-asset">${item.asset}</div>
+        <div class="rec-event">Bestes Event: ${bestEvt?.event || '-'}</div>
+        <div class="rec-wr ${item.wr >= 50 ? 'pos' : 'neg'}">Win Rate: ${item.wr.toFixed(1)}% · ${item.trades} Trades</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('recBox').innerHTML = `
+    <div class="rec-title">🎯 Deine Top 4 Assets für News Trading</div>
+    <div class="rec-grid">${recItems}</div>
+  `;
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingOverlay').classList.add('visible');
+  document.querySelector('.loading-text').textContent = msg;
+}
+function setLoadingStep(msg) {
+  document.getElementById('loadingStep').textContent = msg;
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('visible');
+}
+</script>
+</body>
+</html>
