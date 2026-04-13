@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM — News Trading Backtest v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+:root {
+  --bg:#080b12;--bg2:#0d1220;--bg3:#121a2e;--border:#1e2d4a;
+  --gold:#f0b429;--green:#00e5a0;--red:#ff4060;--blue:#3b82f6;--purple:#a855f7;
+  --text:#e8eef8;--muted:#4a6080;
+  --mono:'Space Mono',monospace;--sans:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 60% 40% at 10% 20%,rgba(240,180,41,0.05) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 50% at 90% 80%,rgba(0,229,160,0.04) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+
+.header{position:relative;z-index:1;padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;background:rgba(13,18,32,0.9);backdrop-filter:blur(10px);}
+.logo{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#000;flex-shrink:0;}
+.header-title{font-size:15px;font-weight:800;}
+.header-sub{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.header-badge{margin-left:auto;padding:3px 8px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);
+  border-radius:20px;font-size:9px;font-family:var(--mono);color:var(--gold);}
+
+.app{max-width:480px;margin:0 auto;padding:0 16px 60px;position:relative;z-index:1;}
+.section{margin-top:20px;}
+.section-label{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:10px;}
+
+/* API INPUT */
+.api-row{display:flex;gap:8px;align-items:center;}
+.api-input{flex:1;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;}
+.api-input:focus{border-color:var(--gold);}
+.api-status{font-size:10px;font-family:var(--mono);margin-top:6px;color:var(--muted);}
+.api-status.ok{color:var(--green);}
+.api-status.err{color:var(--red);}
+
+/* UPLOAD */
+.upload-zone{border:1px dashed var(--border);border-radius:10px;padding:16px;text-align:center;
+  cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+.upload-zone:hover{border-color:var(--gold);background:rgba(240,180,41,0.03);}
+.upload-zone.has-files{border-color:var(--green);border-style:solid;}
+.upload-icon{font-size:22px;margin-bottom:6px;}
+.upload-text{font-size:11px;color:var(--muted);}
+.upload-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:2px;}
+.file-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.15);
+  border-radius:6px;font-size:11px;font-family:var(--mono);}
+.file-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.file-name{flex:1;color:var(--green);}
+.file-count{color:var(--muted);}
+
+/* TIME OFFSET */
+.offset-row{display:flex;gap:8px;align-items:center;}
+.offset-info{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;padding:8px;
+  background:rgba(240,180,41,0.06);border-radius:6px;border:1px solid rgba(240,180,41,0.15);}
+
+/* NEWS EVENTS */
+.news-events{display:flex;flex-direction:column;gap:6px;}
+.event-toggle{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  cursor:pointer;transition:all 0.15s;user-select:none;}
+.event-toggle.active{border-color:var(--gold);background:rgba(240,180,41,0.06);}
+.event-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.15s;flex-shrink:0;}
+.event-toggle.active .event-dot{background:var(--gold);}
+.event-name{font-size:11px;font-family:var(--mono);flex:1;}
+.event-freq{font-size:9px;color:var(--muted);}
+
+/* SETTINGS */
+.settings-grid{display:flex;flex-direction:column;gap:10px;}
+.setting-row{display:flex;flex-direction:column;gap:4px;}
+.setting-label{font-size:10px;color:var(--muted);font-family:var(--mono);}
+select,input[type="number"],input[type="text"]{width:100%;padding:9px 12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);
+  font-size:11px;outline:none;transition:border-color 0.2s;appearance:none;}
+select:focus,input:focus{border-color:var(--gold);}
+
+/* BUTTONS */
+.run-btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:8px;
+  color:#000;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;
+  transition:all 0.2s;letter-spacing:0.3px;margin-top:4px;}
+.run-btn:hover{background:#ffc740;transform:translateY(-1px);}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+/* STAT CARDS */
+.stat-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--gold));}
+.stat-label{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:6px;}
+.stat-value{font-size:24px;font-weight:800;line-height:1;margin-bottom:4px;}
+.stat-sub{font-size:9px;color:var(--muted);font-family:var(--mono);}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+.tab{padding:6px 12px;background:transparent;border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.tab.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700;}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ASSET CARDS */
+.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;}
+.asset-card-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.asset-symbol{font-size:14px;font-weight:800;}
+.asset-badge{font-size:9px;font-family:var(--mono);color:var(--muted);}
+.asset-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.asset-stat-item{text-align:center;}
+.asset-stat-val{font-size:16px;font-weight:700;}
+.asset-stat-lbl{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+
+/* NEWS CARDS */
+.news-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.news-card-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+.news-card-sub{font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:12px;}
+.news-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.news-bar-label{font-size:10px;font-family:var(--mono);width:60px;color:var(--muted);}
+.news-bar-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.news-bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease;}
+.news-bar-val{font-size:10px;font-family:var(--mono);width:36px;text-align:right;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:10px;}
+th{padding:9px 10px;background:var(--bg3);text-align:left;font-family:var(--mono);font-size:8px;
+  color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid rgba(30,45,74,0.5);font-family:var(--mono);font-size:10px;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+
+.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:8px;font-weight:700;font-family:var(--mono);}
+.tag-green{background:rgba(0,229,160,0.12);color:var(--green);}
+.tag-red{background:rgba(255,64,96,0.12);color:var(--red);}
+.tag-gold{background:rgba(240,180,41,0.12);color:var(--gold);}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+
+/* REC */
+.rec-box{background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.2);border-radius:10px;padding:16px;}
+.rec-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;}
+.rec-item{background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;margin-bottom:8px;}
+.rec-rank{font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;}
+.rec-asset{font-size:16px;font-weight:800;margin-bottom:4px;}
+.rec-event{font-size:10px;font-family:var(--mono);color:var(--gold);}
+.rec-wr{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(8,11,18,0.9);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:14px;}
+.loading-overlay.visible{display:flex;}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gold);
+  border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;font-family:var(--mono);color:var(--text);}
+.loading-step{font-size:11px;font-family:var(--mono);color:var(--gold);}
+
+/* PROGRESS */
+.progress-wrap{margin-top:8px;display:none;}
+.progress-wrap.visible{display:block;}
+.progress-bar{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.4s;}
+.progress-label{font-size:9px;font-family:var(--mono);color:var(--muted);margin-top:4px;text-align:center;}
+
+/* ALERT */
+.alert{padding:10px 12px;border-radius:8px;font-size:11px;font-family:var(--mono);margin-top:8px;}
+.alert-warn{background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.3);color:var(--gold);}
+.alert-err{background:rgba(255,64,96,0.1);border:1px solid rgba(255,64,96,0.3);color:var(--red);}
+.alert-ok{background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);color:var(--green);}
+
+input[type="file"]{display:none;}
+.results{display:none;}
+.results.visible{display:block;}
+.empty-state{text-align:center;padding:40px 20px;opacity:0.4;}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+.empty-title{font-size:15px;font-weight:700;}
+.empty-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">NT</div>
+  <div>
+    <div class="header-title">FTTM News Backtest</div>
+    <div class="header-sub">Finnhub API · FTMO GMT+2 · v2.0</div>
+  </div>
+  <div class="header-badge">v2.0</div>
+</div>
+
+<div class="app">
+
+  <!-- API KEY -->
+  <div class="section">
+    <div class="section-label">Finnhub API Key</div>
+    <div class="api-row">
+      <input class="api-input" type="text" id="apiKey" placeholder="d7einjhr01qi..." value="d7einjhr01qi33g6dvt0d7einjhr01qi33g6dvtg">
+      <button class="run-btn" style="width:auto;padding:10px 14px;font-size:11px;margin-top:0" onclick="testApi()">Test</button>
+    </div>
+    <div class="api-status" id="apiStatus">API Key eingeben und testen</div>
+  </div>
+
+  <!-- MT5 ZEITZONE -->
+  <div class="section">
+    <div class="section-label">MT5 Server Zeitzone</div>
+    <select id="mt5Offset">
+      <option value="2" selected>GMT+2 (FTMO Standard — Sommer)</option>
+      <option value="3">GMT+3 (FTMO — Sommer mit US DST)</option>
+      <option value="1">GMT+1 (Winter)</option>
+      <option value="0">GMT+0 (UTC)</option>
+    </select>
+    <div class="offset-info">
+      ⚡ FTMO nutzt GMT+2. NFP um 14:30 DE-Zeit = 13:30 in der CSV.<br>
+      Die App rechnet automatisch um — du musst nichts manuell ändern.
+    </div>
+  </div>
+
+  <!-- CSV UPLOAD -->
+  <div class="section">
+    <div class="section-label">CSV Daten (MT5 M15)</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📂</div>
+      <div class="upload-text">
+        <strong>CSVs hochladen</strong>
+        XAUUSD, EURUSD, GBPUSD, US100
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".csv" multiple onchange="handleFiles(event)">
+    <div class="file-list" id="fileList"></div>
+  </div>
+
+  <!-- NEWS EVENTS -->
+  <div class="section">
+    <div class="section-label">News Events (via Finnhub)</div>
+    <div class="news-events">
+      <div class="event-toggle active" data-event="Non Farm Payrolls" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">NFP — Non Farm Payrolls</div>
+        <div class="event-freq">1x/Mo</div>
+      </div>
+      <div class="event-toggle active" data-event="Consumer Price Index" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">CPI — Consumer Price Index</div>
+        <div class="event-freq">1x/Mo</div>
+      </div>
+      <div class="event-toggle active" data-event="FOMC" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">FOMC — Fed Zinsentscheid</div>
+        <div class="event-freq">8x/Jahr</div>
+      </div>
+      <div class="event-toggle" data-event="Producer Price Index" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">PPI — Producer Price Index</div>
+        <div class="event-freq">1x/Mo</div>
+      </div>
+      <div class="event-toggle" data-event="Gross Domestic Product" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">GDP — Bruttoinlandsprodukt</div>
+        <div class="event-freq">1x/Quartal</div>
+      </div>
+      <div class="event-toggle" data-event="Retail Sales" onclick="toggleEvent(this)">
+        <div class="event-dot"></div>
+        <div class="event-name">Retail Sales</div>
+        <div class="event-freq">1x/Mo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EINSTELLUNGEN -->
+  <div class="section">
+    <div class="section-label">Einstellungen</div>
+    <div class="settings-grid">
+      <div class="setting-row">
+        <div class="setting-label">Entry Verzögerung nach Event</div>
+        <select id="entryDelay">
+          <option value="1">1 Kerze (~15 Min)</option>
+          <option value="2" selected>2 Kerzen (~30 Min)</option>
+          <option value="4">4 Kerzen (~60 Min)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Haltezeit</div>
+        <select id="holdBars">
+          <option value="4">4 Kerzen (1 Stunde)</option>
+          <option value="8" selected>8 Kerzen (2 Stunden)</option>
+          <option value="16">16 Kerzen (4 Stunden)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Mindest-Surprise</div>
+        <select id="minSurprise">
+          <option value="0" selected>Alle Events</option>
+          <option value="10">≥10% Überraschung</option>
+          <option value="25">≥25% Überraschung</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Richtung</div>
+        <select id="direction">
+          <option value="both" selected>Long & Short</option>
+          <option value="long">Nur Long</option>
+          <option value="short">Nur Short</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Lade Events von Finnhub...</div>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="runBacktest()" disabled style="margin-top:16px">
+    ▶ Backtest starten
+  </button>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="section" style="margin-top:24px">
+      <div class="stat-cards" id="statCards"></div>
+    </div>
+
+    <div class="section">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(event,'assets')">Assets</button>
+        <button class="tab" onclick="switchTab(event,'news')">News Events</button>
+        <button class="tab" onclick="switchTab(event,'trades')">Trade Log</button>
+        <button class="tab" onclick="switchTab(event,'rec')">Empfehlung</button>
+      </div>
+
+      <div class="tab-content active" id="tab-assets"></div>
+      <div class="tab-content" id="tab-news"></div>
+      <div class="tab-content" id="tab-trades"></div>
+      <div class="tab-content" id="tab-rec"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Lade Daten...</div>
+  <div class="loading-step" id="loadingStep">Bitte warten</div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  files: {},
+  activeEvents: ['Non Farm Payrolls','Consumer Price Index','FOMC'],
+  newsEvents: [],
+  apiKey: 'd7einjhr01qi33g6dvt0d7einjhr01qi33g6dvtg'
+};
+
+// ============================================================
+// API TEST
+// ============================================================
+async function testApi() {
+  const key = document.getElementById('apiKey').value.trim();
+  const status = document.getElementById('apiStatus');
+  if (!key) { status.textContent = '⚠ Kein API Key'; status.className = 'api-status err'; return; }
+  status.textContent = '🔄 Teste...'; status.className = 'api-status';
+  try {
+    const url = `https://finnhub.io/api/v1/calendar/economic?from=2024-04-01&to=2024-04-30&token=${key}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.economicCalendar && data.economicCalendar.length > 0) {
+      status.textContent = `✅ API OK — ${data.economicCalendar.length} Events gefunden`; 
+      status.className = 'api-status ok';
+      state.apiKey = key;
+      checkReady();
+    } else {
+      status.textContent = '❌ Ungültiger Key oder keine Daten'; status.className = 'api-status err';
+    }
+  } catch(e) {
+    status.textContent = '❌ API Fehler: ' + e.message; status.className = 'api-status err';
+  }
+}
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+function handleFiles(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const name = file.name.replace('.csv','').replace('_M15','');
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.files[name] = parseCSV(e.target.result);
+      updateFileList();
+      checkReady();
+    };
+    reader.readAsText(file);
+  });
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  return lines.slice(1).map(line => {
+    const v = line.split(',');
+    return {
+      date: v[0]?.trim(),
+      time: v[1]?.trim(),
+      open: parseFloat(v[2]),
+      high: parseFloat(v[3]),
+      low:  parseFloat(v[4]),
+      close: parseFloat(v[5]),
+      volume: parseInt(v[6]) || 0
+    };
+  }).filter(r => r.date && !isNaN(r.close));
+}
+
+function updateFileList() {
+  const list = document.getElementById('fileList');
+  const zone = document.getElementById('uploadZone');
+  const keys = Object.keys(state.files);
+  list.innerHTML = keys.map(name => `
+    <div class="file-item">
+      <div class="file-dot"></div>
+      <div class="file-name">${name}_M15.csv</div>
+      <div class="file-count">${state.files[name].length.toLocaleString()} K</div>
+    </div>`).join('');
+  if (keys.length > 0) zone.classList.add('has-files');
+}
+
+function checkReady() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = Object.keys(state.files).length === 0;
+}
+
+function toggleEvent(el) {
+  el.classList.toggle('active');
+  const event = el.dataset.event;
+  if (el.classList.contains('active')) {
+    if (!state.activeEvents.includes(event)) state.activeEvents.push(event);
+  } else {
+    state.activeEvents = state.activeEvents.filter(e => e !== event);
+  }
+}
+
+// ============================================================
+// ZEITUMRECHNUNG
+// ============================================================
+// Finnhub liefert UTC timestamps
+// MT5 CSV ist GMT+2 (FTMO)
+// News z.B. NFP: 13:30 UTC → in CSV 15:30 (GMT+2)
+function utcToMt5(utcDateStr, utcTimeStr, mt5OffsetHours) {
+  // utcDateStr: "2024-04-05", utcTimeStr: "13:30:00" oder "13:30"
+  const dt = new Date(`${utcDateStr}T${utcTimeStr.length === 5 ? utcTimeStr + ':00' : utcTimeStr}Z`);
+  dt.setHours(dt.getHours() + mt5OffsetHours);
+  const date = dt.toISOString().slice(0,10).replace(/-/g,'.');
+  const time = dt.toTimeString().slice(0,5);
+  return { date, time };
+}
+
+// CSV Datum/Zeit zu Date object (MT5 Zeit, kein Timezone conversion nötig)
+function csvToDate(csvDate, csvTime) {
+  // csvDate: "2024.04.05", csvTime: "13:30"
+  const d = csvDate.replace(/\./g,'-');
+  return new Date(`${d}T${csvTime}:00`);
+}
+
+// ============================================================
+// FINNHUB EVENT LADEN
+// ============================================================
+async function loadFinnhubEvents(from, to, token) {
+  const url = `https://finnhub.io/api/v1/calendar/economic?from=${from}&to=${to}&token=${token}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.economicCalendar || [];
+}
+
+// Events nach Typ filtern
+function matchEventType(eventName, activeEvents) {
+  const name = (eventName || '').toLowerCase();
+  for (const active of activeEvents) {
+    const a = active.toLowerCase();
+    if (a === 'fomc' && (name.includes('fomc') || name.includes('federal funds') || name.includes('interest rate decision'))) return active;
+    if (name.includes(a.toLowerCase())) return active;
+  }
+  return null;
+}
+
+// ============================================================
+// BACKTEST ENGINE
+// ============================================================
+async function runBacktest() {
+  if (Object.keys(state.files).length === 0) return;
+
+  showLoading('Lade Events von Finnhub...');
+  setLoadingStep('Verbinde mit API...');
+
+  try {
+    const key = document.getElementById('apiKey').value.trim() || state.apiKey;
+    const mt5Offset = parseInt(document.getElementById('mt5Offset').value);
+    const entryDelay = parseInt(document.getElementById('entryDelay').value);
+    const holdBars   = parseInt(document.getElementById('holdBars').value);
+    const minSurp    = parseFloat(document.getElementById('minSurprise').value);
+    const direction  = document.getElementById('direction').value;
+
+    // Datum-Range aus CSV ableiten
+    const allDates = Object.values(state.files).flatMap(bars => bars.map(b => b.date));
+    const minDate = allDates.reduce((a,b) => a < b ? a : b).replace(/\./g,'-');
+    const maxDate = allDates.reduce((a,b) => a > b ? a : b).replace(/\./g,'-');
+
+    setLoadingStep(`Lade Events ${minDate} → ${maxDate}`);
+
+    // Finnhub in 3-Monats-Batches laden (API Limit)
+    let allEvents = [];
+    let current = new Date(minDate);
+    const end = new Date(maxDate);
+    let batch = 0;
+    const totalMonths = Math.ceil((end - current) / (1000*60*60*24*90)) + 1;
+
+    while (current <= end) {
+      const from = current.toISOString().slice(0,10);
+      current.setDate(current.getDate() + 90);
+      const to = current > end ? maxDate : current.toISOString().slice(0,10);
+      batch++;
+      setLoadingStep(`Batch ${batch}/${totalMonths}: ${from} → ${to}`);
+      setProgress(batch / totalMonths * 50);
+
+      try {
+        const events = await loadFinnhubEvents(from, to, key);
+        allEvents = allEvents.concat(events);
+        await sleep(300); // Rate limit
+      } catch(e) {
+        console.warn('Batch error:', e);
+      }
+    }
+
+    setLoadingStep(`${allEvents.length} Events geladen — filtere...`);
+    setProgress(55);
+
+    // Nur US High-Impact Events
+    const relevantEvents = allEvents.filter(e => {
+      if (e.country !== 'US' && e.country !== 'United States') return false;
+      if (e.impact !== 'high' && e.impact !== 3 && e.impact !== '3') {
+        // Auch medium wenn FOMC
+        const name = (e.event || '').toLowerCase();
+        if (!name.includes('fomc') && !name.includes('federal funds') && !name.includes('interest rate')) return false;
+      }
+      const matched = matchEventType(e.event, state.activeEvents);
+      return matched !== null;
+    });
+
+    setLoadingStep(`${relevantEvents.length} relevante Events gefunden`);
+    setProgress(60);
+
+    // Trades berechnen
+    const trades = [];
+    const assets = Object.keys(state.files);
+    let processed = 0;
+
+    for (const event of relevantEvents) {
+      processed++;
+      setProgress(60 + (processed / relevantEvents.length) * 35);
+
+      const actual   = parseFloat(event.actual)   || 0;
+      const estimate = parseFloat(event.estimate) || parseFloat(event.prev) || 0;
+      
+      if (estimate === 0) continue;
+      
+      const surprise = Math.abs((actual - estimate) / Math.abs(estimate) * 100);
+      if (surprise < minSurp) continue;
+
+      // Event Zeit: Finnhub gibt UTC Zeit
+      // event.time ist Unix timestamp in Sekunden
+      const eventUtc = new Date(event.time * 1000);
+      const utcDateStr = eventUtc.toISOString().slice(0,10);
+      const utcTimeStr = eventUtc.toISOString().slice(11,16);
+      
+      // Umrechnen in MT5 Zeit
+      const { date: mt5Date, time: mt5Time } = utcToMt5(utcDateStr, utcTimeStr, mt5Offset);
+      const eventDt = csvToDate(mt5Date, mt5Time);
+
+      const eventType = matchEventType(event.event, state.activeEvents);
+
+      // Richtungslogik
+      let bullish;
+      const name = (event.event || '').toLowerCase();
+      if (name.includes('non farm') || name.includes('nonfarm')) {
+        bullish = actual < estimate; // schwacher Job-Markt = Dollar schwach = Gold/EUR hoch
+      } else if (name.includes('consumer price') || name.includes('cpi')) {
+        bullish = actual < estimate; // niedrige Inflation = dovish Fed = Gold/EUR hoch
+      } else if (name.includes('fomc') || name.includes('federal funds') || name.includes('interest rate')) {
+        bullish = actual <= estimate; // Zinssenkung oder Hold = bullish für Gold/EUR
+      } else if (name.includes('producer price') || name.includes('ppi')) {
+        bullish = actual < estimate;
+      } else if (name.includes('gross domestic') || name.includes('gdp')) {
+        bullish = actual < estimate; // schwache Wirtschaft = dovish = Gold/EUR hoch
+      } else if (name.includes('retail sales')) {
+        bullish = actual < estimate;
+      } else {
+        bullish = actual < estimate;
+      }
+
+      for (const asset of assets) {
+        const bars = state.files[asset];
+        
+        // Event Kerze finden (nächste Kerze nach Event-Zeit)
+        let eventIdx = -1;
+        for (let i = 0; i < bars.length; i++) {
+          const barDt = csvToDate(bars[i].date, bars[i].time);
+          if (barDt >= eventDt) { eventIdx = i; break; }
+        }
+        if (eventIdx < 0) continue;
+
+        const entryIdx = eventIdx + entryDelay;
+        const exitIdx  = entryIdx + holdBars;
+        if (entryIdx >= bars.length || exitIdx >= bars.length) continue;
+
+        const entryPrice = bars[entryIdx].open;
+        const exitPrice  = bars[exitIdx].close;
+
+        // US100 reagiert umgekehrt (starke Wirtschaft = Aktien hoch)
+        let isLong = asset === 'US100' ? !bullish : bullish;
+
+        if (direction === 'long' && !isLong) continue;
+        if (direction === 'short' && isLong) continue;
+
+        let pips = isLong ? (exitPrice - entryPrice) : (entryPrice - exitPrice);
+        // Normalisieren für Forex
+        if (asset === 'EURUSD' || asset === 'GBPUSD') pips *= 10000;
+
+        trades.push({
+          date: mt5Date,
+          time: mt5Time,
+          utcTime: `${utcDateStr} ${utcTimeStr}`,
+          eventType,
+          eventName: event.event,
+          asset,
+          actual: actual.toFixed(2),
+          estimate: estimate.toFixed(2),
+          surprise: surprise.toFixed(1),
+          isLong,
+          entryPrice,
+          exitPrice,
+          pips,
+          win: pips > 0
+        });
+      }
+    }
+
+    setProgress(100);
+    setLoadingStep('Rendere Ergebnisse...');
+    await sleep(200);
+
+    if (trades.length === 0) {
+      hideLoading();
+      showAlert('Keine Trades gefunden. Prüfe ob die CSV Daten den gleichen Zeitraum wie die Events abdecken.', 'warn');
+      return;
+    }
+
+    state.results = { trades, allEvents: relevantEvents };
+    renderResults(trades, relevantEvents);
+    hideLoading();
+
+  } catch(e) {
+    hideLoading();
+    console.error(e);
+    showAlert('Fehler: ' + e.message, 'err');
+  }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderResults(trades, events) {
+  document.getElementById('results').classList.add('visible');
+
+  const totalWins = trades.filter(t => t.win).length;
+  const totalPips = trades.reduce((s,t) => s + t.pips, 0);
+  const winRate = (totalWins / trades.length * 100).toFixed(1);
+
+  // STAT CARDS
+  document.getElementById('statCards').innerHTML = `
+    <div class="stat-card" style="--accent:var(--gold)">
+      <div class="stat-label">Trades</div>
+      <div class="stat-value">${trades.length}</div>
+      <div class="stat-sub">${events.length} Events gefunden</div>
+    </div>
+    <div class="stat-card" style="--accent:${parseFloat(winRate)>=50?'var(--green)':'var(--red)'}">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-value ${parseFloat(winRate)>=50?'pos':'neg'}">${winRate}%</div>
+      <div class="stat-sub">${totalWins}W / ${trades.length-totalWins}L</div>
+    </div>
+    <div class="stat-card" style="--accent:${totalPips>=0?'var(--green)':'var(--red)'}">
+      <div class="stat-label">Gesamt P&L</div>
+      <div class="stat-value ${totalPips>=0?'pos':'neg'}">${totalPips>=0?'+':''}${totalPips.toFixed(0)}</div>
+      <div class="stat-sub">Pips / Punkte</div>
+    </div>
+    <div class="stat-card" style="--accent:var(--blue)">
+      <div class="stat-label">Ø/Trade</div>
+      <div class="stat-value ${totalPips/trades.length>=0?'pos':'neg'}">${(totalPips/trades.length)>=0?'+':''}${(totalPips/trades.length).toFixed(1)}</div>
+      <div class="stat-sub">Pips pro Trade</div>
+    </div>`;
+
+  // ASSETS TAB
+  const byAsset = {};
+  trades.forEach(t => {
+    if (!byAsset[t.asset]) byAsset[t.asset] = {trades:[],wins:0,pips:0};
+    byAsset[t.asset].trades.push(t);
+    if(t.win) byAsset[t.asset].wins++;
+    byAsset[t.asset].pips += t.pips;
+  });
+
+  const assetColors = {XAUUSD:'#f0b429',EURUSD:'#3b82f6',GBPUSD:'#a855f7',US100:'#00e5a0'};
+  document.getElementById('tab-assets').innerHTML = Object.entries(byAsset).map(([asset, d]) => {
+    const wr = (d.wins/d.trades.length*100).toFixed(1);
+    const avg = (d.pips/d.trades.length).toFixed(1);
+    return `<div class="asset-card">
+      <div class="asset-card-header">
+        <div style="width:10px;height:10px;border-radius:50%;background:${assetColors[asset]||'var(--gold)'};flex-shrink:0"></div>
+        <div class="asset-symbol">${asset}</div>
+        <div class="asset-badge">${d.trades.length} Trades</div>
+      </div>
+      <div class="asset-stats">
+        <div class="asset-stat-item">
+          <div class="asset-stat-val ${parseFloat(wr)>=50?'pos':'neg'}">${wr}%</div>
+          <div class="asset-stat-lbl">Win Rate</div>
+        </div>
+        <div class="asset-stat-item">
+          <div class="asset-stat-val ${d.pips>=0?'pos':'neg'}">${d.pips>=0?'+':''}${d.pips.toFixed(0)}</div>
+          <div class="asset-stat-lbl">Gesamt</div>
+        </div>
+        <div class="asset-stat-item">
+          <div class="asset-stat-val ${parseFloat(avg)>=0?'pos':'neg'}">${parseFloat(avg)>=0?'+':''}${avg}</div>
+          <div class="asset-stat-lbl">Ø/Trade</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // NEWS TAB
+  const byEvent = {};
+  trades.forEach(t => {
+    if (!byEvent[t.eventType]) byEvent[t.eventType] = {};
+    if (!byEvent[t.eventType][t.asset]) byEvent[t.eventType][t.asset] = {trades:0,wins:0};
+    byEvent[t.eventType][t.asset].trades++;
+    if(t.win) byEvent[t.eventType][t.asset].wins++;
+  });
+
+  const eventColors = {'Non Farm Payrolls':'#f0b429','Consumer Price Index':'#3b82f6',
+    'FOMC':'#a855f7','Producer Price Index':'#00e5a0','Gross Domestic Product':'#ff4060','Retail Sales':'#fb923c'};
+  const eventShort = {'Non Farm Payrolls':'NFP','Consumer Price Index':'CPI','FOMC':'FOMC',
+    'Producer Price Index':'PPI','Gross Domestic Product':'GDP','Retail Sales':'Retail'};
+
+  document.getElementById('tab-news').innerHTML = Object.entries(byEvent).map(([evt, assets]) => {
+    const color = eventColors[evt] || 'var(--gold)';
+    const short = eventShort[evt] || evt;
+    const bars = Object.entries(assets).map(([asset, d]) => {
+      const wr = Math.round(d.wins/d.trades*100);
+      return `<div class="news-bar-row">
+        <div class="news-bar-label">${asset}</div>
+        <div class="news-bar-track">
+          <div class="news-bar-fill" style="width:${wr}%;background:${wr>=50?'var(--green)':'var(--red)'}"></div>
+        </div>
+        <div class="news-bar-val ${wr>=50?'pos':'neg'}">${wr}%</div>
+      </div>`;
+    }).join('');
+    return `<div class="news-card">
+      <div class="news-card-title" style="color:${color}">${short}</div>
+      <div class="news-card-sub">${evt}</div>
+      ${bars}
+    </div>`;
+  }).join('');
+
+  // TRADE LOG
+  document.getElementById('tab-trades').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Datum (MT5)</th><th>UTC</th><th>Event</th><th>Asset</th>
+          <th>Actual</th><th>Est.</th><th>Surpr.</th>
+          <th>Dir</th><th>Pips</th><th>Result</th>
+        </tr></thead>
+        <tbody>${trades.slice(-80).reverse().map(t => `<tr>
+          <td>${t.date} ${t.time}</td>
+          <td style="color:var(--muted)">${t.utcTime}</td>
+          <td><span class="tag tag-gold">${eventShort[t.eventType]||t.eventType}</span></td>
+          <td>${t.asset}</td>
+          <td>${t.actual}</td><td>${t.estimate}</td>
+          <td>${t.surprise}%</td>
+          <td><span class="tag ${t.isLong?'tag-green':'tag-red'}">${t.isLong?'L':'S'}</span></td>
+          <td class="${t.win?'pos':'neg'}">${t.pips>=0?'+':''}${t.pips.toFixed(1)}</td>
+          <td><span class="tag ${t.win?'tag-green':'tag-red'}">${t.win?'WIN':'LOSS'}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+
+  // EMPFEHLUNG
+  const ranked = Object.entries(byAsset)
+    .map(([asset,d]) => ({asset, wr:d.wins/d.trades.length*100, trades:d.trades.length, pips:d.pips}))
+    .sort((a,b) => b.wr-a.wr);
+
+  const bestEvt = {};
+  Object.entries(byEvent).forEach(([evt,assets]) => {
+    Object.entries(assets).forEach(([asset,d]) => {
+      const wr = d.wins/d.trades*100;
+      if (!bestEvt[asset] || wr > bestEvt[asset].wr) bestEvt[asset] = {event:eventShort[evt]||evt, wr};
+    });
+  });
+
+  document.getElementById('tab-rec').innerHTML = `
+    <div class="rec-box">
+      <div class="rec-title">🎯 Deine Top Assets für News Trading</div>
+      ${ranked.map((item,i) => `
+        <div class="rec-item">
+          <div class="rec-rank">#${i+1} EMPFOHLEN</div>
+          <div class="rec-asset">${item.asset}</div>
+          <div class="rec-event">Bestes Event: ${bestEvt[item.asset]?.event||'-'}</div>
+          <div class="rec-wr ${item.wr>=50?'pos':'neg'}">Win Rate: ${item.wr.toFixed(1)}% · ${item.trades} Trades</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function switchTab(event, tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+tabId).classList.add('active');
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingOverlay').classList.add('visible');
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('progressWrap').classList.add('visible');
+  setProgress(0);
+}
+function setLoadingStep(msg) { document.getElementById('loadingStep').textContent = msg; }
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = Math.round(pct) + '%';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('visible');
+  document.getElementById('progressWrap').classList.remove('visible');
+}
+function showAlert(msg, type) {
+  const a = document.createElement('div');
+  a.className = `alert alert-${type}`;
+  a.textContent = msg;
+  document.querySelector('.app').appendChild(a);
+  setTimeout(() => a.remove(), 8000);
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Auto-test on load
+window.addEventListener('load', () => {
+  checkReady();
+  setTimeout(testApi, 500);
+});
+</script>
+</body>
+</html>
