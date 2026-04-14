@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BizCoach AI</title>
+  <style>
+    :root{
+      --bg1:#05051a;
+      --bg2:#0b1237;
+      --card:rgba(255,255,255,.045);
+      --card2:rgba(255,255,255,.03);
+      --border:rgba(255,255,255,.08);
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.55);
+      --muted2:rgba(255,255,255,.32);
+      --orange1:#ff6b35;
+      --orange2:#ff8b4a;
+      --green:#4ade80;
+      --danger:#ff6464;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0;width:100%;min-height:100%;background:radial-gradient(circle at 80% 10%, rgba(255,72,0,.12), transparent 20%),radial-gradient(circle at 20% 80%, rgba(0,102,255,.12), transparent 24%),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+    body{min-height:100svh}
+    #app{min-height:100svh;width:100%;display:flex;justify-content:center}
+    .shell{width:100%;max-width:760px;min-height:100svh;padding:env(safe-area-inset-top) 18px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+    .screen{display:none;min-height:100svh;width:100%}
+    .screen.active{display:flex;flex-direction:column}
+    .center{flex:1;display:flex;flex-direction:column;justify-content:center}
+    .logo{width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,var(--orange1),var(--orange2));display:flex;align-items:center;justify-content:center;font-size:54px;box-shadow:0 16px 40px rgba(255,107,53,.28);margin:0 auto 26px}
+    h1{font-size:clamp(36px,8vw,64px);line-height:1.02;margin:0 0 14px;font-weight:800;letter-spacing:-.03em}
+    h2{font-size:clamp(26px,7vw,42px);line-height:1.06;margin:0 0 10px;font-weight:800;letter-spacing:-.03em}
+    p.sub{font-size:clamp(18px,4.7vw,28px);line-height:1.45;color:var(--muted);margin:0 0 28px}
+    .badge{display:inline-flex;align-items:center;gap:10px;padding:13px 18px;border-radius:18px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.22);color:#7ef4a8;font-size:18px;margin-bottom:28px}
+    .steps{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+    .step{display:flex;align-items:center;gap:16px;padding:18px;border-radius:20px;background:var(--card2);border:1px solid rgba(255,255,255,.04)}
+    .stepn{width:40px;height:40px;border-radius:12px;background:rgba(255,107,53,.12);display:flex;align-items:center;justify-content:center;color:var(--orange2);font-weight:800;font-size:22px;flex-shrink:0}
+    .step span{font-size:clamp(20px,5vw,28px);color:rgba(255,255,255,.78)}
+    .btn{border:none;border-radius:20px;padding:22px 24px;font-size:clamp(22px,5.7vw,32px);font-weight:800;cursor:pointer;transition:.2s transform,.2s opacity,.2s background;box-shadow:var(--shadow)}
+    .btn:active{transform:scale(.99)}
+    .btn-primary{background:linear-gradient(135deg,var(--orange1),var(--orange2));color:#fff}
+    .btn-secondary{background:transparent;border:1px solid var(--border);color:rgba(255,255,255,.45);box-shadow:none}
+    .btn[disabled]{opacity:.35;cursor:not-allowed;box-shadow:none}
+    .stack{display:flex;flex-direction:column;gap:14px}
+    .input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;border-radius:18px;padding:20px 18px;font-size:20px;outline:none}
+    .input::placeholder{color:rgba(255,255,255,.38)}
+    .tiny{font-size:15px;line-height:1.45;color:var(--muted2);text-align:center;margin-top:16px}
+    .footerPill{align-self:center;margin-top:22px;padding:14px 28px;border-radius:999px;border:1px solid rgba(92,133,255,.28);background:rgba(66,100,255,.1);color:#fff;font-size:18px;box-shadow:0 8px 30px rgba(30,45,120,.28)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;color:rgba(255,255,255,.5);font-size:18px}
+    .back{background:none;border:none;color:rgba(255,255,255,.55);font-size:18px;padding:0;cursor:pointer}
+    .progress{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:0 0 24px}
+    .progress span{height:6px;border-radius:999px;background:rgba(255,255,255,.12)}
+    .progress span.on{background:linear-gradient(90deg,var(--orange1),var(--orange2))}
+    .qTitle{font-size:clamp(34px,8vw,58px);line-height:1.02;margin:0 0 12px;font-weight:800;letter-spacing:-.03em}
+    .qSub{font-size:clamp(18px,4.7vw,24px);line-height:1.4;color:var(--muted);margin:0 0 24px}
+    .option{display:flex;align-items:center;gap:18px;width:100%;padding:21px 18px;border-radius:22px;background:var(--card);border:1px solid rgba(255,255,255,.07);color:#fff;font-size:clamp(21px,5vw,28px);cursor:pointer;text-align:left}
+    .option small{display:block;color:rgba(255,255,255,.4);font-size:14px;margin-top:4px}
+    .option.selected{border-color:rgba(255,139,74,.55);background:rgba(255,107,53,.09)}
+    .icon{width:44px;text-align:center;flex-shrink:0;font-size:30px}
+    .checkbox{margin-left:auto;width:34px;height:34px;border-radius:10px;border:2px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#0a0a18;font-size:20px;background:transparent;flex-shrink:0}
+    .option.selected .checkbox{background:var(--orange2);border-color:var(--orange2)}
+    .nav{margin-top:auto;padding-top:26px}
+    .loaderWrap{flex:1;display:flex;align-items:center;justify-content:center;text-align:center}
+    .loaderCard{max-width:560px;width:100%}
+    .spinner{width:78px;height:78px;border-radius:50%;border:6px solid rgba(255,255,255,.12);border-top-color:var(--orange2);margin:0 auto 22px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .debug{white-space:pre-wrap;word-break:break-word;margin-top:18px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:14px;color:#ffd0d0;text-align:left}
+    .cards{display:flex;flex-direction:column;gap:14px}
+    .card{padding:18px;border-radius:22px;background:var(--card);border:1px solid rgba(255,255,255,.08)}
+    .card h3{font-size:26px;margin:0 0 8px}
+    .muted{color:var(--muted)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+    .chip{padding:6px 10px;border-radius:999px;font-size:13px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.62)}
+    .resultActions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .stepsList{padding-left:18px;color:rgba(255,255,255,.82);line-height:1.5}
+    .chatBox{display:flex;flex-direction:column;gap:10px;max-height:52svh;overflow:auto;padding-right:4px;margin:12px 0}
+    .bubble{padding:14px 16px;border-radius:18px;line-height:1.5;font-size:16px;white-space:pre-wrap}
+    .bubble.user{align-self:flex-end;background:linear-gradient(135deg,var(--orange1),var(--orange2))}
+    .bubble.ai{align-self:flex-start;background:rgba(255,255,255,.06)}
+    .quick{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+    .quick button{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.7);text-align:left;font-size:15px}
+    .seg{display:flex;gap:8px;margin:6px 0 14px}
+    .seg button{flex:1;padding:12px;border-radius:14px;border:none;background:rgba(255,255,255,.04);color:rgba(255,255,255,.45);font-weight:700}
+    .seg button.on{background:rgba(255,107,53,.12);color:var(--orange2)}
+    .safeBottom{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+    @media (min-width:768px){
+      .shell{padding-left:28px;padding-right:28px}
+      .btn{font-size:24px}
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="shell">
+    <section id="screen-key" class="screen active">
+      <div class="center">
+        <div class="logo">🔒</div>
+        <h1 style="text-align:center">API-Key eingeben</h1>
+        <p class="sub" style="text-align:center">Der Key wird nur lokal im Browser gespeichert. Er liegt nicht im GitHub-Code.</p>
+        <div class="stack">
+          <input id="apiKeyInput" class="input" type="password" placeholder="Anthropic API-Key eingeben" autocomplete="off" />
+          <button id="saveKeyBtn" class="btn btn-primary">Key lokal speichern</button>
+          <button id="clearKeyBtn" class="btn btn-secondary">Gespeicherten Key löschen</button>
+        </div>
+        <div class="tiny">Hinweis: Die App sendet Anfragen direkt aus deinem Browser an Anthropic. Das ist nur sinnvoll für deine eigene Nutzung.</div>
+      </div>
+      <div class="footerPill">timmy2413.github.io</div>
+    </section>
+
+    <section id="screen-welcome" class="screen">
+      <div class="center">
+        <div class="logo">🚀</div>
+        <h1 style="text-align:center">BizCoach <span style="color:var(--orange2)">AI</span></h1>
+        <p class="sub" style="text-align:center">Dein KI-Business-Berater.<br>Von der Idee zum Fahrplan.</p>
+        <div class="badge" id="keyBadge">API-Key lokal gespeichert</div>
+        <div class="steps">
+          <div class="step"><div class="stepn">1</div><span>Beantworte ein paar Fragen</span></div>
+          <div class="step"><div class="stepn">2</div><span>KI analysiert dein Profil</span></div>
+          <div class="step"><div class="stepn">3</div><span>Erhalte 3 Business-Vorschläge</span></div>
+        </div>
+        <div class="stack">
+          <button id="startBtn" class="btn btn-primary">Jetzt starten →</button>
+          <button id="manageKeyBtn" class="btn btn-secondary">API-Key verwalten</button>
+        </div>
+        <div class="tiny">Lokaler Key · Keine Anmeldung</div>
+      </div>
+      <div class="footerPill">timmy2413.github.io</div>
+    </section>
+
+    <section id="screen-quiz" class="screen">
+      <div class="topbar"><button id="backBtn" class="back">← Zurück</button><span id="stepCounter">1 / 6</span></div>
+      <div class="progress" id="progress"></div>
+      <h2 id="qTitle" class="qTitle"></h2>
+      <p id="qSub" class="qSub"></p>
+      <div id="options" class="stack"></div>
+      <div class="nav safeBottom"><button id="nextBtn" class="btn btn-primary" disabled>Weiter →</button></div>
+    </section>
+
+    <section id="screen-loading" class="screen">
+      <div class="loaderWrap">
+        <div class="loaderCard">
+          <div class="spinner"></div>
+          <h2 style="text-align:center">KI analysiert dein Profil</h2>
+          <p class="sub" style="text-align:center">Einen Moment. Ich erstelle drei passende Ideen für dich.</p>
+          <div id="loadingDebug" class="debug" style="display:none"></div>
+          <div class="stack" style="margin-top:18px">
+            <button id="retryBtn" class="btn btn-secondary" style="display:none">Nochmal versuchen</button>
+            <button id="backToQuizBtn" class="btn btn-secondary">Zurück zum Fragebogen</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-results" class="screen">
+      <div class="topbar"><button id="resultsBackBtn" class="back">← Neue Analyse</button><span>Ergebnisse</span></div>
+      <h2 class="qTitle">Deine besten Optionen</h2>
+      <p class="qSub">Drei Vorschläge, die zu deinen Antworten passen.</p>
+      <div id="resultsList" class="cards"></div>
+    </section>
+
+    <section id="screen-detail" class="screen">
+      <div class="topbar"><button id="detailBackBtn" class="back">← Zurück</button><span id="detailTop"></span></div>
+      <div id="detailHead"></div>
+      <div class="seg"><button id="tabPlan" class="on">📋 Fahrplan</button><button id="tabChat">💬 Deep Dive</button></div>
+      <div id="detailPlan"></div>
+      <div id="detailChat" style="display:none">
+        <div class="quick" id="quickQuestions"></div>
+        <div class="chatBox" id="chatBox"></div>
+        <div class="stack safeBottom">
+          <input id="chatInput" class="input" type="text" placeholder="Stell eine Frage..." />
+          <button id="chatSend" class="btn btn-primary">Frage senden</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'bizcoach_anthropic_key';
+  const state = {
+    screen: 'key',
+    currentQuestion: 0,
+    answers: {},
+    results: [],
+    selectedResult: null,
+    chat: {},
+    loadingError: ''
+  };
+
+  const qs = (id) => document.getElementById(id);
+  const screens = {
+    key: qs('screen-key'),
+    welcome: qs('screen-welcome'),
+    quiz: qs('screen-quiz'),
+    loading: qs('screen-loading'),
+    results: qs('screen-results'),
+    detail: qs('screen-detail')
+  };
+
+  const questions = [
+    {
+      id: 'idea',
+      title: 'Hast du schon eine\nBusiness-Idee?',
+      sub: 'Sei ehrlich – beides ist völlig okay',
+      type: 'single',
+      options: [
+        { icon:'💡', label:'Ja, ich habe eine Idee', value:'Ich habe schon eine Business-Idee.' },
+        { icon:'🔎', label:'Nein, ich brauche eine', value:'Ich brauche noch eine Business-Idee.' }
+      ]
+    },
+    {
+      id: 'skills',
+      title: 'Was sind deine\nstärksten Skills?',
+      sub: 'Wähle aus und/oder schreibe eigene dazu',
+      type: 'multi',
+      options: [
+        { icon:'🎨', label:'Design & Kreativität', value:'Design & Kreativität' },
+        { icon:'💻', label:'Programmieren & Tech', value:'Programmieren & Tech' },
+        { icon:'📱', label:'Marketing & Social Media', value:'Marketing & Social Media' },
+        { icon:'✍️', label:'Texten & Content', value:'Texten & Content' },
+        { icon:'🤝', label:'Verkaufen & Verhandeln', value:'Verkaufen & Verhandeln' },
+        { icon:'📋', label:'Organisation & Planung', value:'Organisation & Planung' },
+        { icon:'🔧', label:'Handwerk & Produktion', value:'Handwerk & Produktion' },
+        { icon:'🎯', label:'Beratung & Coaching', value:'Beratung & Coaching' }
+      ],
+      placeholder:'Weitere Skills eingeben...'
+    },
+    {
+      id: 'time',
+      title: 'Wie viel Zeit\npro Woche?',
+      sub: 'Sei realistisch',
+      type: 'singlePlusInput',
+      options: [
+        { icon:'🕐', label:'1–3 Stunden', value:'1–3 Stunden pro Woche' },
+        { icon:'🕓', label:'4–8 Stunden', value:'4–8 Stunden pro Woche' },
+        { icon:'🕘', label:'8–15 Stunden', value:'8–15 Stunden pro Woche' },
+        { icon:'⏰', label:'15+ Stunden', value:'15+ Stunden pro Woche' }
+      ],
+      placeholder:'Oder genaue Stundenzahl...'
+    },
+    {
+      id: 'budget',
+      title: 'Wie viel\nStartkapital?',
+      sub: 'Alles ist möglich – auch 0€',
+      type: 'singlePlusInput',
+      options: [
+        { icon:'🆓', label:'0–50 €', value:'0–50 € Startkapital' },
+        { icon:'💶', label:'50–500 €', value:'50–500 € Startkapital' },
+        { icon:'💰', label:'500–2.000 €', value:'500–2.000 € Startkapital' },
+        { icon:'🏦', label:'2.000 €+', value:'2.000 €+ Startkapital' }
+      ],
+      placeholder:'Oder genauen Betrag eingeben...'
+    },
+    {
+      id: 'goal',
+      title: 'Was ist\ndein Ziel?',
+      sub: 'Wo willst du hin?',
+      type: 'singlePlusInput',
+      options: [
+        { icon:'🌱', label:'Nebenbei starten', value:'Nebenbei starten und testen' },
+        { icon:'🚀', label:'Schnell wachsen', value:'Schnell wachsen und skalieren' },
+        { icon:'📈', label:'Stabiles Einkommen', value:'Ein stabiles zusätzliches Einkommen aufbauen' },
+        { icon:'🧪', label:'Erst lernen und testen', value:'Erst lernen und testen' }
+      ],
+      placeholder:'Oder eigenes Ziel beschreiben...'
+    },
+    {
+      id: 'details',
+      title: 'Beschreibe dich\nkurz genauer',
+      sub: 'Optional, aber hilfreich für bessere Vorschläge',
+      type: 'text',
+      placeholder:'z. B. Beruf, Erfahrung, Interessen, was du vermeiden willst...'
+    }
+  ];
+
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+    state.screen = name;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  function getApiKey(){ return localStorage.getItem(STORAGE_KEY) || ''; }
+  function saveApiKey(key){ localStorage.setItem(STORAGE_KEY, key.trim()); }
+  function clearApiKey(){ localStorage.removeItem(STORAGE_KEY); }
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+  }
+
+  function renderProgress(){
+    const el = qs('progress');
+    el.innerHTML = '';
+    questions.forEach((_, i) => {
+      const span = document.createElement('span');
+      if(i <= state.currentQuestion) span.className = 'on';
+      el.appendChild(span);
+    });
+    qs('stepCounter').textContent = `${state.currentQuestion + 1} / ${questions.length}`;
+  }
+
+  function isQuestionAnswered(q){
+    const v = state.answers[q.id];
+    if(q.type === 'single') return !!v;
+    if(q.type === 'multi') return !!(v && ((v.selected && v.selected.length) || (v.custom && v.custom.trim())));
+    if(q.type === 'singlePlusInput') return !!(v && ((v.selected && v.selected.trim()) || (v.custom && v.custom.trim())));
+    if(q.type === 'text') return true;
+    return false;
+  }
+
+  function renderQuiz(){
+    renderProgress();
+    const q = questions[state.currentQuestion];
+    qs('qTitle').innerHTML = escapeHtml(q.title).replace(/\n/g,'<br>');
+    qs('qSub').textContent = q.sub;
+    const options = qs('options');
+    options.innerHTML = '';
+
+    const answer = state.answers[q.id] || (q.type === 'multi' ? {selected:[], custom:''} : q.type === 'singlePlusInput' ? {selected:'', custom:''} : '');
+
+    if(q.type === 'single'){
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option' + (answer === opt.value ? ' selected' : '');
+        btn.innerHTML = `<div class="icon">${opt.icon}</div><div>${escapeHtml(opt.label)}</div>`;
+        btn.onclick = () => { state.answers[q.id] = opt.value; renderQuiz(); };
+        options.appendChild(btn);
+      });
+    }
+
+    if(q.type === 'multi'){
+      const current = {selected:[...(answer.selected || [])], custom: answer.custom || ''};
+      q.options.forEach(opt => {
+        const selected = current.selected.includes(opt.value);
+        const btn = document.createElement('button');
+        btn.className = 'option' + (selected ? ' selected' : '');
+        btn.innerHTML = `<div class="icon">${opt.icon}</div><div>${escapeHtml(opt.label)}</div><div class="checkbox">${selected ? '✓' : ''}</div>`;
+        btn.onclick = () => {
+          const idx = current.selected.indexOf(opt.value);
+          if(idx >= 0) current.selected.splice(idx, 1); else current.selected.push(opt.value);
+          state.answers[q.id] = current;
+          renderQuiz();
+        };
+        options.appendChild(btn);
+      });
+      const input = document.createElement('input');
+      input.className = 'input';
+      input.placeholder = q.placeholder;
+      input.value = current.custom;
+      input.oninput = (e) => {
+        state.answers[q.id] = {selected: current.selected, custom: e.target.value};
+        updateNextButton();
+      };
+      options.appendChild(input);
+    }
+
+    if(q.type === 'singlePlusInput'){
+      const current = {selected: answer.selected || '', custom: answer.custom || ''};
+      q.options.forEach(opt => {
+        const selected = current.selected === opt.value;
+        const btn = document.createElement('button');
+        btn.className = 'option' + (selected ? ' selected' : '');
+        btn.innerHTML = `<div class="icon">${opt.icon}</div><div>${escapeHtml(opt.label)}</div>`;
+        btn.onclick = () => {
+          state.answers[q.id] = {selected: opt.value, custom: current.custom};
+          renderQuiz();
+        };
+        options.appendChild(btn);
+      });
+      const input = document.createElement('input');
+      input.className = 'input';
+      input.placeholder = q.placeholder;
+      input.value = current.custom;
+      input.oninput = (e) => {
+        state.answers[q.id] = {selected: current.selected, custom: e.target.value};
+        updateNextButton();
+      };
+      options.appendChild(input);
+    }
+
+    if(q.type === 'text'){
+      const input = document.createElement('textarea');
+      input.className = 'input';
+      input.style.minHeight = '220px';
+      input.style.resize = 'vertical';
+      input.placeholder = q.placeholder;
+      input.value = state.answers[q.id] || '';
+      input.oninput = (e) => { state.answers[q.id] = e.target.value; updateNextButton(); };
+      options.appendChild(input);
+    }
+
+    qs('backBtn').style.visibility = state.currentQuestion === 0 ? 'hidden' : 'visible';
+    qs('nextBtn').textContent = state.currentQuestion === questions.length - 1 ? 'Analyse starten →' : 'Weiter →';
+    updateNextButton();
+  }
+
+  function updateNextButton(){
+    const q = questions[state.currentQuestion];
+    qs('nextBtn').disabled = !isQuestionAnswered(q) && q.type !== 'text';
+  }
+
+  function normalizeAnswers(){
+    const out = {};
+    for(const q of questions){
+      const v = state.answers[q.id];
+      if(q.type === 'single') out[q.id] = v || '';
+      else if(q.type === 'multi') out[q.id] = [...(v?.selected || []), ...(v?.custom?.trim() ? [v.custom.trim()] : [])].join(', ');
+      else if(q.type === 'singlePlusInput') out[q.id] = [v?.selected || '', v?.custom?.trim() || ''].filter(Boolean).join(' | ');
+      else out[q.id] = v || '';
+    }
+    return out;
+  }
+
+  function fallbackResults(profile){
+    return [
+      {
+        title:'Service-basierte Nischen-Dienstleistung', icon:'🎯', difficulty:'Leicht', income:'500–3.000 €/Monat',
+        why:'Passt gut, wenn du schnell starten und ohne viel Kapital testen willst.',
+        description:'Ein klares Angebot für eine kleine Zielgruppe, zum Beispiel Content, Outreach, Design, Beratung oder lokale Services.',
+        firstSteps:['Ein konkretes Problem auswählen','Zielgruppe definieren','Angebot mit einem Ergebnis formulieren','3–5 Testkunden ansprechen','Feedback einbauen'],
+        risks:'Unscharfes Angebot und zu breite Zielgruppe.'
+      },
+      {
+        title:'Digitale Produkt-Idee', icon:'📦', difficulty:'Mittel', income:'300–5.000 €/Monat',
+        why:'Gut, wenn du Wissen, Prozesse oder Vorlagen in ein wiederverwendbares Produkt packen kannst.',
+        description:'Vorlagen, Checklisten, Mini-Kurse, Rechner, Prompts oder Dateien für ein konkretes Problem.',
+        firstSteps:['Nerviges Problem sammeln','kleinstes Produkt definieren','Landingpage bauen','mit 10 Personen testen','Version 2 verbessern'],
+        risks:'Zu großes Produkt am Anfang.'
+      },
+      {
+        title:'Content + Lead-Gen Modell', icon:'🚀', difficulty:'Mittel', income:'Langfristig stark skalierbar',
+        why:'Sinnvoll, wenn du Reichweite, Vertrauen und später Anfragen oder Verkäufe aufbauen willst.',
+        description:'Inhalte zu einer klaren Nische veröffentlichen und daraus Leads, Calls oder Verkäufe erzeugen.',
+        firstSteps:['Thema und Plattform wählen','Content-Format festlegen','30 Ideen sammeln','Call-to-Action definieren','wöchentlich messen'],
+        risks:'Zu unregelmäßig posten und kein klares Angebot dahinter.'
+      }
+    ];
+  }
+
+  function parseAiText(text){
+    try{
+      const cleaned = String(text || '').trim();
+      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      const candidate = (match ? match[1] : cleaned).trim();
+      const parsed = JSON.parse(candidate);
+      const arr = Array.isArray(parsed) ? parsed : parsed.ideas || parsed.results || [];
+      if(Array.isArray(arr) && arr.length) return arr.map(normalizeResult).filter(Boolean).slice(0,3);
+    }catch(_e){}
+
+    // XML-like fallback
+    const blocks = [...String(text || '').matchAll(/<idea>([\s\S]*?)<\/idea>/gi)].map(m => m[1]);
+    if(blocks.length){
+      return blocks.map(block => {
+        const get = (tag) => {
+          const m = block.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+          return m ? m[1].trim() : '';
+        };
+        return normalizeResult({
+          title:get('title'), icon:get('icon') || '💡', difficulty:get('difficulty'), income:get('income'), why:get('why'), description:get('description'),
+          firstSteps:get('steps').split(/\n|;/).map(s => s.trim()).filter(Boolean).slice(0,5), risks:get('risks')
+        });
+      }).filter(Boolean).slice(0,3);
+    }
+
+    return [];
+  }
+
+  function normalizeResult(item){
+    if(!item) return null;
+    const title = item.title || item.name || 'Business-Idee';
+    return {
+      title,
+      icon:item.icon || '💡',
+      difficulty:item.difficulty || 'Mittel',
+      income:item.income || item.incomeRange || 'Unbekannt',
+      why:item.why || item.whyFit || '',
+      description:item.description || '',
+      firstSteps:Array.isArray(item.firstSteps) ? item.firstSteps : [],
+      risks:item.risks || item.risk || ''
+    };
+  }
+
+  async function callAnthropic(prompt, apiKey){
+    const body = {
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 1800,
+      temperature: 0.5,
+      messages: [{ role:'user', content: prompt }]
+    };
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); } catch (e) {
+      throw new Error('Antwort war kein gültiges JSON: ' + raw.slice(0, 280));
+    }
+    if(!res.ok){
+      throw new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
+    }
+    const text = Array.isArray(data.content)
+      ? data.content.filter(x => x.type === 'text').map(x => x.text).join('\n\n')
+      : '';
+    if(!text.trim()) throw new Error('Leere Antwort von Anthropic.');
+    return text;
+  }
+
+  async function generateIdeas(){
+    const apiKey = getApiKey();
+    if(!apiKey){ showScreen('key'); return; }
+    state.loadingError = '';
+    qs('retryBtn').style.display = 'none';
+    qs('loadingDebug').style.display = 'none';
+    qs('loadingDebug').textContent = '';
+    showScreen('loading');
+
+    const profile = normalizeAnswers();
+    const prompt = `Erstelle genau 3 Business-Vorschläge auf Deutsch.\n\nProfil:\n- Idee: ${profile.idea}\n- Skills: ${profile.skills}\n- Zeit: ${profile.time}\n- Budget: ${profile.budget}\n- Ziel: ${profile.goal}\n- Zusatzinfos: ${profile.details}\n\nGib NUR gültiges JSON zurück, ohne Markdown, ohne Erklärtext.\nFormat:\n{\n  "ideas": [\n    {\n      "title": "...",\n      "icon": "🚀",\n      "difficulty": "Leicht|Mittel|Schwer",\n      "income": "...",\n      "why": "Warum es passt",\n      "description": "Kurzbeschreibung",\n      "firstSteps": ["Schritt 1", "Schritt 2", "Schritt 3", "Schritt 4", "Schritt 5"],\n      "risks": "Typisches Risiko"\n    }\n  ]\n}`;
+
+    try{
+      const aiText = await callAnthropic(prompt, apiKey);
+      const parsed = parseAiText(aiText);
+      state.results = parsed.length ? parsed : fallbackResults(profile);
+      renderResults();
+      showScreen('results');
+    }catch(err){
+      state.loadingError = err && err.message ? err.message : String(err);
+      qs('loadingDebug').style.display = 'block';
+      qs('loadingDebug').textContent = state.loadingError;
+      qs('retryBtn').style.display = 'block';
+    }
+  }
+
+  function renderResults(){
+    const list = qs('resultsList');
+    list.innerHTML = '';
+    state.results.forEach((r, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="logo" style="width:64px;height:64px;border-radius:18px;font-size:30px;margin:0">${r.icon}</div>
+          <div style="flex:1;min-width:0">
+            <h3>${escapeHtml(r.title)}</h3>
+            <div class="chips">
+              <span class="chip">${escapeHtml(r.difficulty)}</span>
+              <span class="chip">💰 ${escapeHtml(r.income)}</span>
+            </div>
+            <div class="muted" style="font-size:15px;line-height:1.5">${escapeHtml(r.description || r.why)}</div>
+          </div>
+        </div>
+        <div class="resultActions">
+          <button class="btn btn-primary" style="font-size:18px;padding:16px 18px">Ansehen →</button>
+        </div>`;
+      card.querySelector('button').onclick = () => {
+        state.selectedResult = idx;
+        renderDetail();
+        showScreen('detail');
+      };
+      list.appendChild(card);
+    });
+  }
+
+  function renderDetail(){
+    const r = state.results[state.selectedResult];
+    if(!r){ showScreen('results'); return; }
+    qs('detailTop').textContent = 'Deep Dive';
+    qs('detailHead').innerHTML = `
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div class="logo" style="width:78px;height:78px;border-radius:20px;font-size:38px;margin:0">${r.icon}</div>
+        <div>
+          <h2 style="margin:0 0 6px;font-size:32px">${escapeHtml(r.title)}</h2>
+          <div class="muted">${escapeHtml(r.income)} · ${escapeHtml(r.difficulty)}</div>
+        </div>
+      </div>`;
+    qs('detailPlan').innerHTML = `
+      <div class="card"><div class="muted" style="margin-bottom:10px">Warum es passt</div><div style="line-height:1.55">${escapeHtml(r.why || r.description)}</div></div>
+      <div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:10px">Erste Schritte</div><ol class="stepsList">${(r.firstSteps || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ol></div>
+      <div class="card" style="margin-top:12px"><div class="muted" style="margin-bottom:10px">Typisches Risiko</div><div style="line-height:1.55">${escapeHtml(r.risks || 'Zu unspezifisch starten.')}</div></div>`;
+    const quick = ['Wie starte ich damit?','Was brauche ich rechtlich?','Wie bekomme ich Kunden?','Welche Tools brauche ich?','Was sind typische Fehler?'];
+    qs('quickQuestions').innerHTML = quick.map(q => `<button>${escapeHtml(q)}</button>`).join('');
+    [...qs('quickQuestions').querySelectorAll('button')].forEach(btn => btn.onclick = () => sendChat(btn.textContent));
+    const chatArr = state.chat[state.selectedResult] || [];
+    renderChat(chatArr);
+    switchTab('plan');
+  }
+
+  function renderChat(items){
+    const box = qs('chatBox');
+    box.innerHTML = items.map(m => `<div class="bubble ${m.role}">${escapeHtml(m.text)}</div>`).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function switchTab(tab){
+    const planOn = tab === 'plan';
+    qs('tabPlan').classList.toggle('on', planOn);
+    qs('tabChat').classList.toggle('on', !planOn);
+    qs('detailPlan').style.display = planOn ? 'block' : 'none';
+    qs('detailChat').style.display = planOn ? 'none' : 'block';
+  }
+
+  async function sendChat(text){
+    const input = qs('chatInput');
+    const msg = (text || input.value || '').trim();
+    if(!msg) return;
+    const idx = state.selectedResult;
+    const result = state.results[idx];
+    const arr = state.chat[idx] || [];
+    arr.push({role:'user', text: msg});
+    state.chat[idx] = arr;
+    renderChat(arr);
+    input.value = '';
+    arr.push({role:'ai', text:'Denke nach...'});
+    renderChat(arr);
+
+    try{
+      const prompt = `Antworte auf Deutsch, konkret und knapp. Der Nutzer fragt zu dieser Business-Idee:\nTitel: ${result.title}\nBeschreibung: ${result.description}\nWarum passend: ${result.why}\nErste Schritte: ${(result.firstSteps || []).join('; ')}\n\nFrage: ${msg}`;
+      const reply = await callAnthropic(prompt, getApiKey());
+      arr[arr.length - 1] = {role:'ai', text: reply.trim()};
+    }catch(err){
+      arr[arr.length - 1] = {role:'ai', text: 'Fehler: ' + (err && err.message ? err.message : String(err))};
+    }
+    renderChat(arr);
+  }
+
+  // Events
+  qs('saveKeyBtn').onclick = () => {
+    const val = qs('apiKeyInput').value.trim();
+    if(!val) return;
+    saveApiKey(val);
+    qs('apiKeyInput').value = '';
+    showScreen('welcome');
+  };
+  qs('clearKeyBtn').onclick = () => { clearApiKey(); qs('apiKeyInput').value = ''; };
+  qs('manageKeyBtn').onclick = () => { qs('apiKeyInput').value = getApiKey(); showScreen('key'); };
+  qs('startBtn').onclick = () => {
+    if(!getApiKey()){ showScreen('key'); return; }
+    state.currentQuestion = 0;
+    state.answers = {};
+    renderQuiz();
+    showScreen('quiz');
+  };
+  qs('backBtn').onclick = () => {
+    if(state.currentQuestion > 0){ state.currentQuestion--; renderQuiz(); }
+    else showScreen('welcome');
+  };
+  qs('nextBtn').onclick = () => {
+    if(state.currentQuestion < questions.length - 1){ state.currentQuestion++; renderQuiz(); }
+    else generateIdeas();
+  };
+  qs('retryBtn').onclick = generateIdeas;
+  qs('backToQuizBtn').onclick = () => { renderQuiz(); showScreen('quiz'); };
+  qs('resultsBackBtn').onclick = () => showScreen('welcome');
+  qs('detailBackBtn').onclick = () => showScreen('results');
+  qs('tabPlan').onclick = () => switchTab('plan');
+  qs('tabChat').onclick = () => switchTab('chat');
+  qs('chatSend').onclick = () => sendChat();
+  qs('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChat(); });
+
+  // Init
+  window.addEventListener('error', (e) => {
+    qs('loadingDebug').style.display = 'block';
+    qs('loadingDebug').textContent = 'JavaScript-Fehler: ' + (e.message || 'Unbekannt');
+  });
+
+  const saved = getApiKey();
+  if(saved){ showScreen('welcome'); } else { showScreen('key'); }
+})();
+</script>
+</body>
+</html>
