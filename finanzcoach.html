@@ -1269,7 +1269,9 @@ async function sendToAPI(userMessage) {
   } catch (e) {
     hideTyping();
     reEnableUI();
-    addBubble('ai', '⚠️ Verbindungsfehler. Bitte versuche es erneut.');
+    const msg = (e && e.message) ? e.message : String(e);
+    addBubble('ai', '⚠️ Fehler: ' + msg);
+    console.error('[Chat API]', e);
   }
 }
 
@@ -1601,7 +1603,8 @@ async function runAnalysis() {
         }, 400);
       }).catch(err => {
         loading.style.display = 'none';
-        renderError(err.message || 'Unbekannter Fehler');
+        const msg = (err && err.message) ? err.message : String(err);
+        renderError(msg || 'Unbekannter Fehler');
       });
     }
   }, 100);
@@ -1826,14 +1829,15 @@ function renderReport(j) {
 
 function renderError(msg) {
   v4State = 'idle';
+  console.error('[Analysis API]', msg);
   const container = document.getElementById('v4-report');
   container.innerHTML = '';
   container.classList.add('visible');
   container.innerHTML = `
     <div class="error-card report-section">
       <h3>⚠️ Analyse fehlgeschlagen</h3>
-      <p>Die Analyse konnte nicht erstellt werden.</p>
-      <small>${msg}</small>
+      <p style="font-size:13px;opacity:0.75;line-height:1.5;">Die Analyse konnte nicht erstellt werden. Fehlermeldung:</p>
+      <code style="display:block;background:rgba(0,0,0,0.3);border-radius:8px;padding:10px 12px;font-size:11px;word-break:break-all;text-align:left;color:#f87171;line-height:1.5;width:100%;">${msg}</code>
       <button class="btn-gold" style="height:44px;border-radius:var(--radius-btn);padding:0 24px;" onclick="runAnalysis()">
         Erneut versuchen
       </button>
