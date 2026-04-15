@@ -440,7 +440,7 @@
     .hh-scroll::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
 
     .accordion {
-      background: var(--glass-bg);
+      background: rgba(255,255,255,0.07);
       backdrop-filter: blur(12px);
       border: 1px solid var(--glass-border);
       border-radius: var(--radius-card);
@@ -703,6 +703,15 @@
     .v4-empty-icon { opacity: 0.3; }
     .v4-empty h3 { font-family: var(--font-display); font-size: 20px; color: var(--text); }
     .v4-empty p  { font-size: 14px; color: var(--text-muted); max-width: 260px; line-height: 1.5; }
+
+    /* ─── Mobile full-width ─────────────────────────────────── */
+    @media (max-width: 500px) {
+      #app { max-width: 100%; }
+      #bottom-nav { max-width: 100%; }
+      .splash-content { padding: 40px 24px 100px; }
+      .accordion-header { min-height: 60px; padding: 14px 16px; }
+      .accordion-icon { font-size: 22px; }
+    }
 
     /* ─── Print ───────────────────────────────────────────── */
     @media print {
@@ -1231,6 +1240,8 @@ async function sendToAPI(userMessage) {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
@@ -1620,6 +1631,8 @@ async function generateAnalysis() {
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
+    mode: 'cors',
+    credentials: 'omit',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
