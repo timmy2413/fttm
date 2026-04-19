@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTTM — Auto Backtest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap');
+:root{
+  --bg:#070a10;--bg2:#0c1018;--bg3:#111620;--border:#1a2235;
+  --gold:#f0b429;--green:#00d68f;--red:#ff3d5a;--blue:#3d8bff;
+  --text:#e0eaff;--muted:#354060;
+  --mono:'JetBrains Mono',monospace;--display:'Archivo Black',sans-serif;--sans:'Archivo',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:80px;}
+
+.hdr{padding:11px 14px;background:rgba(7,10,16,0.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;}
+.hdr-logo{font-family:var(--display);font-size:17px;color:var(--gold);}
+.hdr-info{flex:1;}
+.hdr-title{font-size:11px;font-weight:600;}
+.hdr-sub{font-size:8px;color:var(--muted);font-family:var(--mono);}
+.hdr-badge{padding:2px 8px;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.25);
+  border-radius:4px;font-size:9px;font-family:var(--mono);color:var(--gold);}
+
+.app{max-width:500px;margin:0 auto;padding:0 12px;}
+
+/* TABS */
+.tabs{display:flex;gap:6px;padding:12px 0 8px;}
+.tab{flex:1;padding:9px 4px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:8px;font-family:var(--display);font-size:11px;color:var(--muted);
+  cursor:pointer;text-align:center;transition:all 0.2s;}
+.tab.active{background:rgba(240,180,41,0.1);border-color:var(--gold);color:var(--gold);}
+
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* UPLOAD */
+.sec{margin-top:12px;}
+.sec-lbl{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.uc{background:var(--bg2);border:1px dashed var(--border);border-radius:10px;
+  padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.uc:hover{border-color:var(--gold);}
+.uc.loaded{border-style:solid;border-color:var(--green);}
+.uc-tf{font-family:var(--display);font-size:15px;color:var(--muted);margin-bottom:3px;}
+.uc.loaded .uc-tf{color:var(--green);}
+.uc-n{font-size:8px;font-family:var(--mono);color:var(--muted);}
+.uc-ico{font-size:16px;margin-bottom:3px;}
+input[type=file]{display:none;}
+
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.setting{display:flex;flex-direction:column;gap:3px;}
+.setting-lbl{font-size:8px;font-family:var(--mono);color:var(--muted);}
+select,input[type=number]{width:100%;padding:8px 10px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:7px;color:var(--text);
+  font-family:var(--mono);font-size:11px;outline:none;appearance:none;}
+select:focus{border-color:var(--gold);}
+
+.btn-run{width:100%;padding:14px;background:var(--gold);border:none;border-radius:9px;
+  color:#000;font-family:var(--display);font-size:17px;cursor:pointer;transition:all 0.2s;}
+.btn-run:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* PROGRESS */
+.progress-wrap{display:none;margin-top:12px;}
+.progress-lbl{font-size:9px;font-family:var(--mono);color:var(--muted);margin-bottom:5px;text-align:center;}
+.progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.1s;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.stat-card.wide{grid-column:1/-1;}
+.sc-lbl{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.sc-val{font-family:var(--display);font-size:26px;line-height:1;}
+.sc-sub{font-size:9px;font-family:var(--mono);color:var(--muted);margin-top:3px;}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+.gold{color:var(--gold);}
+
+/* CHART */
+.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+.chart-hdr{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.chart-ttl{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+canvas{display:block;width:100%;}
+
+/* BREAKDOWN */
+.breakdown-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.bc-title{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.bar-lbl{font-size:9px;font-family:var(--mono);width:60px;flex-shrink:0;color:var(--text);}
+.bar-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.6s ease;}
+.bar-stats{font-size:8px;font-family:var(--mono);color:var(--muted);width:80px;text-align:right;flex-shrink:0;}
+
+/* HEATMAP */
+.heatmap-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;}
+.hm-cell{aspect-ratio:1;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);}
+.hm-hour{font-size:7px;color:var(--muted);font-family:var(--mono);}
+.hm-wr{font-size:9px;}
+
+/* TRADE LIST */
+.trade-item{display:flex;align-items:center;gap:7px;padding:8px 10px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;}
+.ti-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ti-dot.win{background:var(--green);}
+.ti-dot.loss{background:var(--red);}
+.ti-date{font-size:9px;font-family:var(--mono);color:var(--muted);flex:1;}
+.ti-dir{font-size:8px;font-family:var(--mono);padding:2px 5px;border-radius:3px;}
+.ti-dir.long{background:rgba(0,214,143,0.1);color:var(--green);}
+.ti-dir.short{background:rgba(255,61,90,0.1);color:var(--red);}
+.ti-sess{font-size:8px;font-family:var(--mono);color:var(--muted);width:48px;text-align:center;}
+.ti-pips{font-size:10px;font-family:var(--mono);min-width:50px;text-align:right;}
+
+.empty{text-align:center;padding:40px 20px;}
+.empty-ico{font-size:36px;margin-bottom:10px;}
+.empty-txt{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+/* BEST/WORST */
+.bw-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
+.bw-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.bw-label{font-size:8px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.bw-pips{font-family:var(--display);font-size:22px;margin-bottom:2px;}
+.bw-date{font-size:8px;font-family:var(--mono);color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">FTTM</div>
+  <div class="hdr-info">
+    <div class="hdr-title">Auto Backtest</div>
+    <div class="hdr-sub">MTF Strategie · Vollautomatisch</div>
+  </div>
+  <div class="hdr-badge" id="hdrBadge">SETUP</div>
+</div>
+
+<div class="app">
+  <div class="tabs">
+    <div class="tab active" id="tab-setup-btn" onclick="switchTab('setup')">⚙️ Setup</div>
+    <div class="tab" id="tab-stats-btn" onclick="switchTab('stats')">📊 Stats</div>
+    <div class="tab" id="tab-time-btn" onclick="switchTab('time')">🕐 Zeit</div>
+    <div class="tab" id="tab-trades-btn" onclick="switchTab('trades')">📋 Trades</div>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div class="screen active" id="tab-setup">
+    <div class="sec">
+      <div class="sec-lbl">CSV Daten laden</div>
+      <div class="upload-grid">
+        <div class="uc" id="uc-h1" onclick="document.getElementById('fi-h1').click()">
+          <div class="uc-ico">📊</div><div class="uc-tf">H1</div><div class="uc-n" id="ucn-h1">Laden</div>
+        </div>
+        <div class="uc" id="uc-m15" onclick="document.getElementById('fi-m15').click()">
+          <div class="uc-ico">📈</div><div class="uc-tf">M15</div><div class="uc-n" id="ucn-m15">Laden</div>
+        </div>
+        <div class="uc" id="uc-m5" onclick="document.getElementById('fi-m5').click()">
+          <div class="uc-ico">⚡</div><div class="uc-tf">M5</div><div class="uc-n" id="ucn-m5">Laden</div>
+        </div>
+      </div>
+      <input type="file" id="fi-h1" accept=".csv" onchange="loadCSV('h1',event)">
+      <input type="file" id="fi-m15" accept=".csv" onchange="loadCSV('m15',event)">
+      <input type="file" id="fi-m5" accept=".csv" onchange="loadCSV('m5',event)">
+    </div>
+
+    <div class="sec">
+      <div class="sec-lbl">Einstellungen</div>
+      <div class="settings-grid">
+        <div class="setting">
+          <div class="setting-lbl">Asset</div>
+          <select id="assetType">
+            <option value="xauusd">XAUUSD (Gold)</option>
+            <option value="forex">EURUSD / GBPUSD</option>
+          </select>
+        </div>
+        <div class="setting">
+          <div class="setting-lbl">RRR</div>
+          <select id="rrrSetting">
+            <option value="1">1:1</option>
+            <option value="2" selected>1:2</option>
+            <option value="3">1:3</option>
+          </select>
+        </div>
+        <div class="setting">
+          <div class="setting-lbl">Review Kerzen (M5)</div>
+          <select id="reviewBars">
+            <option value="12">12 (1h)</option>
+            <option value="24" selected>24 (2h)</option>
+            <option value="48">48 (4h)</option>
+          </select>
+        </div>
+        <div class="setting">
+          <div class="setting-lbl">Start bei H1 Kerze</div>
+          <input type="number" id="startBar" value="20" min="5">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-run" id="btnRun" onclick="runBacktest()" disabled>▶ BACKTEST STARTEN</button>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-lbl" id="progressLbl">Analysiere...</div>
+      <div class="progress"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div class="screen" id="tab-stats">
+    <div id="statsContent">
+      <div class="empty"><div class="empty-ico">🔍</div><div class="empty-txt">Zuerst Backtest starten</div></div>
+    </div>
+  </div>
+
+  <!-- TIME TAB -->
+  <div class="screen" id="tab-time">
+    <div id="timeContent">
+      <div class="empty"><div class="empty-ico">🕐</div><div class="empty-txt">Zuerst Backtest starten</div></div>
+    </div>
+  </div>
+
+  <!-- TRADES TAB -->
+  <div class="screen" id="tab-trades">
+    <div id="tradesContent">
+      <div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">Zuerst Backtest starten</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const D = { h1: null, m15: null, m5: null };
+let results = [];
+
+// ── CSV LOADING ──
+function loadCSV(tf, e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    D[tf] = parseCSV(ev.target.result);
+    document.getElementById(`ucn-${tf}`).textContent = D[tf].length.toLocaleString() + ' K';
+    document.getElementById(`uc-${tf}`).classList.add('loaded');
+    checkReady();
+  };
+  r.readAsText(file);
+}
+
+function parseCSV(txt) {
+  return txt.trim().split('\n').slice(1).map(l => {
+    const v = l.split(',');
+    return { date: v[0]?.trim(), time: v[1]?.trim(),
+      open: parseFloat(v[2]), high: parseFloat(v[3]),
+      low: parseFloat(v[4]), close: parseFloat(v[5]) };
+  }).filter(r => r.date && !isNaN(r.close));
+}
+
+function checkReady() {
+  document.getElementById('btnRun').disabled = !(D.h1 && D.m15 && D.m5);
+}
+
+function barMs(b) {
+  const [y,m,d] = b.date.replace(/\./g,'-').split('-').map(Number);
+  const [h,min] = b.time.split(':').map(Number);
+  return new Date(y, m-1, d, h, min, 0).getTime();
+}
+
+// ── STRATEGY ANALYSIS ──
+function analyzeH1(idx) {
+  const bar = D.h1[idx];
+  const bull = bar.close > bar.open;
+  const bodySize = Math.abs(bar.close - bar.open);
+  const totalRange = bar.high - bar.low;
+  if (totalRange === 0) return null;
+  const bodyRatio = bodySize / totalRange;
+  if (bodyRatio < 0.5) return null;
+  return { bias: bull ? 'long' : 'short', bodyRatio };
+}
+
+function analyzeM15(h1Idx, bias) {
+  if (!D.m15) return false;
+  const h1OpenMs = barMs(D.h1[h1Idx]);
+  const h1CloseMs = h1OpenMs + 60 * 60 * 1000;
+  // 4 M15 Kerzen innerhalb der H1: 09:00, 09:15, 09:30, 09:45
+  const bars = D.m15.filter(b => {
+    const t = barMs(b);
+    return t >= h1OpenMs && t < h1CloseMs;
+  });
+  if (bars.length < 4) return false;
+  const last4 = bars.slice(-4);
+
+  // Letzte Kerze muss gleiche Richtung haben
+  const last = last4[last4.length - 1];
+  const lastBull = last.close > last.open;
+  const lastDirOk = bias === 'long' ? lastBull : !lastBull;
+  if (!lastDirOk) return false;
+
+  // Mindestens 3 von 4 Kerzen gleiche Richtung wie H1
+  const bullCount = last4.filter(b => b.close > b.open).length;
+  const bearCount = last4.filter(b => b.close < b.open).length;
+  return bias === 'long' ? bullCount >= 3 : bearCount >= 3;
+}
+
+function isEngulfing(bar, prevBar, bias) {
+  if (!prevBar) return false;
+  const bull = bar.close > bar.open;
+  const prevBull = prevBar.close > prevBar.open;
+  if (bias === 'long') {
+    return bull && !prevBull && bar.close > prevBar.open && bar.open < prevBar.close;
+  } else {
+    return !bull && prevBull && bar.close < prevBar.open && bar.open > prevBar.close;
+  }
+}
+
+function isHammerOrStar(bar, bias) {
+  const body = Math.abs(bar.close - bar.open);
+  const range = bar.high - bar.low;
+  if (range === 0) return false;
+  const upperWick = bar.high - Math.max(bar.open, bar.close);
+  const lowerWick = Math.min(bar.open, bar.close) - bar.low;
+  if (bias === 'long') {
+    // Hammer: langer unterer Docht >= 2x Body, kleiner Body
+    return lowerWick >= body * 2 && (body / range) <= 0.35;
+  } else {
+    // Shooting Star: langer oberer Docht >= 2x Body, kleiner Body
+    return upperWick >= body * 2 && (body / range) <= 0.35;
+  }
+}
+
+function analyzeM5(h1Idx, bias) {
+  if (!D.m5) return null;
+  // H1 Zeitstempel = OPEN Zeit (z.B. 09:00 = Kerze läuft 09:00-10:00)
+  const h1OpenMs = barMs(D.h1[h1Idx]);
+  const h1CloseMs = h1OpenMs + 60 * 60 * 1000;
+  // Letzte M5 Kerze innerhalb der H1: öffnet bei 09:55
+  let idx = -1;
+  for (let i = 0; i < D.m5.length; i++) {
+    const t = barMs(D.m5[i]);
+    if (t >= h1OpenMs && t < h1CloseMs) idx = i;
+    else if (t >= h1CloseMs) break;
+  }
+  if (idx < 0) return null;
+  const bar = D.m5[idx];
+  const prevBar = idx > 0 ? D.m5[idx - 1] : null;
+
+  const bull = bar.close > bar.open;
+  const range = bar.high - bar.low;
+  const body = Math.abs(bar.close - bar.open);
+  const bodyRatio = range > 0 ? body / range : 0;
+  const dirMatch = bias === 'long' ? bull : !bull;
+
+  // Mindestens eine der drei Bedingungen:
+  // 1. Gleiche Richtung + Body >= 50%
+  const strongBody = dirMatch && bodyRatio >= 0.5;
+  // 2. Engulfing in Bias-Richtung
+  const engulfing = isEngulfing(bar, prevBar, bias);
+  // 3. Hammer (long) oder Shooting Star (short)
+  const hammerStar = isHammerOrStar(bar, bias);
+
+  if (!strongBody && !engulfing && !hammerStar) return null;
+
+  return { bar, idx, bodyRatio, strongBody, engulfing, hammerStar };
+}
+
+function simulateTrade(dir, entry, sl, tp, m5StartIdx, reviewBars) {
+  if (!D.m5) return { result: 'loss', pips: -(entry - sl) };
+  // reviewBars = user setting, but max 1h = 12 M5 candles for forced close
+  const maxBars = Math.min(reviewBars, 12);
+  const endIdx = Math.min(D.m5.length - 1, m5StartIdx + maxBars);
+  for (let i = m5StartIdx + 1; i <= endIdx; i++) {
+    const bar = D.m5[i];
+    if (dir === 'long') {
+      if (bar.low <= sl) return { result: 'loss', pips: sl - entry };
+      if (bar.high >= tp) return { result: 'win', pips: tp - entry };
+    } else {
+      if (bar.high >= sl) return { result: 'loss', pips: entry - sl };
+      if (bar.low <= tp) return { result: 'win', pips: entry - tp };
+    }
+  }
+  // Force close at last bar close after 1h max
+  const last = D.m5[Math.min(endIdx, D.m5.length-1)];
+  const closePips = dir === 'long' ? last.close - entry : entry - last.close;
+  return { result: 'closed', pips: closePips };
+}
+
+function getSession(timeStr) {
+  const [h] = timeStr.split(':').map(Number);
+  if (h >= 1 && h < 9) return 'Asian';
+  if (h >= 9 && h < 15) return 'London';
+  if (h >= 15 && h < 22) return 'NY';
+  return 'Other';
+}
+
+// ── MAIN BACKTEST ──
+function runBacktest() {
+  const startBar = parseInt(document.getElementById('startBar').value) || 20;
+  const rrr = parseFloat(document.getElementById('rrrSetting').value);
+  const reviewBars = parseInt(document.getElementById('reviewBars').value);
+  const asset = document.getElementById('assetType').value;
+
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('btnRun').disabled = true;
+
+  results = [];
+  const total = D.h1.length - 5;
+  let processed = 0;
+
+  function processBatch(startIdx) {
+    const batchSize = 100;
+    const endIdx = Math.min(startIdx + batchSize, total);
+
+    for (let i = Math.max(startBar, 2); i < endIdx; i++) {
+      const h1sig = analyzeH1(i);
+      if (!h1sig) continue;
+
+      const m15ok = analyzeM15(i, h1sig.bias);
+      if (!m15ok) continue;
+
+      const m5sig = analyzeM5(i, h1sig.bias);
+      if (!m5sig) continue;
+
+      // Deduplizierung: pro H1 Kerze nur 1 Setup
+      const h1bar = D.h1[i];
+      const dupKey = h1bar.date + '_' + h1bar.time;
+      if (results.some(r => r._key === dupKey)) continue;
+
+      const bar = m5sig.bar;
+      const rrr_val = rrr;
+      let entry, sl, tp;
+      if (h1sig.bias === 'long') {
+        sl = bar.low;
+        entry = bar.close;
+        tp = entry + (entry - sl) * rrr_val;
+      } else {
+        sl = bar.high;
+        entry = bar.close;
+        tp = entry - (sl - entry) * rrr_val;
+      }
+
+      const sim = simulateTrade(h1sig.bias, entry, sl, tp, m5sig.idx, reviewBars);
+      let pips = sim.pips;
+      if (asset === 'forex') pips *= 10000;
+
+      results.push({
+        _key: dupKey,
+        date: h1bar.date,
+        time: h1bar.time,
+        dir: h1sig.bias,
+        result: sim.result,
+        pips: parseFloat(pips.toFixed(2)),
+        entry, sl, tp,
+        session: getSession(h1bar.time),
+        h1Idx: i
+      });
+    }
+
+    processed = endIdx;
+    const pct = (processed / total * 100).toFixed(0);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLbl').textContent = `Analysiere... ${pct}% (${results.length} Setups gefunden)`;
+
+    if (endIdx < total) {
+      setTimeout(() => processBatch(endIdx), 0);
+    } else {
+      onBacktestComplete();
+    }
+  }
+
+  processBatch(startBar);
+}
+
+function onBacktestComplete() {
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('hdrBadge').textContent = results.length + ' Setups';
+  renderStats();
+  renderTime();
+  renderTrades();
+  switchTab('stats');
+}
+
+// ── TABS ──
+function switchTab(t) {
+  ['setup','stats','time','trades'].forEach(n => {
+    document.getElementById('tab-'+n).classList.remove('active');
+    document.getElementById('tab-'+n+'-btn').classList.remove('active');
+  });
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('tab-'+t+'-btn').classList.add('active');
+}
+
+// ── RENDER STATS ──
+function renderStats() {
+  const real = results.filter(t => t.result === 'win' || t.result === 'loss' || t.result === 'closed');
+  const wins = real.filter(t => t.result === 'win');
+  const closed = real.filter(t => t.result === 'closed');
+  const losses = real.filter(t => t.result === 'loss');
+  const totalPips = results.reduce((s,t) => s + t.pips, 0);
+  const wr = real.length ? (wins.length / real.length * 100) : 0;
+  const avgPips = results.length ? totalPips / results.length : 0;
+  const avgWin = wins.length ? wins.reduce((s,t)=>s+t.pips,0)/wins.length : 0;
+  const avgLoss = losses.length ? Math.abs(losses.reduce((s,t)=>s+t.pips,0)/losses.length) : 0;
+  const pf = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : '∞';
+
+  // Win streak
+  let maxStreak = 0, cur = 0;
+  real.forEach(t => { if(t.result==='win'){cur++;maxStreak=Math.max(maxStreak,cur);}else cur=0; });
+
+  // Best/worst
+  const sorted = [...results].sort((a,b) => b.pips - a.pips);
+  const best = sorted[0];
+  const worst = sorted[sorted.length-1];
+
+  const wrClass = wr >= 55 ? 'pos' : wr >= 45 ? 'gold' : 'neg';
+
+  document.getElementById('statsContent').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-lbl">Win Rate</div>
+        <div class="sc-val ${wrClass}">${wr.toFixed(1)}%</div>
+        <div class="sc-sub">${wins.length} W / ${losses.length} L</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Gesamt Pips</div>
+        <div class="sc-val ${totalPips>=0?'pos':'neg'}">${totalPips>=0?'+':''}${totalPips.toFixed(1)}</div>
+        <div class="sc-sub">Ø ${avgPips>=0?'+':''}${avgPips.toFixed(1)} / Trade</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Setups Gesamt</div>
+        <div class="sc-val gold">${results.length}</div>
+        <div class="sc-sub">${real.length} bewertet · ${results.length-real.length} offen</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Profit Factor</div>
+        <div class="sc-val ${parseFloat(pf)>=1?'pos':'neg'}">${pf}</div>
+        <div class="sc-sub">Ø W: ${avgWin.toFixed(1)} · Ø L: ${avgLoss.toFixed(1)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Max Win Streak</div>
+        <div class="sc-val gold">${maxStreak}</div>
+        <div class="sc-sub">in Folge</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-lbl">Ø Pips/Win</div>
+        <div class="sc-val pos">+${avgWin.toFixed(1)}</div>
+        <div class="sc-sub">vs Ø Loss: -${avgLoss.toFixed(1)}</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-hdr">
+        <div class="chart-ttl">Equity Kurve (Pips)</div>
+        <div style="font-size:9px;font-family:var(--mono);color:var(--muted)">${results.length} Trades</div>
+      </div>
+      <canvas id="equityCanvas" height="140"></canvas>
+    </div>
+
+    ${best ? `
+    <div class="bw-grid">
+      <div class="bw-card">
+        <div class="bw-label">🏆 Bester Trade</div>
+        <div class="bw-pips pos">+${best.pips.toFixed(1)}</div>
+        <div class="bw-date">${best.date} · ${best.dir.toUpperCase()}</div>
+      </div>
+      <div class="bw-card">
+        <div class="bw-label">💥 Schlechtester</div>
+        <div class="bw-pips neg">${worst.pips.toFixed(1)}</div>
+        <div class="bw-date">${worst.date} · ${worst.dir.toUpperCase()}</div>
+      </div>
+    </div>` : ''}
+
+    <div class="breakdown-card">
+      <div class="bc-title">Session Breakdown</div>
+      ${renderBarBreakdown(results, 'session', ['Asian','London','NY','Other'])}
+    </div>
+
+    <div class="breakdown-card">
+      <div class="bc-title">Richtung</div>
+      ${renderBarBreakdown(results, 'dir', ['long','short'], ['▲ Long','▼ Short'])}
+    </div>
+  `;
+
+  drawEquity();
+}
+
+function renderBarBreakdown(data, key, vals, labels) {
+  if (!data.length) return '<div style="font-size:9px;color:var(--muted);font-family:var(--mono)">Keine Daten</div>';
+  return vals.map((v, i) => {
+    const group = data.filter(t => t[key] === v);
+    const wins = group.filter(t => t.result === 'win').length;
+    const real = group.filter(t => t.result !== 'open');
+    const wr = real.length ? (wins / real.length * 100) : 0;
+    const totalPips = group.reduce((s,t)=>s+t.pips,0);
+    const color = wr >= 58 ? 'var(--green)' : wr >= 45 ? 'var(--gold)' : group.length ? 'var(--red)' : 'var(--border)';
+    const widthPct = data.length ? (group.length / data.length * 100) : 0;
+    const lbl = labels ? labels[i] : v;
+    return `<div class="bar-row">
+      <div class="bar-lbl">${lbl}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${widthPct}%;background:${color}"></div></div>
+      <div class="bar-stats">${real.length ? wr.toFixed(0)+'%' : '—'} <span style="opacity:0.5">(${group.length})</span> ${totalPips>=0?'<span style="color:var(--green)">+':'<span style="color:var(--red)">'}${totalPips.toFixed(0)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function drawEquity() {
+  const canvas = document.getElementById('equityCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 460;
+  const H = 140;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#0c1018';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!results.length) return;
+
+  const points = [0];
+  results.forEach(t => points.push(points[points.length-1] + t.pips));
+
+  const mn = Math.min(...points);
+  const mx = Math.max(...points);
+  const pad = (mx - mn) * 0.12 || 5;
+  const lo = mn - pad, hi = mx + pad;
+  const range = hi - lo;
+  const toX = i => 10 + (i / (points.length - 1)) * (W - 20);
+  const toY = v => H - 10 - ((v - lo) / range) * (H - 20);
+
+  // Grid lines
+  ctx.strokeStyle = '#1a2235'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = 10 + (H - 20) * i / 4;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    const val = hi - (range - 2*pad) * i / 4;
+    ctx.fillStyle = '#354060'; ctx.font = '7px JetBrains Mono'; ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(0), W - 2, y - 2);
+  }
+
+  // Zero line
+  ctx.strokeStyle = 'rgba(53,64,96,0.9)'; ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(0, toY(0)); ctx.lineTo(W, toY(0)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const endVal = points[points.length-1];
+
+  // Fill area
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(0));
+  points.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+  ctx.lineTo(toX(points.length-1), toY(0));
+  ctx.closePath();
+  ctx.fillStyle = endVal >= 0 ? 'rgba(0,214,143,0.07)' : 'rgba(255,61,90,0.07)';
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = endVal >= 0 ? '#00d68f' : '#ff3d5a';
+  ctx.lineWidth = 2;
+  points.forEach((v, i) => i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)));
+  ctx.stroke();
+
+  // End label
+  ctx.fillStyle = endVal >= 0 ? '#00d68f' : '#ff3d5a';
+  ctx.font = 'bold 9px JetBrains Mono'; ctx.textAlign = 'right';
+  ctx.fillText((endVal >= 0 ? '+' : '') + endVal.toFixed(1) + ' Pips', W - 4, Math.max(14, Math.min(H - 6, toY(endVal) - 5)));
+}
+
+// ── TIME TAB ──
+function renderTime() {
+  if (!results.length) return;
+
+  // Per-hour stats
+  const hourStats = {};
+  for (let h = 0; h < 24; h++) hourStats[h] = { wins: 0, total: 0, pips: 0 };
+
+  results.forEach(t => {
+    const h = parseInt(t.time.split(':')[0]);
+    const real = t.result !== 'open';
+    hourStats[h].total++;
+    if (real) {
+      if (t.result === 'win') hourStats[h].wins++;
+    }
+    hourStats[h].pips += t.pips;
+  });
+
+  // Best hours (min 2 trades)
+  const rankedHours = Object.entries(hourStats)
+    .filter(([,v]) => v.total >= 2)
+    .map(([h,v]) => ({ h: parseInt(h), wr: v.total ? v.wins/v.total*100 : 0, n: v.total, pips: v.pips }))
+    .sort((a,b) => b.wr - a.wr);
+
+  // Heatmap cells
+  const heatmapCells = Array.from({length:24}, (_,h) => {
+    const s = hourStats[h];
+    const wr = s.total >= 2 ? s.wins/s.total*100 : -1;
+    let bg, txt;
+    if (s.total < 2) { bg='rgba(26,34,53,0.5)'; txt='var(--muted)'; }
+    else if (wr >= 60) { bg='rgba(0,214,143,0.2)'; txt='var(--green)'; }
+    else if (wr >= 50) { bg='rgba(240,180,41,0.15)'; txt='var(--gold)'; }
+    else { bg='rgba(255,61,90,0.15)'; txt='var(--red)'; }
+    return `<div class="hm-cell" style="background:${bg}">
+      <div class="hm-hour">${String(h).padStart(2,'0')}h</div>
+      <div class="hm-wr" style="color:${txt}">${s.total>=2?wr.toFixed(0)+'%':'—'}</div>
+    </div>`;
+  }).join('');
+
+  // Bar chart top hours
+  const maxN = Math.max(...Object.values(hourStats).map(v=>v.total), 1);
+  const hourBars = Array.from({length:24}, (_,h) => {
+    const s = hourStats[h];
+    if (!s.total) return '';
+    const wr = s.total >= 2 ? s.wins/s.total*100 : 0;
+    const color = wr >= 58 ? 'var(--green)' : wr >= 45 ? 'var(--gold)' : 'var(--red)';
+    const w = (s.total / maxN * 100).toFixed(0);
+    return `<div class="bar-row">
+      <div class="bar-lbl">${String(h).padStart(2,'0')}:00</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${color}"></div></div>
+      <div class="bar-stats">${s.total>=2?wr.toFixed(0)+'%':'—'} <span style="opacity:0.5">(${s.total})</span></div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('timeContent').innerHTML = `
+    <div class="breakdown-card" style="margin-top:8px;">
+      <div class="bc-title">Beste Stunden (min. 2 Trades)</div>
+      ${rankedHours.slice(0,5).map(h =>
+        `<div class="bar-row">
+          <div class="bar-lbl">${String(h.h).padStart(2,'0')}:00</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${h.wr}%;background:${h.wr>=58?'var(--green)':h.wr>=45?'var(--gold)':'var(--red)'}"></div></div>
+          <div class="bar-stats">${h.wr.toFixed(0)}% <span style="opacity:0.5">(${h.n})</span></div>
+        </div>`
+      ).join('')}
+    </div>
+
+    <div class="breakdown-card">
+      <div class="bc-title">Win Rate Heatmap (Uhrzeit)</div>
+      <div class="heatmap-grid">${heatmapCells}</div>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="bc-title">Alle Stunden — Aktivität</div>
+      ${hourBars}
+    </div>
+  `;
+}
+
+// ── TRADES TAB ──
+function renderTrades() {
+  if (!results.length) return;
+  const sorted = [...results].sort((a,b) => {
+    const da = new Date(a.date.replace(/\./g,'-')+'T'+a.time);
+    const db = new Date(b.date.replace(/\./g,'-')+'T'+b.time);
+    return db - da;
+  });
+
+  document.getElementById('tradesContent').innerHTML = `
+    <div style="font-size:8px;font-family:var(--mono);color:var(--muted);padding:6px 0 4px;text-align:center">
+      ${results.length} Setups gefunden · Neueste zuerst
+    </div>
+    ${sorted.map((t,i) => `
+      <div class="trade-item">
+        <div class="ti-dot ${t.result==='win'?'win':t.result==='loss'?'loss':'closed'}"></div>
+        <div class="ti-date">${t.date} ${t.time}</div>
+        <div class="ti-dir ${t.dir}">${t.dir.toUpperCase()}</div>
+        <div class="ti-sess">${t.session}</div>
+        <div class="ti-pips" style="color:${t.pips>=0?'var(--green)':'var(--red)'}">
+          ${t.pips>=0?'+':''}${t.pips.toFixed(1)}
+        </div>
+      </div>`).join('')}
+  `;
+}
+
+window.addEventListener('resize', () => {
+  if (results.length) drawEquity();
+});
+</script>
+</body>
+</html>
