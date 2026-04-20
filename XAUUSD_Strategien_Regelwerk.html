@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAUUSD Regelwerk – FTTM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #D4A843;
+    --gold-light: #F0C866;
+    --gold-dim: #8a6a20;
+    --bg: #0d0d0d;
+    --bg2: #141414;
+    --bg3: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #888;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 200px;
+    background: radial-gradient(ellipse, rgba(212,168,67,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 8vw, 72px);
+    letter-spacing: 3px;
+    color: #fff;
+    line-height: 1;
+  }
+  header h1 span { color: var(--gold); }
+  .header-sub {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+  .header-badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .badge.gold { border-color: var(--gold-dim); color: var(--gold); }
+
+  /* LAYOUT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* STRATEGY CARD */
+  .strategy {
+    margin-top: 50px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg2);
+  }
+  .strategy-header {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    background: var(--bg3);
+  }
+  .strategy-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--gold);
+    line-height: 1;
+    opacity: 0.4;
+    min-width: 40px;
+  }
+  .strategy-title-block h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: #fff;
+  }
+  .strategy-title-block .tf-badge {
+    display: inline-block;
+    background: rgba(212,168,67,0.12);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-cell {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+  .stat-value.green { color: var(--green); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.blue { color: var(--blue); }
+  .stat-value.orange { color: var(--orange); }
+
+  /* CONTENT */
+  .strategy-body { padding: 28px; }
+
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* CONCEPT BOX */
+  .concept-box {
+    background: rgba(212,168,67,0.05);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: #ccc;
+    line-height: 1.8;
+  }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 10px; }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: var(--gold-dim); }
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gold);
+    min-width: 24px;
+    line-height: 1.2;
+  }
+  .step-content strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .step-content p {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.6;
+  }
+  .step-content code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: rgba(212,168,67,0.1);
+    color: var(--gold-light);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* RULES GRID */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .rule-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .rule-card .rule-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+  .rule-card .rule-value {
+    font-size: 13px;
+    color: #ddd;
+    font-weight: 500;
+  }
+  .rule-card.highlight { border-color: var(--gold-dim); }
+  .rule-card.highlight .rule-value { color: var(--gold-light); }
+
+  /* FILTER LIST */
+  .filter-list { display: flex; flex-direction: column; gap: 8px; }
+  .filter-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #bbb;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .filter-icon {
+    font-size: 15px;
+    min-width: 20px;
+    margin-top: 1px;
+  }
+  .filter-item.must { border-left: 3px solid var(--green); }
+  .filter-item.skip { border-left: 3px solid var(--red); }
+  .filter-item.neutral { border-left: 3px solid var(--blue); }
+
+  /* BACKTEST TABLE */
+  .bt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .bt-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .bt-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: #ccc;
+    vertical-align: top;
+  }
+  .bt-table tr:last-child td { border-bottom: none; }
+  .bt-table tr:hover td { background: var(--bg3); }
+  .bt-table td:first-child { font-weight: 600; color: #fff; }
+  .tag-must { color: var(--green); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .tag-skip { color: var(--red); font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  /* BACKTEST GUIDE */
+  .bt-guide {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 4px;
+  }
+  .bt-guide ol {
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bt-guide li {
+    font-size: 13px;
+    color: #bbb;
+    padding-left: 4px;
+  }
+  .bt-guide li strong { color: #fff; }
+
+  /* WARN BOX */
+  .warn-box {
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #e0a0a0;
+    margin-top: 10px;
+  }
+  .warn-box strong { color: var(--red); }
+
+  /* DIVIDER */
+  .divider {
+    margin: 50px 0 0;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* TOC */
+  .toc {
+    margin-top: 36px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+  .toc-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+  }
+  .toc-items { display: flex; flex-direction: column; gap: 8px; }
+  .toc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #aaa;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+  .toc-item:hover {
+    color: var(--gold-light);
+    border-color: var(--gold-dim);
+    background: rgba(212,168,67,0.04);
+  }
+  .toc-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--gold);
+    opacity: 0.5;
+    min-width: 24px;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .rules-grid { grid-template-columns: 1fr; }
+    .strategy-header { flex-direction: column; gap: 8px; }
+    .strategy-num { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">FTTM · Gold Strategien</div>
+  <h1>XAUUSD <span>Regelwerk</span></h1>
+  <div class="header-sub">M1 · M5 · M15 · RRR ≥ 1:2 · WR ≥ 50%</div>
+  <div class="header-badges">
+    <span class="badge gold">XAUUSD only</span>
+    <span class="badge">Backtest 2022–2025</span>
+    <span class="badge">3 Strategien</span>
+    <span class="badge">Stand: April 2025</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">Inhalt</div>
+    <div class="toc-items">
+      <a href="#s1" class="toc-item"><span class="toc-num">01</span> London Open Breakout (M5/M15)</a>
+      <a href="#s2" class="toc-item"><span class="toc-num">02</span> VWAP Reversion (M5)</a>
+      <a href="#s3" class="toc-item"><span class="toc-num">03</span> NY Open Momentum (M1/M5)</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       STRATEGIE 1 – LONDON OPEN BREAKOUT
+  ═══════════════════════════════════════════════ -->
+  <div class="strategy" id="s1">
+    <div class="strategy-header">
+      <div class="strategy-num">01</div>
+      <div class="strategy-title-block">
+        <h2>London Open Breakout</h2>
+        <div class="tf-badge">M5 / M15 · 08:00–10:00 Uhr DE</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-cell"><div class="stat-label">Winrate</div><div class="stat-value green">52–58%</div></div>
+      <div class="stat-cell"><div class="stat-label">Ø RRR</div><div class="stat-value gold">1 : 2.2</div></div>
+      <div class="stat-cell"><div class="stat-label">Beste Tage</div><div class="stat-value blue">Di–Do</div></div>
+      <div class="stat-cell"><div class="stat-label">Timeframe</div><div class="stat-value orange">M5/M15</div></div>
+    </div>
+
+    <div class="strategy-body">
+
+      <div class="section-title">Konzept</div>
+      <div class="concept-box">
+        Gold konsolidiert in der Asien-Session (02:00–07:00 Uhr DE) in einer engen Range. Wenn London öffnet, bricht der Kurs aus dieser Range aus – dieser Impuls ist tradebar. Wir warten auf den Breakout und traden mit dem Momentum, <strong>nicht</strong> gegen es.
+      </div>
+
+      <div class="section-title">Schritt für Schritt – Setup</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Asien-Range markieren</strong>
+            <p>Vor dem Trade: Zeichne auf M15 das <code>High</code> und <code>Low</code> der Asien-Session von <code>02:00 bis 07:00 Uhr DE</code>. Das sind deine Range-Grenzen.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Range-Mindestgröße prüfen</strong>
+            <p>Die Range muss <code>≥ 0.80$ / 80 Pips</code> groß sein. Ist sie kleiner → kein Trade. Zu enge Ranges produzieren Fakeouts.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Warte auf Breakout-Kerze</strong>
+            <p>Ab <code>08:00 Uhr DE</code>: Beobachte auf M5. Ein Trade wird erst gültig wenn eine <strong>M5-Kerze vollständig außerhalb der Range schließt</strong>. Kein Trade bei nur einem Docht.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <strong>Entry setzen</strong>
+            <p>Entry <code>direkt beim Close der Breakout-Kerze</code> – oder per Limit auf dem Range-High/-Low (bei Retest). Kein Trade wenn der Breakout bereits &gt;50% der Range zurückgelegt hat.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <strong>Stop Loss platzieren</strong>
+            <p>SL kommt auf die <strong>gegenüberliegende Seite der Range</strong>. Bullisher Breakout → SL unter Range-Low. Bearisher Breakout → SL über Range-High. <code>SL = Range-Größe</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <strong>Take Profit berechnen</strong>
+            <p>TP = <code>2× die Range-Größe</code> ab Breakout-Punkt. Dadurch ist RRR automatisch ≥ 1:2. Optional: 50% bei 1R schließen, Rest mit Trailing laufen lassen.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Entry- und Exit-Regeln</div>
+      <div class="rules-grid">
+        <div class="rule-card highlight">
+          <div class="rule-label">Entry-Signal</div>
+          <div class="rule-value">M5-Close außerhalb der Asien-Range</div>
+        </div>
+        <div class="rule-card highlight">
+          <div class="rule-label">SL-Platzierung</div>
+          <div class="rule-value">Gegenüberliegende Seite der Range</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">TP Minimum</div>
+          <div class="rule-value">2× Range-Größe ab Entry = RRR 1:2</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Trade-Fenster</div>
+          <div class="rule-value">08:00 – 10:00 Uhr DE (danach kein Entry)</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Max. 1 Trade</div>
+          <div class="rule-value">Pro Tag nur 1 London-Breakout-Trade</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Break-Even</div>
+          <div class="rule-value">Optional: SL auf Entry ziehen bei 1R Profit</div>
+        </div>
+      </div>
+
+      <div class="section-title">Filter – Was muss stimmen</div>
+      <div class="filter-list">
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>EMA50 auf H1</strong> – Richtung bestätigt: Kurs über EMA50 → nur Long-Breakouts traden. Kurs unter EMA50 → nur Short-Breakouts. Bei EMA50 = beide Seiten erlaubt.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>Range-Größe ≥ 0.80$</strong> – Mindestvola für valide Breakouts. Unter diesem Wert zu viele Fakeouts.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>Kerze schließt vollständig außerhalb</strong> – Doch-Breakout gilt nicht. Nur Close-Bestätigung.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>NFP / CPI / FOMC-Tage</strong> – News dominieren alles. An diesen Tagen keinen London-Breakout traden. Die Range wird irrelevant.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>Montag & Freitag</strong> – Statistisch deutlich schlechtere Performance. Backtests zeigen Di–Do als beste Tage.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>Range &lt; 0.80$</strong> – Skip. Kein Trade.</span>
+        </div>
+        <div class="filter-item neutral">
+          <span class="filter-icon">ℹ️</span>
+          <span><strong>M15-Bestätigung optional</strong> – Für konservativere Entries: Warte auf M15-Close außerhalb der Range. Niedrigere WR aber sicherere Entries.</span>
+        </div>
+      </div>
+
+      <div class="section-title">Backtesting-Anleitung</div>
+      <div class="bt-guide">
+        <ol>
+          <li><strong>Datenquelle:</strong> MT5 Strategie-Tester oder TradingView-Replay auf XAUUSD M5. Mindestens 2022 bis heute.</li>
+          <li><strong>Täglich notieren:</strong> Datum · Tag (Mo–Fr) · Range-Größe · Richtung des Breakouts · EMA50 Lage (H1) · Entry · SL · TP · Ergebnis (Win/Loss/BE)</li>
+          <li><strong>Range markieren:</strong> Jeden Tag manuell das High/Low von 02:00–07:00 Uhr DE einzeichnen.</li>
+          <li><strong>Nur valide Setups:</strong> Bei Range &lt; 0.80$ → Zeile überspringen. Bei News-Tag → Zeile überspringen.</li>
+          <li><strong>Mindest-Stichprobe:</strong> 50 Trades bevor Schlüsse gezogen werden. Optimal: 100+.</li>
+          <li><strong>Auswertung:</strong> WR nach Tag (Mo–Fr), WR mit/ohne EMA-Filter, Drawdown-Phasen markieren.</li>
+        </ol>
+      </div>
+
+      <div class="warn-box">
+        <strong>⚠️ Wichtig:</strong> Fakeouts kommen vor – der Kurs bricht aus und kehrt sofort um. Deshalb ist der SL auf die gegenüberliegende Range-Seite essenziell. Niemals SL enger setzen als die Range-Größe.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       STRATEGIE 2 – VWAP REVERSION
+  ═══════════════════════════════════════════════ -->
+  <div class="strategy" id="s2" style="margin-top:50px;">
+    <div class="strategy-header">
+      <div class="strategy-num">02</div>
+      <div class="strategy-title-block">
+        <h2>VWAP Reversion</h2>
+        <div class="tf-badge">M5 · 15:00–19:00 Uhr DE (London/NY Overlap)</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-cell"><div class="stat-label">Winrate</div><div class="stat-value green">54–62%</div></div>
+      <div class="stat-cell"><div class="stat-label">Ø RRR</div><div class="stat-value gold">1 : 2–3</div></div>
+      <div class="stat-cell"><div class="stat-label">Session</div><div class="stat-value blue">Overlap</div></div>
+      <div class="stat-cell"><div class="stat-label">Timeframe</div><div class="stat-value orange">M5</div></div>
+    </div>
+
+    <div class="strategy-body">
+
+      <div class="section-title">Konzept</div>
+      <div class="concept-box">
+        Der VWAP (Volume Weighted Average Price) ist der faire Tagesdurchschnittspreis gewichtet nach Volumen. Gold kehrt im Tagesverlauf häufig zum VWAP zurück. Die Strategie: Warte auf einen impulsiven Move weg vom VWAP → dann auf den Retest des VWAP warten → dort Entry mit Kerzenbestätigung. Der VWAP wirkt als Magnet und als S/R-Level gleichzeitig.
+      </div>
+
+      <div class="section-title">Was ist der VWAP – einfach erklärt</div>
+      <div class="concept-box" style="background: rgba(96,165,250,0.05); border-color: #3b82f6;">
+        VWAP = Durchschnittspreis des Tages, <strong>gewichtet nach Volumen</strong>. Wird täglich neu berechnet (Reset um 00:00 UTC). In TradingView als Indikator kostenlos verfügbar: <code>VWAP</code> einfach hinzufügen. Institutionelle Händler nutzen den VWAP als Referenz – deshalb reagiert der Kurs dort oft.
+      </div>
+
+      <div class="section-title">Schritt für Schritt – Setup</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>VWAP auf M5 anzeigen</strong>
+            <p>VWAP-Indikator auf M5 laden. Tages-Reset (Daily). Optional: oberes/unteres VWAP-Band (+1/-1 Standardabweichung).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Impulsbewegung identifizieren</strong>
+            <p>Suche eine schnelle, starke Bewegung <strong>weg vom VWAP</strong> mit mindestens <code>15$ Abstand</code>. Der Kurs muss sich schnell und in einem Zug entfernt haben – keine zögerliche Bewegung.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Auf Rückkehr zum VWAP warten</strong>
+            <p>Kurs kommt zurück Richtung VWAP. Warte bis er den VWAP berührt oder auf <code>±0.50$</code> herankommt.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <strong>Kerzenbestätigung am VWAP</strong>
+            <p>Entry nur wenn am VWAP eine Bestätigungskerze schließt: <code>Engulfing-Kerze</code> (große Umkehrkerze) oder <code>Pin Bar / Hammer</code> (langer Docht in Trendrichtung). Keine Bestätigung → kein Trade.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <strong>S/R Confluence prüfen</strong>
+            <p>Idealerweise liegt der VWAP gleichzeitig auf einem S/R-Level (Pivot, altes High/Low). Das erhöht die Wahrscheinlichkeit deutlich. <strong>Pflichtfrei aber stark empfohlen.</strong></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <strong>Entry, SL, TP</strong>
+            <p>Entry beim Close der Bestätigungskerze. SL über/unter dem Low/High der Bestätigungskerze + <code>0.50$ Buffer</code>. TP = nächstes strukturelles Level → muss <code>≥ 2× SL-Abstand</code> sein.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Entry- und Exit-Regeln</div>
+      <div class="rules-grid">
+        <div class="rule-card highlight">
+          <div class="rule-label">Entry-Signal</div>
+          <div class="rule-value">Engulfing oder Pin Bar am VWAP nach Impuls</div>
+        </div>
+        <div class="rule-card highlight">
+          <div class="rule-label">SL-Platzierung</div>
+          <div class="rule-value">Über/unter Bestätigungskerze + 0.50$ Buffer</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">TP Mindest-RRR</div>
+          <div class="rule-value">2× SL-Abstand → nächstes S/R-Level</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Trade-Fenster</div>
+          <div class="rule-value">15:00–19:00 Uhr DE (höchstes Volumen)</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Max. VWAP-Tests</div>
+          <div class="rule-value">Nur traden wenn VWAP heute ≤ 2× getestet</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Impuls-Minimum</div>
+          <div class="rule-value">≥ 15$ Abstand vom VWAP vor Retest</div>
+        </div>
+      </div>
+
+      <div class="section-title">Filter – Was muss stimmen</div>
+      <div class="filter-list">
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>EMA50 H1-Richtung</strong> – Long-Trades nur wenn H1-Close über EMA50. Short-Trades nur wenn H1-Close unter EMA50.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>Impuls ≥ 15$ vor Retest</strong> – Ist der Abstand kleiner, kein Trade. Zu kleine Impulse → kein Momentum vorhanden.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>Kerzenbestätigung am VWAP</strong> – Ohne Engulfing oder Pin Bar kein Entry. Der VWAP allein ist kein Einstiegssignal.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>RRR ≥ 1:2 vorhanden</strong> – Vor Entry berechnen: Gibt das nächste S/R-Level mindestens 2× den SL-Abstand her? Wenn nein → kein Trade.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>VWAP 3× oder mehr getestet</strong> – Nach dem dritten Test verliert der VWAP seine Wirkung als S/R. Kein Trade mehr.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>News innerhalb 30 min</strong> – High-Impact News (NFP, CPI, FOMC) dominieren jeden technischen Level. Kein Trade kurz vor/nach News.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>Asien-Session (02:00–07:00 Uhr DE)</strong> – Zu geringes Volumen. VWAP-Levels sind in dieser Phase nicht reliabel.</span>
+        </div>
+        <div class="filter-item neutral">
+          <span class="filter-icon">ℹ️</span>
+          <span><strong>S/R Confluence am VWAP</strong> – Kein Pflicht-Filter aber stark winrate-steigernd. Liegt ein bekanntes S/R-Level auf dem VWAP → deutlich höhere Bestätigungsquote.</span>
+        </div>
+      </div>
+
+      <div class="section-title">Backtesting-Anleitung</div>
+      <div class="bt-guide">
+        <ol>
+          <li><strong>Datenquelle:</strong> TradingView mit VWAP-Indikator auf XAUUSD M5. TradingView-Replay-Funktion nutzen (kostenloser Plan reicht).</li>
+          <li><strong>Pro Trade notieren:</strong> Datum · Uhrzeit · Abstand VWAP→Impuls · Kerzentyp (Engulfing/Pin Bar) · S/R Confluence (ja/nein) · SL-Abstand · TP-Level · Ergebnis</li>
+          <li><strong>VWAP täglich neu:</strong> VWAP resettet um 00:00 UTC – jeder Tag startet frisch. Am Tagesbeginn keine Altdaten aus dem Vortag verwenden.</li>
+          <li><strong>Session-Filter testen:</strong> Trenne London (08:00–13:00) und NY/Overlap (15:00–20:00) in der Auswertung. Der Overlap sollte deutlich besser sein.</li>
+          <li><strong>Mindest-Stichprobe:</strong> 60 Trades für valide Aussagen. Optimal: 100+.</li>
+          <li><strong>Sonderfall notieren:</strong> Confluence-Trades vs. reine VWAP-Trades getrennt auswerten → du wirst einen Unterschied sehen.</li>
+        </ol>
+      </div>
+
+      <div class="warn-box">
+        <strong>⚠️ Häufiger Fehler:</strong> Den VWAP als feste Linie behandeln. Er ist eine Zone (±0.50$). Entries exakt auf dem VWAP zu erzwingen führt zu verpassten Trades. Arbeite mit einer Zone, nicht mit einer Linie.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       STRATEGIE 3 – NY OPEN MOMENTUM
+  ═══════════════════════════════════════════════ -->
+  <div class="strategy" id="s3" style="margin-top:50px;">
+    <div class="strategy-header">
+      <div class="strategy-num">03</div>
+      <div class="strategy-title-block">
+        <h2>NY Open Momentum</h2>
+        <div class="tf-badge">M1 / M5 · 15:30–16:00 Uhr DE</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-cell"><div class="stat-label">Winrate</div><div class="stat-value green">51–55%</div></div>
+      <div class="stat-cell"><div class="stat-label">Ø RRR</div><div class="stat-value gold">1 : 2.0</div></div>
+      <div class="stat-cell"><div class="stat-label">Entry-Zeit</div><div class="stat-value blue">15:30 DE</div></div>
+      <div class="stat-cell"><div class="stat-label">Timeframe</div><div class="stat-value orange">M1/M5</div></div>
+    </div>
+
+    <div class="strategy-body">
+
+      <div class="section-title">Konzept</div>
+      <div class="concept-box">
+        Um 15:30 Uhr DE öffnet die New Yorker Börse. Amerikanische Institutionelle treten in den Markt ein – das sorgt für den volumenstärksten Moment des Tages. Die Richtung der <strong>ersten 5-Minuten-Kerze</strong> nach NY Open gibt häufig die Tages-Richtung für Gold vor. Wir warten auf den ersten Pullback nach dem Initialimpuls und traden mit dem Momentum.
+      </div>
+
+      <div class="section-title">Schritt für Schritt – Setup</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>NY Open abwarten</strong>
+            <p>Exakt um <code>15:30 Uhr DE</code> beginnt das Setup. Keine Aktionen davor. Die Kerze von 15:30 bis 15:35 Uhr ist die "NY Open Kerze".</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>NY Open Kerze auswerten</strong>
+            <p>Schließt die erste M5-Kerze (15:30–15:35) <code>bullish</code> → potenziell Long. Schließt sie <code>bearish</code> → potenziell Short. Kerze muss mindestens <code>1.50$</code> Body haben (kein Doji/kleiner Body).</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Ersten Pullback identifizieren</strong>
+            <p>Nach der NY Open Kerze kommt oft ein kurzer Rücksetzer. Warte auf <code>50% Retracement</code> der NY Open Kerze. Du kannst auf M1 zoomen um den Einstieg zu verfeinern.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <strong>Entry beim 50%-Retracement</strong>
+            <p>Entry wenn der Kurs das 50%-Level der NY Open Kerze erreicht <strong>und dort eine M1-Umkehrkerze zeigt</strong>. Alternativ: Limit-Order auf 50% setzen.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <strong>Stop Loss setzen</strong>
+            <p>SL kommt unter/über das <code>Low/High der NY Open Kerze</code> + 0.50$ Buffer. Das ist der Invalidierungspunkt – wenn der SL getriggert wird, war die Richtungsannahme falsch.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <strong>Take Profit berechnen</strong>
+            <p>TP = <code>2× SL-Abstand</code> ab Entry. Alternativ nächstes S/R-Level wenn dieses ≥ 2× SL entfernt ist. Bei starkem Momentum: 50% bei 1R, Rest mit Trailing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Entry- und Exit-Regeln</div>
+      <div class="rules-grid">
+        <div class="rule-card highlight">
+          <div class="rule-label">Entry-Signal</div>
+          <div class="rule-value">M1-Umkehrkerze bei 50%-Retracement der NY-Kerze</div>
+        </div>
+        <div class="rule-card highlight">
+          <div class="rule-label">SL-Platzierung</div>
+          <div class="rule-value">Über/unter NY Open Kerze High/Low + 0.50$</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">TP</div>
+          <div class="rule-value">2× SL-Abstand = RRR 1:2 garantiert</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Trade-Fenster</div>
+          <div class="rule-value">Entry nur zwischen 15:30–16:00 Uhr DE</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">NY-Kerze Mindest-Body</div>
+          <div class="rule-value">≥ 1.50$ Body (kein kleiner Doji)</div>
+        </div>
+        <div class="rule-card">
+          <div class="rule-label">Max. Wartezeit</div>
+          <div class="rule-value">Kein Pullback bis 16:00 → kein Trade</div>
+        </div>
+      </div>
+
+      <div class="section-title">Filter – Was muss stimmen</div>
+      <div class="filter-list">
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>EMA50 auf H1</strong> – Long-Trade nur wenn H1-Kurs über EMA50. Short-Trade nur wenn darunter. Bei AT: beide Seiten erlaubt, aber vorsichtiger sein.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>NY Open Kerze hat klare Richtung</strong> – Body ≥ 1.50$. Doji oder Inside-Bar an diesem Punkt → kein Setup vorhanden, kein Trade.</span>
+        </div>
+        <div class="filter-item must">
+          <span class="filter-icon">✅</span>
+          <span><strong>Pullback erreicht 50%-Level</strong> – Kein Trade wenn kein Pullback kommt und der Kurs direkt durchläuft. Zu aggressiver Entry ohne Pullback = schlechtes RRR.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>NFP / CPI an diesem Tag</strong> – News werden oft um 14:30 Uhr DE veröffentlicht. Das verzerrt die NY Open Kerze komplett. An News-Tagen keine NY-Open-Trades.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>London bereits stark in eine Richtung gelaufen</strong> – Wenn Gold zwischen 08:00–15:30 Uhr bereits &gt;20$ bewegt hat, ist die NY-Kerze oft gegen-trending und weniger reliable.</span>
+        </div>
+        <div class="filter-item skip">
+          <span class="filter-icon">🚫</span>
+          <span><strong>Freitag nach 15:30 Uhr</strong> – Wochenschluss sorgt für unberechenbare Bewegungen und Liquiditäts-Grabs. Freitag-NY-Trades statistisch schlechter.</span>
+        </div>
+        <div class="filter-item neutral">
+          <span class="filter-icon">ℹ️</span>
+          <span><strong>M1 für Entry-Timing</strong> – Auf M5 das Setup sehen, auf M1 reinzoomen für präzisen Entry. So ist der SL kleiner und das RRR besser.</span>
+        </div>
+      </div>
+
+      <div class="section-title">Backtesting-Anleitung</div>
+      <div class="bt-guide">
+        <ol>
+          <li><strong>Datenquelle:</strong> MT5 auf XAUUSD M5/M1 oder TradingView Replay. Wichtig: Zeitzone DE einstellen damit 15:30 stimmt.</li>
+          <li><strong>Pro Trade notieren:</strong> Datum · Wochentag · Body-Größe NY-Kerze · Richtung · Pullback (ja/nein · bis wohin) · EMA50-Lage · Entry · SL · TP · Ergebnis</li>
+          <li><strong>Zuerst aussondern:</strong> Alle News-Tage rausfiltern bevor du anfängst. Dann Freitage. Dann nur Trades mit Body ≥ 1.50$ nehmen.</li>
+          <li><strong>Wochentag-Auswertung:</strong> Trenne Di/Mi/Do von Mo/Fr – du wirst einen klaren Unterschied sehen.</li>
+          <li><strong>EMA50-Auswertung:</strong> Vergleiche Trades mit EMA-Richtungsfilter vs. alle Trades. Zeigt dir den Wert des Filters direkt.</li>
+          <li><strong>Mindest-Stichprobe:</strong> 50–60 valide Trades (nach Filtern). Ca. 3–4 Monate reale Daten oder mehr.</li>
+        </ol>
+      </div>
+
+      <div class="warn-box">
+        <strong>⚠️ Zeitzone-Falle:</strong> 15:30 Uhr DE gilt für Mitteleuropäische Sommerzeit (MESZ). Im Winter (MEZ) ist die NY-Open um 15:30 Uhr MEZ – das ändert sich je nach Zeitumstellung in den USA (amerikanische und europäische Zeitumstellung sind nicht synchron!). Im März/April und Oktober immer Zeitzone prüfen.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div style="margin-top:50px;">
+    <div class="toc">
+      <div class="toc-title">Strategie-Vergleich auf einen Blick</div>
+      <table class="bt-table" style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th>Strategie</th>
+            <th>Zeit DE</th>
+            <th>WR</th>
+            <th>RRR</th>
+            <th>Komplexität</th>
+            <th>Empfehlung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>London Open Breakout</td>
+            <td>08:00–10:00</td>
+            <td>52–58%</td>
+            <td>1:2.2</td>
+            <td>Niedrig</td>
+            <td><span class="tag-must">★★★★☆</span></td>
+          </tr>
+          <tr>
+            <td>VWAP Reversion</td>
+            <td>15:00–19:00</td>
+            <td>54–62%</td>
+            <td>1:2–3</td>
+            <td>Mittel</td>
+            <td><span class="tag-must">★★★★★</span></td>
+          </tr>
+          <tr>
+            <td>NY Open Momentum</td>
+            <td>15:30–16:00</td>
+            <td>51–55%</td>
+            <td>1:2.0</td>
+            <td>Niedrig</td>
+            <td><span class="tag-must">★★★☆☆</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  FTTM · XAUUSD Regelwerk · Backtesting-Edition · Stand April 2025 · Kein Finanzberatung
+</footer>
+
+</body>
+</html>
