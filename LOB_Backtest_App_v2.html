@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LOB Backtester v2 – FTTM</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --gold: #E8B84B;
+  --gold-dim: #6b520f;
+  --gold-glow: rgba(232,184,75,0.12);
+  --bg: #0b0b0b;
+  --bg2: #131313;
+  --bg3: #1a1a1a;
+  --bg4: #222;
+  --border: #252525;
+  --border2: #2e2e2e;
+  --text: #e2e2e2;
+  --muted: #5a5a5a;
+  --muted2: #888;
+  --green: #3ecf7a;
+  --green-dim: rgba(62,207,122,0.12);
+  --red: #f06565;
+  --red-dim: rgba(240,101,101,0.12);
+  --blue: #5b9cf6;
+  --orange: #fb923c;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TABS ── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 4px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); transition: color 0.2s;
+  gap: 4px;
+}
+.tab-btn.active { color: var(--gold); }
+.tab-btn svg { width: 20px; height: 20px; }
+.tab-btn span { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 0 0 80px; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── HEADER ── */
+.page-header {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  position: sticky; top: 0; z-index: 50;
+}
+.page-header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px; letter-spacing: 2px; color: #fff;
+}
+.page-header h1 em { color: var(--gold); font-style: normal; }
+.page-header p { font-size: 12px; color: var(--muted2); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* ── TIMEZONE BAR ── */
+.tz-bar {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 14px 16px 0;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tz-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 6px; grid-column: 1/-1;
+}
+.tz-row {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.tz-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.tz-times { display: flex; flex-direction: column; gap: 3px; }
+.tz-time {
+  display: flex; justify-content: space-between;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+}
+.tz-time .de { color: var(--muted2); }
+.tz-time .mt5 { color: var(--gold); }
+.tz-time .event { color: var(--muted); font-size: 10px; }
+
+/* ── DECISION TREE ── */
+.dt-container { padding: 14px 16px; }
+.dt-step {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: none;
+  animation: fadeIn 0.25s ease;
+}
+.dt-step.visible { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.dt-step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--gold);
+  letter-spacing: 2px; margin-bottom: 8px;
+}
+.dt-step h3 {
+  font-size: 15px; font-weight: 600; color: #fff;
+  line-height: 1.4; margin-bottom: 6px;
+}
+.dt-step p { font-size: 13px; color: var(--muted2); margin-bottom: 12px; line-height: 1.6; }
+
+/* Time hint badge */
+.time-hint {
+  display: inline-flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.time-badge {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 3px 10px; border-radius: 100px;
+  border: 1px solid var(--border2);
+}
+.time-badge .de-t { color: var(--muted2); }
+.time-badge .mt5-t { color: var(--gold); }
+.time-badge .sep { color: var(--muted); margin: 0 4px; }
+
+.dt-btns { display: flex; gap: 8px; }
+.dt-btn {
+  flex: 1; padding: 12px;
+  border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.dt-btn:active { transform: scale(0.97); }
+.dt-btn.yes { border-color: rgba(62,207,122,0.3); color: var(--green); background: var(--green-dim); }
+.dt-btn.no { border-color: rgba(240,101,101,0.3); color: var(--red); background: var(--red-dim); }
+.dt-btn.neutral { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+.dt-result {
+  border-radius: 12px; padding: 20px; text-align: center;
+  margin-bottom: 10px; display: none;
+  animation: fadeIn 0.25s ease;
+}
+.dt-result.visible { display: block; }
+.dt-result.trade { background: var(--green-dim); border: 1px solid rgba(62,207,122,0.25); }
+.dt-result.skip { background: var(--red-dim); border: 1px solid rgba(240,101,101,0.25); }
+.dt-result .icon { font-size: 36px; margin-bottom: 8px; }
+.dt-result h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; }
+.dt-result.trade h2 { color: var(--green); }
+.dt-result.skip h2 { color: var(--red); }
+.dt-result p { font-size: 13px; color: var(--muted2); margin-top: 6px; }
+
+.dt-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.dt-input-item label {
+  display: block; font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 4px;
+}
+.dt-input-item input, .dt-input-item select {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 13px; padding: 9px 10px;
+  outline: none;
+}
+.dt-input-item input:focus, .dt-input-item select:focus { border-color: var(--gold-dim); }
+.dt-input-item.full { grid-column: 1/-1; }
+
+.range-display {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 12px;
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 12px;
+}
+.range-display .label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+.range-display .value { font-family: 'DM Mono', monospace; font-size: 16px; color: var(--gold); font-weight: 500; }
+.range-display .status { font-size: 12px; font-weight: 600; }
+.range-display .status.ok { color: var(--green); }
+.range-display .status.bad { color: var(--red); }
+
+.range-note {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--muted); background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; margin-bottom: 12px; line-height: 1.5;
+}
+
+.ema-btns { display: flex; gap: 6px; margin-bottom: 12px; }
+.ema-btn {
+  flex: 1; padding: 10px 4px;
+  border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--muted2);
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.ema-btn.selected-over { border-color: rgba(62,207,122,0.4); color: var(--green); background: var(--green-dim); }
+.ema-btn.selected-under { border-color: rgba(240,101,101,0.4); color: var(--red); background: var(--red-dim); }
+.ema-btn.selected-at { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+.skip-reason {
+  background: var(--red-dim); border: 1px solid rgba(240,101,101,0.2);
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 13px; color: #d08080; margin-bottom: 10px;
+  display: none;
+}
+.skip-reason.visible { display: block; }
+
+.reset-btn {
+  width: 100%; padding: 12px;
+  border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--muted2);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  cursor: pointer; margin-top: 8px;
+}
+
+.trade-detail {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px;
+  margin-bottom: 12px;
+}
+.trade-detail h3 {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--gold); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.calc-row {
+  display: flex; justify-content: space-between;
+  align-items: center; padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.calc-row:last-child { border-bottom: none; }
+.calc-row .clabel { color: var(--muted2); }
+.calc-row .cval { font-family: 'DM Mono', monospace; color: var(--gold); font-weight: 500; }
+.calc-row .cval.green { color: var(--green); }
+.calc-row .cval.red { color: var(--red); }
+
+.save-trade-btn {
+  width: 100%; padding: 14px;
+  border-radius: 10px; border: none;
+  background: var(--gold); color: #000;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 12px; transition: opacity 0.15s;
+}
+.save-trade-btn:active { opacity: 0.85; }
+
+/* ── LOG PAGE ── */
+.log-container { padding: 16px; }
+.log-filters {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; padding-bottom: 4px;
+}
+.log-filter-btn {
+  padding: 6px 14px; border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: var(--bg2); color: var(--muted2);
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.log-filter-btn.active { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+.export-btn {
+  width: 100%; padding: 12px;
+  border-radius: 10px; border: 1px solid rgba(62,207,122,0.3);
+  background: var(--green-dim); color: var(--green);
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-bottom: 14px; transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.export-btn:active { opacity: 0.8; }
+
+.log-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted); font-size: 13px;
+}
+.log-empty .icon { font-size: 40px; margin-bottom: 12px; }
+
+.trade-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 10px;
+  position: relative;
+}
+.trade-card.win { border-left: 3px solid var(--green); }
+.trade-card.loss { border-left: 3px solid var(--red); }
+.trade-card.skip { border-left: 3px solid var(--muted); }
+.trade-card.be { border-left: 3px solid var(--gold); }
+
+.tc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tc-date { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted2); }
+.tc-result {
+  font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
+  padding: 2px 10px; border-radius: 100px;
+}
+.tc-result.win { background: var(--green-dim); color: var(--green); }
+.tc-result.loss { background: var(--red-dim); color: var(--red); }
+.tc-result.skip { background: var(--bg3); color: var(--muted2); }
+.tc-result.be { background: var(--gold-glow); color: var(--gold); }
+
+.tc-mid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.tc-tag {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 2px 8px; border-radius: 4px;
+  background: var(--bg3); color: var(--muted2);
+  border: 1px solid var(--border);
+}
+.tc-tag.direction-long { color: var(--green); background: var(--green-dim); border-color: rgba(62,207,122,0.2); }
+.tc-tag.direction-short { color: var(--red); background: var(--red-dim); border-color: rgba(240,101,101,0.2); }
+
+.tc-bottom { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.tc-pips { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+.tc-pips.pos { color: var(--green); }
+.tc-pips.neg { color: var(--red); }
+
+.delete-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 16px; padding: 4px;
+}
+
+/* ── STATS PAGE ── */
+.stats-container { padding: 16px; }
+.kpi-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px;
+}
+.kpi-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; line-height: 1; }
+.kpi-value.green { color: var(--green); }
+.kpi-value.gold { color: var(--gold); }
+.kpi-value.red { color: var(--red); }
+.kpi-value.blue { color: var(--blue); }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+.chart-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+}
+.chart-wrap { position: relative; height: 180px; }
+
+.breakdown-grid { display: flex; flex-direction: column; gap: 8px; }
+.breakdown-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border-radius: 8px; padding: 10px 12px;
+}
+.br-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); min-width: 40px; }
+.br-bar-wrap { flex: 1; background: var(--bg4); border-radius: 100px; height: 6px; overflow: hidden; }
+.br-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.5s ease; }
+.br-pct { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gold); min-width: 40px; text-align: right; }
+.br-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
+
+.filter-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fc-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; text-align: center;
+}
+.fc-title { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.fc-big { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; }
+.fc-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.fc-card.better .fc-big { color: var(--green); }
+.fc-card.worse .fc-big { color: var(--red); }
+
+.section-label {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); margin: 20px 0 10px;
+}
+
+.streak-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px;
+  display: flex; gap: 12px;
+}
+.streak-item { flex: 1; text-align: center; }
+.streak-num { font-family: 'Bebas Neue', sans-serif; font-size: 36px; }
+.streak-num.green { color: var(--green); }
+.streak-num.red { color: var(--red); }
+.streak-lbl { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+.no-data { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ PAGE: DECISION TREE ══════════════════ -->
+<div class="page active" id="page-dt">
+  <div class="page-header">
+    <h1>Ist das ein <em>Trade?</em></h1>
+    <p>LONDON OPEN BREAKOUT · ENTSCHEIDUNGSBAUM</p>
+  </div>
+
+  <!-- TIMEZONE REFERENCE -->
+  <div class="tz-bar">
+    <div class="tz-title">⏰ ZEITREFERENZ</div>
+    <div class="tz-row">
+      <div class="tz-label">Range-Fenster</div>
+      <div class="tz-times">
+        <div class="tz-time"><span class="event">Start</span><span class="de-t">🇩🇪 02:00</span><span class="mt5-t">MT5 03:00</span></div>
+        <div class="tz-time"><span class="event">Ende</span><span class="de-t">🇩🇪 07:00</span><span class="mt5-t">MT5 08:00</span></div>
+      </div>
+    </div>
+    <div class="tz-row">
+      <div class="tz-label">Entry-Fenster</div>
+      <div class="tz-times">
+        <div class="tz-time"><span class="event">Start</span><span class="de-t">🇩🇪 08:00</span><span class="mt5-t">MT5 09:00</span></div>
+        <div class="tz-time"><span class="event">Ende</span><span class="de-t">🇩🇪 10:00</span><span class="mt5-t">MT5 11:00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dt-container" id="dt-container">
+
+    <!-- STEP 1 -->
+    <div class="dt-step visible" id="dt-step-1">
+      <div class="dt-step-num">SCHRITT 01</div>
+      <h3>Ist heute Dienstag, Mittwoch oder Donnerstag?</h3>
+      <p>Montag & Freitag statistisch signifikant schlechter. Di–Do sind die validen Tage.</p>
+      <div class="dt-btns">
+        <button class="dt-btn yes" onclick="dtAnswer(1,'yes')">✓ JA</button>
+        <button class="dt-btn no" onclick="dtAnswer(1,'no','Skip – Wochentag (Mo/Fr)')">✗ NEIN</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="dt-step" id="dt-step-2">
+      <div class="dt-step-num">SCHRITT 02</div>
+      <h3>Steht heute ein High-Impact News Event an?</h3>
+      <p>NFP, CPI, FOMC oder Fed-Reden. Checke forexfactory.com. An News-Tagen kein Trade.</p>
+      <div class="dt-btns">
+        <button class="dt-btn no" onclick="dtAnswer(2,'no','Skip – News Event heute')">✗ JA (News da)</button>
+        <button class="dt-btn yes" onclick="dtAnswer(2,'yes')">✓ NEIN (keine News)</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="dt-step" id="dt-step-3">
+      <div class="dt-step-num">SCHRITT 03</div>
+      <h3>Asien-Range messen</h3>
+      <div class="time-hint">
+        <span class="time-badge">Range: <span class="de-t">🇩🇪 02:00–07:00</span> <span class="sep">|</span> <span class="mt5-t">MT5 03:00–08:00</span></span>
+      </div>
+      <p>M15-Chart: Das absolute High und Low aller Kerzen inkl. Dochte in diesem Fenster markieren. Dann High minus Low = Range-Größe.</p>
+      <div class="dt-input-grid">
+        <div class="dt-input-item">
+          <label>Range HIGH ($)</label>
+          <input type="number" id="range-high" step="0.01" placeholder="z.B. 3025.50" oninput="calcRange()">
+        </div>
+        <div class="dt-input-item">
+          <label>Range LOW ($)</label>
+          <input type="number" id="range-low" step="0.01" placeholder="z.B. 3021.80" oninput="calcRange()">
+        </div>
+      </div>
+      <div class="range-display" id="range-display">
+        <div><div class="label">RANGE-GRÖSSE</div><div class="value" id="range-val">—</div></div>
+        <div class="status" id="range-status">Eingabe ausstehend</div>
+      </div>
+      <div class="range-note" id="range-note" style="display:none;"></div>
+      <div class="dt-btns">
+        <button class="dt-btn neutral" onclick="dtStep3Check()">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="dt-step" id="dt-step-4">
+      <div class="dt-step-num">SCHRITT 04</div>
+      <h3>EMA50 auf H1 – Wo steht der Kurs?</h3>
+      <p>H1-Chart in MT5 öffnen. Wo liegt der letzte H1-Close relativ zum EMA50 (gelbe Linie)?</p>
+      <div class="ema-btns">
+        <button class="ema-btn" id="ema-over" onclick="selectEMA('OVER')">📈 ÜBER<br><small>Long only</small></button>
+        <button class="ema-btn" id="ema-under" onclick="selectEMA('UNDER')">📉 UNTER<br><small>Short only</small></button>
+        <button class="ema-btn" id="ema-at" onclick="selectEMA('AT')">➡️ DRAN<br><small>Beide</small></button>
+      </div>
+      <div class="dt-btns">
+        <button class="dt-btn neutral" onclick="dtAnswer(4,'yes')">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="dt-step" id="dt-step-5">
+      <div class="dt-step-num">SCHRITT 05</div>
+      <h3>Schließt eine M5-Kerze vollständig außerhalb der Range?</h3>
+      <div class="time-hint">
+        <span class="time-badge">Entry-Fenster: <span class="de-t">🇩🇪 08:00–10:00</span> <span class="sep">|</span> <span class="mt5-t">MT5 09:00–11:00</span></span>
+      </div>
+      <p>Nur ein vollständiger Close zählt – kein Docht-Breakout. Nach Ende des Fensters kein Entry mehr.</p>
+      <div class="dt-btns">
+        <button class="dt-btn yes" onclick="dtStep5(true)">✓ JA – Close außerhalb</button>
+        <button class="dt-btn no" onclick="dtAnswer(5,'no','Skip – Kein Breakout im Fenster')">✗ NEIN / Nur Docht</button>
+      </div>
+    </div>
+
+    <!-- STEP 6 -->
+    <div class="dt-step" id="dt-step-6">
+      <div class="dt-step-num">SCHRITT 06</div>
+      <h3>Stimmt die Breakout-Richtung mit dem EMA50 überein?</h3>
+      <p id="ema-reminder-text">Bullisher Breakout nach oben → EMA OVER oder AT. Bearisher nach unten → EMA UNDER oder AT.</p>
+      <div class="dt-btns">
+        <button class="dt-btn yes" onclick="dtAnswer(6,'yes')">✓ JA – Passt</button>
+        <button class="dt-btn no" onclick="dtAnswer(6,'no','Skip – EMA-Konflikt')">✗ NEIN – Konflikt</button>
+      </div>
+    </div>
+
+    <!-- STEP 7 -->
+    <div class="dt-step" id="dt-step-7">
+      <div class="dt-step-num">SCHRITT 07</div>
+      <h3>Trade-Details erfassen</h3>
+      <div class="dt-input-grid">
+        <div class="dt-input-item">
+          <label>Entry-Preis ($)</label>
+          <input type="number" id="entry-price" step="0.01" placeholder="z.B. 3026.10" oninput="calcTrade()">
+        </div>
+        <div class="dt-input-item">
+          <label>Richtung</label>
+          <select id="trade-direction" onchange="calcTrade()">
+            <option value="">Wählen...</option>
+            <option value="LONG">LONG ↑</option>
+            <option value="SHORT">SHORT ↓</option>
+          </select>
+        </div>
+        <div class="dt-input-item full">
+          <label>Datum</label>
+          <input type="date" id="trade-date">
+        </div>
+      </div>
+      <div class="trade-detail" id="trade-calc">
+        <h3>BERECHNUNG</h3>
+        <div class="calc-row"><span class="clabel">Range-Größe</span><span class="cval" id="calc-range">—</span></div>
+        <div class="calc-row"><span class="clabel">Stop Loss</span><span class="cval red" id="calc-sl">—</span></div>
+        <div class="calc-row"><span class="clabel">Take Profit (RRR 1:2)</span><span class="cval green" id="calc-tp">—</span></div>
+        <div class="calc-row"><span class="clabel">SL-Abstand</span><span class="cval" id="calc-sl-dist">—</span></div>
+        <div class="calc-row"><span class="clabel">TP-Abstand</span><span class="cval" id="calc-tp-dist">—</span></div>
+      </div>
+      <div class="dt-btns">
+        <button class="dt-btn neutral" onclick="showResultStep()">Trade anzeigen →</button>
+      </div>
+    </div>
+
+    <!-- RESULT TRADE -->
+    <div class="dt-result trade" id="result-trade">
+      <div class="icon">🎯</div>
+      <h2>TRADE VALID!</h2>
+      <p id="result-trade-detail">Setup erfüllt alle Kriterien.</p>
+    </div>
+
+    <!-- RESULT SKIP -->
+    <div class="dt-result skip" id="result-skip">
+      <div class="icon">⛔</div>
+      <h2>SKIP</h2>
+      <p id="result-skip-reason">—</p>
+    </div>
+
+    <!-- OUTCOME -->
+    <div class="dt-step" id="dt-step-outcome" style="display:none;">
+      <div class="dt-step-num">ERGEBNIS</div>
+      <h3>Was ist passiert?</h3>
+      <div class="dt-input-grid">
+        <div class="dt-input-item full">
+          <label>Ergebnis</label>
+          <select id="outcome-result">
+            <option value="WIN">WIN ✓</option>
+            <option value="LOSS">LOSS ✗</option>
+            <option value="BE">BREAK-EVEN</option>
+          </select>
+        </div>
+        <div class="dt-input-item">
+          <label>Pips (+/-)</label>
+          <input type="number" id="outcome-pips" step="1" placeholder="z.B. 370">
+        </div>
+        <div class="dt-input-item">
+          <label>Exit-Preis ($)</label>
+          <input type="number" id="outcome-exit" step="0.01" placeholder="z.B. 3029.80">
+        </div>
+        <div class="dt-input-item full">
+          <label>Notiz (optional)</label>
+          <input type="text" id="outcome-note" placeholder="z.B. Sauberer Breakout, Fakeout...">
+        </div>
+      </div>
+      <button class="save-trade-btn" onclick="saveTrade()">💾 Trade speichern</button>
+    </div>
+
+    <div class="skip-reason" id="skip-save-prompt">
+      <button class="save-trade-btn" style="margin-top:0;background:#333;color:#aaa;" onclick="saveSkip()">Skip ebenfalls speichern</button>
+    </div>
+
+    <button class="reset-btn" id="reset-btn" onclick="resetDT()" style="display:none;">↺ Neuer Tag / Reset</button>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: LOG ══════════════════ -->
+<div class="page" id="page-log">
+  <div class="page-header">
+    <h1>Trade <em>Log</em></h1>
+    <p id="log-count">0 EINTRÄGE GESPEICHERT</p>
+  </div>
+  <div class="log-container">
+    <button class="export-btn" onclick="exportExcel()">
+      📊 Als Excel exportieren (.csv)
+    </button>
+    <div class="log-filters">
+      <button class="log-filter-btn active" onclick="filterLog('ALL', this)">Alle</button>
+      <button class="log-filter-btn" onclick="filterLog('WIN', this)">Wins</button>
+      <button class="log-filter-btn" onclick="filterLog('LOSS', this)">Losses</button>
+      <button class="log-filter-btn" onclick="filterLog('SKIP', this)">Skips</button>
+      <button class="log-filter-btn" onclick="filterLog('BE', this)">Break-Even</button>
+    </div>
+    <div id="log-list">
+      <div class="log-empty"><div class="icon">📋</div>Noch keine Trades gespeichert.<br>Starte mit dem Entscheidungsbaum.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PAGE: STATS ══════════════════ -->
+<div class="page" id="page-stats">
+  <div class="page-header">
+    <h1>Auswert<em>ung</em></h1>
+    <p id="stats-subtitle">BACKTESTING ANALYTICS</p>
+  </div>
+  <div class="stats-container" id="stats-container">
+    <div class="no-data" id="stats-nodata">📊<br><br>Noch zu wenig Daten.<br>Sammle erst mindestens 5 Trades.</div>
+    <div id="stats-content" style="display:none;">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Winrate</div><div class="kpi-value green" id="kpi-wr">—</div><div class="kpi-sub" id="kpi-wr-sub">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Expectancy</div><div class="kpi-value gold" id="kpi-exp">—</div><div class="kpi-sub">Pips pro Trade</div></div>
+        <div class="kpi-card"><div class="kpi-label">Trades</div><div class="kpi-value blue" id="kpi-trades">—</div><div class="kpi-sub" id="kpi-trades-sub">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Ø Gewinn</div><div class="kpi-value gold" id="kpi-avg-win">—</div><div class="kpi-sub" id="kpi-avg-loss-sub">—</div></div>
+      </div>
+
+      <div class="section-label">Serien</div>
+      <div class="streak-box">
+        <div class="streak-item"><div class="streak-num green" id="streak-win">0</div><div class="streak-lbl">Max Win-Serie</div></div>
+        <div class="streak-item"><div class="streak-num red" id="streak-loss">0</div><div class="streak-lbl">Max Loss-Serie</div></div>
+        <div class="streak-item"><div class="streak-num" id="streak-cur" style="color:var(--blue)">0</div><div class="streak-lbl">Aktuelle Serie</div></div>
+      </div>
+
+      <div class="section-label">Equity-Kurve (Pips)</div>
+      <div class="chart-card"><div class="chart-wrap"><canvas id="chart-equity"></canvas></div></div>
+
+      <div class="section-label">Winrate nach Wochentag</div>
+      <div class="chart-card"><div class="breakdown-grid" id="weekday-breakdown"></div></div>
+
+      <div class="section-label">EMA50-Filter Vergleich</div>
+      <div class="filter-compare">
+        <div class="fc-card" id="fc-ema-with"><div class="fc-title">Mit EMA-Richtung</div><div class="fc-big" id="fc-ema-with-val">—</div><div class="fc-sub" id="fc-ema-with-n">— Trades</div></div>
+        <div class="fc-card" id="fc-ema-all"><div class="fc-title">Alle Trades</div><div class="fc-big" id="fc-ema-all-val">—</div><div class="fc-sub" id="fc-ema-all-n">— Trades</div></div>
+      </div>
+
+      <div class="section-label">Winrate nach Range-Größe</div>
+      <div class="chart-card"><div class="chart-wrap" style="height:160px;"><canvas id="chart-range"></canvas></div></div>
+
+      <div class="section-label">Long vs. Short</div>
+      <div class="filter-compare">
+        <div class="fc-card" id="fc-long"><div class="fc-title">LONG</div><div class="fc-big" id="fc-long-val">—</div><div class="fc-sub" id="fc-long-n">— Trades</div></div>
+        <div class="fc-card" id="fc-short"><div class="fc-title">SHORT</div><div class="fc-big" id="fc-short-val">—</div><div class="fc-sub" id="fc-short-n">— Trades</div></div>
+      </div>
+
+      <div class="section-label">Pips pro Monat</div>
+      <div class="chart-card"><div class="chart-wrap"><canvas id="chart-monthly"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TAB BAR ══════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('dt')" id="tab-dt">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+    <span>Check</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('log')" id="tab-log">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span>Log</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('stats')" id="tab-stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <span>Stats</span>
+  </button>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let dtState = { rangeHigh:0, rangeLow:0, rangeSize:0, ema50:'', direction:'', entry:0, sl:0, tp:0, date:'', skipReason:'' };
+let trades = JSON.parse(localStorage.getItem('lob_trades_v2') || '[]');
+let charts = {};
+let currentFilter = 'ALL';
+
+// ═══════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'log') renderLog();
+  if (tab === 'stats') renderStats();
+}
+
+// ═══════════════════════════════════════
+// DECISION TREE
+// ═══════════════════════════════════════
+function dtAnswer(step, answer, skipReason) {
+  if (answer === 'no') { showSkip(skipReason); return; }
+  const next = step + 1;
+  const nextEl = document.getElementById('dt-step-' + next);
+  if (nextEl) {
+    nextEl.classList.add('visible');
+    setTimeout(() => nextEl.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+  }
+}
+
+function showSkip(reason) {
+  dtState.skipReason = reason;
+  document.getElementById('result-skip').classList.add('visible');
+  document.getElementById('result-skip-reason').textContent = reason;
+  document.getElementById('skip-save-prompt').classList.add('visible');
+  document.getElementById('reset-btn').style.display = 'block';
+  setTimeout(() => document.getElementById('result-skip').scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+}
+
+function calcRange() {
+  const high = parseFloat(document.getElementById('range-high').value);
+  const low = parseFloat(document.getElementById('range-low').value);
+  if (isNaN(high) || isNaN(low) || high <= low) {
+    document.getElementById('range-val').textContent = '—';
+    document.getElementById('range-status').textContent = 'Eingabe prüfen';
+    document.getElementById('range-status').className = 'status';
+    document.getElementById('range-note').style.display = 'none';
+    return;
+  }
+  const size = (high - low).toFixed(2);
+  dtState.rangeHigh = high; dtState.rangeLow = low; dtState.rangeSize = parseFloat(size);
+  document.getElementById('range-val').textContent = size + '$';
+  const noteEl = document.getElementById('range-note');
+  if (parseFloat(size) >= 0.80) {
+    document.getElementById('range-status').textContent = '✓ OK';
+    document.getElementById('range-status').className = 'status ok';
+    if (parseFloat(size) >= 3.0) {
+      noteEl.style.display = 'block';
+      noteEl.textContent = '🔥 Große Range (' + size + '$) → TP = ' + (parseFloat(size)*2).toFixed(2) + '$ ab Entry. Sehr gutes Setup!';
+    } else { noteEl.style.display = 'none'; }
+  } else {
+    document.getElementById('range-status').textContent = '✗ Zu klein (< 0.80$)';
+    document.getElementById('range-status').className = 'status bad';
+    noteEl.style.display = 'block';
+    noteEl.textContent = 'ℹ️ Range unter Minimum. Bei aktuellem Gold-Preis (>3000$) ist dies selten – Skip trotzdem konsequent dokumentieren.';
+  }
+}
+
+function dtStep3Check() {
+  if (dtState.rangeSize < 0.80 && dtState.rangeSize > 0) { showSkip('Skip – Range zu klein (' + dtState.rangeSize.toFixed(2) + '$)'); return; }
+  if (dtState.rangeSize === 0) { alert('Bitte zuerst Range High und Low eingeben.'); return; }
+  dtAnswer(3, 'yes');
+}
+
+function selectEMA(val) {
+  dtState.ema50 = val;
+  document.querySelectorAll('.ema-btn').forEach(b => b.className = 'ema-btn');
+  document.getElementById('ema-' + val.toLowerCase()).classList.add('selected-' + val.toLowerCase());
+}
+
+function dtStep5(yes) {
+  if (!dtState.ema50) { alert('Bitte zuerst EMA50-Lage in Schritt 4 auswählen.'); return; }
+  dtAnswer(5, 'yes');
+}
+
+function calcTrade() {
+  const entry = parseFloat(document.getElementById('entry-price').value);
+  const dir = document.getElementById('trade-direction').value;
+  if (isNaN(entry) || !dir || dtState.rangeSize === 0) return;
+  dtState.entry = entry; dtState.direction = dir;
+  const range = dtState.rangeSize;
+  let sl, tp;
+  if (dir === 'LONG') { sl = dtState.rangeLow; tp = entry + (range * 2); }
+  else { sl = dtState.rangeHigh; tp = entry - (range * 2); }
+  dtState.sl = sl; dtState.tp = tp;
+  document.getElementById('calc-range').textContent = range.toFixed(2) + '$';
+  document.getElementById('calc-sl').textContent = sl.toFixed(2) + '$';
+  document.getElementById('calc-tp').textContent = tp.toFixed(2) + '$';
+  document.getElementById('calc-sl-dist').textContent = Math.abs(entry - sl).toFixed(2) + '$';
+  document.getElementById('calc-tp-dist').textContent = Math.abs(tp - entry).toFixed(2) + '$';
+}
+
+function showResultStep() {
+  if (!dtState.entry || !dtState.direction) { alert('Bitte Entry-Preis und Richtung eingeben.'); return; }
+  dtState.date = document.getElementById('trade-date').value || new Date().toISOString().split('T')[0];
+  document.getElementById('result-trade').classList.add('visible');
+  document.getElementById('result-trade-detail').textContent =
+    dtState.direction + ' · Entry: ' + dtState.entry.toFixed(2) + '$ · SL: ' + dtState.sl.toFixed(2) + '$ · TP: ' + dtState.tp.toFixed(2) + '$';
+  document.getElementById('dt-step-outcome').style.display = 'block';
+  document.getElementById('reset-btn').style.display = 'block';
+  setTimeout(() => document.getElementById('result-trade').scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+}
+
+function buildTradeObj(type, result, pips, exit, note) {
+  const d = new Date(dtState.date || new Date().toISOString().split('T')[0]);
+  const days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  return {
+    id: Date.now(),
+    date: dtState.date || new Date().toISOString().split('T')[0],
+    day: days[d.getDay()],
+    type, direction: dtState.direction || '—',
+    ema50: dtState.ema50 || '—',
+    rangeSize: dtState.rangeSize || 0,
+    rangeHigh: dtState.rangeHigh || 0,
+    rangeLow: dtState.rangeLow || 0,
+    entry: dtState.entry || 0,
+    sl: dtState.sl || 0,
+    tp: dtState.tp || 0,
+    exit, result,
+    pips: result === 'LOSS' ? -Math.abs(pips) : Math.abs(pips),
+    note
+  };
+}
+
+function saveTrade() {
+  const result = document.getElementById('outcome-result').value;
+  const pips = parseFloat(document.getElementById('outcome-pips').value) || 0;
+  const exit = parseFloat(document.getElementById('outcome-exit').value) || 0;
+  const note = document.getElementById('outcome-note').value;
+  trades.unshift(buildTradeObj('TRADE', result, pips, exit, note));
+  saveTrades(); alert('✅ Trade gespeichert!'); resetDT();
+}
+
+function saveSkip() {
+  const d = new Date(); const days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  trades.unshift({
+    id: Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    day: days[d.getDay()],
+    type: 'SKIP', result: 'SKIP', pips: 0,
+    note: dtState.skipReason,
+    ema50: dtState.ema50 || '—',
+    rangeSize: dtState.rangeSize || 0,
+    rangeHigh: dtState.rangeHigh || 0,
+    rangeLow: dtState.rangeLow || 0,
+    direction: '—', entry: 0, sl: 0, tp: 0, exit: 0
+  });
+  saveTrades(); alert('Skip gespeichert!'); resetDT();
+}
+
+function resetDT() {
+  dtState = { rangeHigh:0, rangeLow:0, rangeSize:0, ema50:'', direction:'', entry:0, sl:0, tp:0, date:'', skipReason:'' };
+  document.querySelectorAll('.dt-step').forEach(s => s.classList.remove('visible'));
+  document.getElementById('dt-step-1').classList.add('visible');
+  document.querySelectorAll('.dt-result').forEach(r => r.classList.remove('visible'));
+  document.getElementById('dt-step-outcome').style.display = 'none';
+  document.getElementById('skip-save-prompt').classList.remove('visible');
+  document.getElementById('reset-btn').style.display = 'none';
+  ['range-high','range-low','entry-price','outcome-pips','outcome-exit','outcome-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('trade-direction').value = '';
+  document.getElementById('trade-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('range-val').textContent = '—';
+  document.getElementById('range-status').textContent = 'Eingabe ausstehend';
+  document.getElementById('range-status').className = 'status';
+  document.getElementById('range-note').style.display = 'none';
+  document.querySelectorAll('.ema-btn').forEach(b => b.className = 'ema-btn');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+// EXPORT CSV (Excel-kompatibel)
+// ═══════════════════════════════════════
+function exportExcel() {
+  if (trades.length === 0) { alert('Keine Daten zum Exportieren.'); return; }
+  const headers = ['Datum','Wochentag','Typ','Richtung','EMA50','Range-High','Range-Low','Range-Groesse','Entry','SL','TP','Exit','Ergebnis','Pips','Notiz'];
+  const rows = trades.map(t => [
+    t.date, t.day, t.type, t.direction, t.ema50,
+    t.rangeHigh || '', t.rangeLow || '',
+    t.rangeSize ? t.rangeSize.toFixed(2) : '',
+    t.entry || '', t.sl || '', t.tp || '', t.exit || '',
+    t.result, t.pips, '"' + (t.note || '').replace(/"/g,'""') + '"'
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(';')).join('\n');
+  const bom = '\uFEFF'; // UTF-8 BOM für Excel
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LOB_Backtest_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════
+function filterLog(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.log-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLog();
+}
+
+function renderLog() {
+  const list = document.getElementById('log-list');
+  const filtered = currentFilter === 'ALL' ? trades : trades.filter(t => t.result === currentFilter);
+  document.getElementById('log-count').textContent = trades.length + ' EINTRÄGE · localStorage ✓';
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="log-empty"><div class="icon">📋</div>Keine Einträge für diesen Filter.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(t => {
+    const resClass = t.result.toLowerCase();
+    const pipStr = t.pips > 0 ? '+' + t.pips : String(t.pips);
+    const pipClass = t.pips > 0 ? 'pos' : (t.pips < 0 ? 'neg' : '');
+    const dirClass = t.direction === 'LONG' ? 'direction-long' : (t.direction === 'SHORT' ? 'direction-short' : '');
+    return `<div class="trade-card ${resClass}">
+      <button class="delete-btn" onclick="deleteTrade(${t.id}, event)">✕</button>
+      <div class="tc-top">
+        <div class="tc-date">${t.date} · ${t.day}</div>
+        <div class="tc-result ${resClass}">${t.result}</div>
+      </div>
+      <div class="tc-mid">
+        ${t.type==='TRADE'?`<span class="tc-tag ${dirClass}">${t.direction}</span>`:''}
+        <span class="tc-tag">EMA: ${t.ema50}</span>
+        ${t.rangeSize?`<span class="tc-tag">Range: ${parseFloat(t.rangeSize).toFixed(2)}$</span>`:''}
+      </div>
+      <div class="tc-bottom">
+        <span style="color:var(--muted2);font-size:12px;">${t.note||'—'}</span>
+        ${t.type==='TRADE'?`<span class="tc-pips ${pipClass}">${pipStr} Pips</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteTrade(id, e) {
+  e.stopPropagation();
+  if (!confirm('Eintrag löschen?')) return;
+  trades = trades.filter(t => t.id !== id);
+  saveTrades(); renderLog();
+}
+
+function saveTrades() {
+  localStorage.setItem('lob_trades_v2', JSON.stringify(trades));
+}
+
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
+function renderStats() {
+  const realTrades = trades.filter(t => t.type === 'TRADE');
+  if (realTrades.length < 5) {
+    document.getElementById('stats-nodata').style.display = 'block';
+    document.getElementById('stats-content').style.display = 'none';
+    return;
+  }
+  document.getElementById('stats-nodata').style.display = 'none';
+  document.getElementById('stats-content').style.display = 'block';
+
+  const wins = realTrades.filter(t => t.result === 'WIN');
+  const losses = realTrades.filter(t => t.result === 'LOSS');
+  const wr = (wins.length / realTrades.length * 100).toFixed(1);
+  const avgWin = wins.length ? (wins.reduce((a,t)=>a+t.pips,0)/wins.length).toFixed(1) : 0;
+  const avgLoss = losses.length ? Math.abs(losses.reduce((a,t)=>a+t.pips,0)/losses.length).toFixed(1) : 0;
+  const expectancy = (wins.length/realTrades.length * parseFloat(avgWin) - losses.length/realTrades.length * parseFloat(avgLoss)).toFixed(1);
+  const totalPips = realTrades.reduce((a,t)=>a+t.pips,0);
+
+  document.getElementById('kpi-wr').textContent = wr + '%';
+  document.getElementById('kpi-wr').className = 'kpi-value ' + (parseFloat(wr)>=50?'green':'red');
+  document.getElementById('kpi-wr-sub').textContent = wins.length + 'W / ' + losses.length + 'L';
+  document.getElementById('kpi-exp').textContent = (expectancy>0?'+':'')+expectancy;
+  document.getElementById('kpi-exp').className = 'kpi-value ' + (expectancy>0?'gold':'red');
+  document.getElementById('kpi-trades').textContent = realTrades.length;
+  document.getElementById('kpi-trades-sub').textContent = trades.filter(t=>t.type==='SKIP').length + ' Skips';
+  document.getElementById('kpi-avg-win').textContent = '+' + avgWin;
+  document.getElementById('kpi-avg-loss-sub').textContent = 'Ø Loss: -' + avgLoss + ' Pips';
+
+  // Streaks
+  const sorted = [...realTrades].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let mxW=0,mxL=0,cW=0,cL=0;
+  sorted.forEach(t=>{
+    if(t.result==='WIN'){cW++;cL=0;mxW=Math.max(mxW,cW);}
+    else if(t.result==='LOSS'){cL++;cW=0;mxL=Math.max(mxL,cL);}
+    else{cW=0;cL=0;}
+  });
+  const lastR = sorted[sorted.length-1]?.result;
+  const cur = lastR==='WIN'?cW:(lastR==='LOSS'?-cL:0);
+  document.getElementById('streak-win').textContent = mxW;
+  document.getElementById('streak-loss').textContent = mxL;
+  const curEl = document.getElementById('streak-cur');
+  curEl.textContent = cur>0?'+'+cur:cur;
+  curEl.style.color = cur>0?'var(--green)':(cur<0?'var(--red)':'var(--muted2)');
+
+  // Charts
+  let eq=0;
+  renderEquityChart(sorted.map(t=>{eq+=t.pips;return eq;}));
+  renderWeekdayBreakdown(realTrades);
+  renderRangeChart(realTrades);
+  renderMonthlyChart(sorted);
+
+  // EMA compare
+  const withEMA = realTrades.filter(t=>(t.direction==='LONG'&&t.ema50==='OVER')||(t.direction==='SHORT'&&t.ema50==='UNDER')||(t.ema50==='AT'));
+  const wrEMA = withEMA.length?(withEMA.filter(t=>t.result==='WIN').length/withEMA.length*100).toFixed(1):'—';
+  document.getElementById('fc-ema-with-val').textContent = wrEMA!=='—'?wrEMA+'%':'—';
+  document.getElementById('fc-ema-with-n').textContent = withEMA.length + ' Trades';
+  document.getElementById('fc-ema-all-val').textContent = wr + '%';
+  document.getElementById('fc-ema-all-n').textContent = realTrades.length + ' Trades';
+  document.getElementById('fc-ema-with').className = 'fc-card '+(parseFloat(wrEMA)>=parseFloat(wr)?'better':'worse');
+
+  // Long/Short
+  const longs=realTrades.filter(t=>t.direction==='LONG');
+  const shorts=realTrades.filter(t=>t.direction==='SHORT');
+  const wrL=longs.length?(longs.filter(t=>t.result==='WIN').length/longs.length*100).toFixed(1):'—';
+  const wrS=shorts.length?(shorts.filter(t=>t.result==='WIN').length/shorts.length*100).toFixed(1):'—';
+  document.getElementById('fc-long-val').textContent=wrL!=='—'?wrL+'%':'—';
+  document.getElementById('fc-long-n').textContent=longs.length+' Trades';
+  document.getElementById('fc-short-val').textContent=wrS!=='—'?wrS+'%':'—';
+  document.getElementById('fc-short-n').textContent=shorts.length+' Trades';
+  document.getElementById('fc-long').className='fc-card '+(parseFloat(wrL)>=50?'better':'worse');
+  document.getElementById('fc-short').className='fc-card '+(parseFloat(wrS)>=50?'better':'worse');
+
+  document.getElementById('stats-subtitle').textContent = realTrades.length + ' TRADES · ' + (totalPips>=0?'+':'') + totalPips + ' PIPS';
+}
+
+function renderEquityChart(data) {
+  const ctx = document.getElementById('chart-equity').getContext('2d');
+  if (charts.equity) charts.equity.destroy();
+  const color = data[data.length-1]>=0?'#3ecf7a':'#f06565';
+  charts.equity = new Chart(ctx, {
+    type:'line',
+    data:{ labels:data.map((_,i)=>i+1), datasets:[{ data, borderColor:color, borderWidth:2, fill:true,
+      backgroundColor: c=>{const g=c.chart.ctx.createLinearGradient(0,0,0,180);g.addColorStop(0,color+'33');g.addColorStop(1,color+'00');return g;},
+      pointRadius:0, tension:0.3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{display:false}, y:{grid:{color:'#1e1e1e'},ticks:{color:'#666',font:{family:'DM Mono',size:10}}} } }
+  });
+}
+
+function renderWeekdayBreakdown(trades) {
+  const days = ['Di','Mi','Do'];
+  document.getElementById('weekday-breakdown').innerHTML = days.map(day=>{
+    const dt=trades.filter(t=>t.day===day);
+    if(!dt.length) return `<div class="breakdown-row"><span class="br-label">${day}</span><div class="br-bar-wrap"><div class="br-bar" style="width:0%"></div></div><span class="br-pct">—</span><span class="br-count">0</span></div>`;
+    const wr=dt.filter(t=>t.result==='WIN').length/dt.length*100;
+    return `<div class="breakdown-row"><span class="br-label">${day}</span><div class="br-bar-wrap"><div class="br-bar" style="width:${wr}%"></div></div><span class="br-pct">${wr.toFixed(0)}%</span><span class="br-count">${dt.length}</span></div>`;
+  }).join('');
+}
+
+function renderRangeChart(trades) {
+  const s=trades.filter(t=>t.rangeSize<1.5), l=trades.filter(t=>t.rangeSize>=1.5&&t.rangeSize<3), xl=trades.filter(t=>t.rangeSize>=3);
+  const wr=arr=>arr.length?(arr.filter(t=>t.result==='WIN').length/arr.length*100).toFixed(0):0;
+  const ctx=document.getElementById('chart-range').getContext('2d');
+  if(charts.range) charts.range.destroy();
+  charts.range = new Chart(ctx,{type:'bar',
+    data:{labels:['0.8–1.5$ ('+s.length+')','1.5–3$ ('+l.length+')','≥3$ ('+xl.length+')'],
+      datasets:[{data:[wr(s),wr(l),wr(xl)],backgroundColor:['rgba(232,184,75,0.2)','rgba(91,156,246,0.2)','rgba(62,207,122,0.2)'],borderColor:['#E8B84B','#5b9cf6','#3ecf7a'],borderWidth:1,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{color:'#666',font:{family:'DM Mono',size:10}}},y:{max:100,grid:{color:'#1e1e1e'},ticks:{color:'#666',font:{family:'DM Mono',size:10},callback:v=>v+'%'}}}}
+  });
+}
+
+function renderMonthlyChart(sorted) {
+  const m={};
+  sorted.forEach(t=>{const k=t.date.substring(0,7);if(!m[k])m[k]=0;m[k]+=t.pips;});
+  const labels=Object.keys(m),values=Object.values(m);
+  const ctx=document.getElementById('chart-monthly').getContext('2d');
+  if(charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(ctx,{type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:values.map(v=>v>=0?'rgba(62,207,122,0.3)':'rgba(240,101,101,0.3)'),borderColor:values.map(v=>v>=0?'#3ecf7a':'#f06565'),borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{color:'#666',font:{family:'DM Mono',size:9}}},y:{grid:{color:'#1e1e1e'},ticks:{color:'#666',font:{family:'DM Mono',size:10}}}}}
+  });
+}
+
+// Init
+document.getElementById('trade-date').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
