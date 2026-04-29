@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARKET MICROSTRUCTURE ACADEMY</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:#050810;--bg2:#0a0f1a;--bg3:#0f1420;--panel:#131824;--panel2:#1a2130;
+  --border:#1e293b;--border2:#2d3748;--text:#e2e8f0;--text2:#cbd5e1;--muted:#64748b;
+  --accent:#06b6d4;--accent2:#0ea5e9;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;
+  --purple:#a855f7;--orange:#f97316;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{overflow-x:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;width:100%;max-width:100vw;padding-bottom:5rem;}
+
+/* HEADER */
+.header{background:rgba(10,15,26,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:1rem 1.5rem;position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;letter-spacing:0.1em;color:var(--accent);text-transform:uppercase;}
+.progress-indicator{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;}
+.progress-bar{width:100px;height:3px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));width:0%;transition:width 0.4s ease;}
+
+/* HERO */
+.hero{padding:3rem 1.5rem 2rem;text-align:center;position:relative;overflow:hidden;max-width:100vw;}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(600px,100vw);height:min(600px,100vw);background:radial-gradient(circle,rgba(6,182,212,0.08) 0%,transparent 70%);pointer-events:none;}
+.hero-tag{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.75rem;}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,7vw,4rem);font-weight:700;line-height:1.05;margin-bottom:1rem;background:linear-gradient(135deg,#fff 0%,var(--accent) 70%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative;}
+.hero-desc{font-size:0.95rem;color:var(--muted);max-width:600px;margin:0 auto 2rem;line-height:1.7;}
+.hero-cta{display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.5rem;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.hero-cta:hover{background:var(--accent2);transform:translateY(-2px);}
+
+/* NAV */
+.nav{display:flex;gap:0.5rem;padding:1rem 1.5rem;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-item{flex-shrink:0;padding:0.5rem 1rem;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:0.75rem;font-family:'IBM Plex Mono',monospace;color:var(--muted);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.05em;}
+.nav-item:hover{border-color:var(--accent);color:var(--accent);}
+.nav-item.active{background:rgba(6,182,212,0.1);border-color:var(--accent);color:var(--accent);}
+
+/* SECTIONS */
+.section{display:none;padding:1.5rem 1rem;max-width:100vw;overflow-x:hidden;}
+.section.active{display:block;}
+
+.section-header{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:2px solid var(--border);}
+.section-tag{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.75rem,5vw,2.5rem);font-weight:700;margin-bottom:0.75rem;color:#fff;}
+.section-desc{font-size:0.9rem;color:var(--text2);max-width:700px;line-height:1.7;}
+
+/* CONTENT BLOCKS */
+.content-block{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1.5rem;max-width:100%;overflow:hidden;}
+.content-block.highlight{border-left:3px solid var(--accent);}
+.content-block.warning{border-left:3px solid var(--orange);}
+.content-block.success{border-left:3px solid var(--green);}
+
+.cb-title{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:0.75rem;color:#fff;display:flex;align-items:center;gap:0.5rem;}
+.cb-icon{font-size:1.2rem;}
+.cb-text{font-size:0.88rem;color:var(--text2);line-height:1.7;word-wrap:break-word;overflow-wrap:break-word;}
+.cb-text strong{color:#fff;font-weight:600;}
+.cb-text em{color:var(--accent);font-style:normal;font-weight:500;}
+
+/* TOOL CARDS */
+.tool-grid{display:grid;grid-template-columns:1fr;gap:1rem;margin:1.5rem 0;}
+.tool-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.25rem;transition:all 0.2s;cursor:pointer;}
+.tool-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.tool-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem;}
+.tool-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:#fff;}
+.tool-badge{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;padding:0.2rem 0.5rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:3px;color:var(--green);text-transform:uppercase;letter-spacing:0.05em;}
+.tool-badge.paid{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.3);color:var(--yellow);}
+.tool-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;}
+.tool-features{display:flex;flex-wrap:wrap;gap:0.4rem;}
+.tool-tag{font-size:0.7rem;padding:0.25rem 0.6rem;background:var(--bg2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);}
+
+/* STEP GUIDE */
+.step-guide{margin:1.5rem 0;}
+.step{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem;position:relative;padding-left:3.5rem;}
+.step-num{position:absolute;left:1.25rem;top:1.25rem;width:2rem;height:2rem;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:600;color:var(--bg);}
+.step-title{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.step-text{font-size:0.82rem;color:var(--text2);line-height:1.6;}
+
+/* CODE BLOCK */
+.code-block{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;margin:1rem 0;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text2);line-height:1.6;overflow-x:auto;white-space:pre;word-wrap:normal;}
+
+/* VISUAL EXAMPLES */
+.visual-grid{display:grid;grid-template-columns:1fr;gap:1.5rem;margin:2rem 0;}
+.visual-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.visual-header{padding:1rem;background:var(--panel2);border-bottom:1px solid var(--border);}
+.visual-title{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600;color:#fff;margin-bottom:0.25rem;}
+.visual-subtitle{font-size:0.75rem;color:var(--muted);}
+.visual-body{padding:1.25rem;}
+
+/* DOM VISUALIZATION */
+.dom-display{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;margin:1rem 0;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;overflow-x:auto;}
+.dom-header{display:grid;grid-template-columns:1fr auto 1fr;gap:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;font-weight:600;color:var(--muted);text-align:center;min-width:280px;}
+.dom-row{display:grid;grid-template-columns:1fr auto 1fr;gap:0.75rem;padding:0.3rem 0;align-items:center;min-width:280px;}
+.dom-bid{text-align:right;color:var(--green);}
+.dom-price{text-align:center;color:var(--text);}
+.dom-ask{text-align:left;color:var(--red);}
+.dom-highlight{background:rgba(6,182,212,0.1);border-left:2px solid var(--accent);padding-left:0.5rem;}
+
+/* FOOTPRINT EXAMPLE */
+.footprint-display{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;margin:1rem 0;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;overflow-x:auto;}
+.fp-row{display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0.5rem;border-bottom:1px solid rgba(30,41,59,0.5);min-width:280px;}
+.fp-price{color:var(--muted);min-width:60px;}
+.fp-volume{display:flex;gap:0.5rem;align-items:center;}
+.fp-bid{color:var(--red);}
+.fp-ask{color:var(--green);}
+.fp-delta{min-width:50px;text-align:right;font-weight:600;}
+.fp-delta.positive{color:var(--green);}
+.fp-delta.negative{color:var(--red);}
+.fp-highlight{background:rgba(6,182,212,0.08);border-left:2px solid var(--accent);}
+
+/* KEY CONCEPTS */
+.concept-grid{display:grid;grid-template-columns:1fr;gap:1rem;margin:1.5rem 0;}
+.concept-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1rem;}
+.concept-term{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--accent);margin-bottom:0.5rem;font-weight:600;}
+.concept-def{font-size:0.82rem;color:var(--text2);line-height:1.6;}
+
+/* COMPARISON TABLE */
+.compare-table{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow-x:auto;margin:1.5rem 0;}
+.compare-header{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--panel2);padding:0.75rem 0.5rem;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:0.65rem;font-weight:600;color:var(--muted);text-transform:uppercase;min-width:280px;}
+.compare-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:0.75rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.75rem;align-items:center;min-width:280px;}
+.compare-row:last-child{border-bottom:none;}
+.compare-label{color:var(--text2);font-weight:500;}
+.compare-check{color:var(--green);text-align:center;}
+.compare-cross{color:var(--red);text-align:center;}
+
+/* GLOSSARY TABLE */
+.glossary-table{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:1.5rem 0;}
+.glossary-row{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:1rem;border-bottom:1px solid var(--border);align-items:start;}
+.glossary-row:last-child{border-bottom:none;}
+.glossary-term{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;font-weight:600;color:var(--accent);white-space:nowrap;padding-top:0.2rem;}
+.glossary-def{font-size:0.82rem;color:var(--text2);line-height:1.6;}
+
+/* INTERACTIVE TOGGLE */
+.toggle-section{margin:1.5rem 0;}
+.toggle-header{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;}
+.toggle-header:hover{border-color:var(--accent);}
+.toggle-title{font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600;color:#fff;}
+.toggle-icon{color:var(--muted);transition:transform 0.3s;}
+.toggle-section.open .toggle-icon{transform:rotate(180deg);}
+.toggle-content{display:none;padding:1.25rem;background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 6px 6px;margin-top:-1px;}
+.toggle-section.open .toggle-content{display:block;}
+
+/* FOOTER NAV */
+.footer-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,15,26,0.98);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;z-index:1000;}
+.footer-btn{padding:0.6rem 1.25rem;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text);cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.05em;}
+.footer-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.footer-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.footer-btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.footer-btn.primary:hover{background:var(--accent2);}
+
+/* RESPONSIVE */
+@media(min-width:768px){
+  .tool-grid{grid-template-columns:1fr 1fr;}
+  .visual-grid{grid-template-columns:1fr 1fr;}
+  .concept-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">⚡ Market Microstructure</div>
+  <div class="progress-indicator">
+    <span id="progressText">0/7</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">Der Weg hinter den Preis</div>
+  <h1>Verstehe wie<br>Märkte WIRKLICH<br>funktionieren</h1>
+  <p class="hero-desc">Vergiss Candlesticks und Indikatoren. Wir tauchen tief ein — vom ersten Tick bis zur institutionellen Order. Du lernst nicht eine Strategie, sondern wie du dir DEINE eigene aus dem Markt selbst ableitest.</p>
+  <button class="hero-cta" onclick="goToSection(0)">🚀 Jetzt starten</button>
+</div>
+
+<div class="nav" id="mainNav">
+  <div class="nav-item active" onclick="goToSection(0)">01 · Einführung</div>
+  <div class="nav-item" onclick="goToSection(1)">02 · DOM</div>
+  <div class="nav-item" onclick="goToSection(2)">03 · Footprint</div>
+  <div class="nav-item" onclick="goToSection(3)">04 · Volume Profile</div>
+  <div class="nav-item" onclick="goToSection(4)">05 · Tape Reading</div>
+  <div class="nav-item" onclick="goToSection(5)">06 · Plattformen</div>
+  <div class="nav-item" onclick="goToSection(6)">07 · Strategie bauen</div>
+</div>
+
+<!-- SECTION 0: EINFÜHRUNG -->
+<div class="section active" id="section0">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 01</div>
+    <h2 class="section-title">Die Wahrheit über Preise</h2>
+    <p class="section-desc">Candlesticks zeigen dir DASS sich der Preis bewegt hat. Orderflow zeigt dir WARUM und WER dahinter steckt.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">💡 Dein Problem mit klassischem Trading</div>
+    <div class="cb-text">
+      Du schaust auf einen Chart. Siehst eine grüne Kerze. Vielleicht RSI unter 30. EMA kreuzt. Du gehst Long.<br><br>
+      <strong>Was du NICHT siehst:</strong><br>
+      • Eine Institution hat gerade 5.000 Kontrakte verkauft<br>
+      • Retail-Stop-Losses wurden unter diesem Level gejagt<br>
+      • Die grüne Kerze war passive Käufer (Limit Orders) die Market-Sells absorbiert haben<br>
+      • Der echte Druck kommt von der anderen Seite<br><br>
+      <em>Candlesticks sind das Endergebnis. Orderflow ist der Prozess dahinter.</em>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <div class="cb-title">🎯 Was du in dieser Academy lernst</div>
+    <div class="cb-text">
+      <strong>NICHT:</strong> "Kauf wenn X passiert" — keine fertige Strategie.<br><br>
+      <strong>SONDERN:</strong><br>
+      → Wie Preise durch Orders WIRKLICH entstehen (Auktionstheorie)<br>
+      → Wie du DOM (Depth of Market) liest — wo große Orders liegen<br>
+      → Wie Footprint Charts zeigen WER bei jedem Tick kauft/verkauft<br>
+      → Wie Volume Profile zeigt wo Institutionen akkumulieren<br>
+      → Wie Tape Reading (Time & Sales) Echtzeit-Execution offenlegt<br>
+      → Wo du diese Tools bekommst (kostenlos!)<br>
+      → Wie du daraus DEINE eigene Strategie entwickelst<br><br>
+      <em>Am Ende verstehst du den Markt so gut, dass du deine eigenen Setups erkennst — ohne dass dir jemand sagt "trade das".</em>
+    </div>
+  </div>
+
+  <div class="content-block warning">
+    <div class="cb-title">⚠️ Das ist kein Anfängerkurs</div>
+    <div class="cb-text">
+      Diese Academy setzt voraus dass du:<br>
+      • Weißt was ein Market Order vs. Limit Order ist<br>
+      • Verstehst wie Bid/Ask funktioniert<br>
+      • Bereit bist tief einzutauchen — oberflächlich wird's nicht<br><br>
+      Wenn du nur "schnell Geld machen" willst — falsch hier. Das ist ein Fundament das Monate braucht um zu sitzen.
+    </div>
+  </div>
+
+  <div class="visual-grid">
+    <div class="visual-card">
+      <div class="visual-header">
+        <div class="visual-title">Was Retail sieht</div>
+        <div class="visual-subtitle">Candlestick Chart</div>
+      </div>
+      <div class="visual-body">
+        <div class="cb-text">
+          📊 Grüne Kerze = Preis gestiegen<br>
+          📈 RSI 45 = "neutral"<br>
+          💹 EMA kreuzt = "Bullish Signal"<br><br>
+          <em>Aber WHY? WER kauft? Wie viel?</em>
+        </div>
+      </div>
+    </div>
+    <div class="visual-card">
+      <div class="visual-header">
+        <div class="visual-title">Was Institutionen sehen</div>
+        <div class="visual-subtitle">Orderflow</div>
+      </div>
+      <div class="visual-body">
+        <div class="cb-text">
+          🔴 2.300 Market-Sells absorbiert bei 4750<br>
+          🟢 Limit-Käufer halten das Level<br>
+          📉 Delta dreht von -800 auf +200<br>
+          ⚡ Stop-Cluster liegt bei 4740<br><br>
+          <em>JETZT wissen sie: Sellers erschöpft, Zeit für Long.</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">📚 Glossar — Alle wichtigen Begriffe</div>
+    <div class="glossary-table">
+      <div class="glossary-row">
+        <div class="glossary-term">DOM</div>
+        <div class="glossary-def">Depth of Market — zeigt Limit-Orders (Bid/Ask) die auf Ausführung warten. Nicht ausgeführte Trades.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">BID</div>
+        <div class="glossary-def">Käufer-Seite im DOM — Orders die bei einem bestimmten Preis kaufen wollen (warten auf niedrigeren Preis).</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">ASK</div>
+        <div class="glossary-def">Verkäufer-Seite im DOM — Orders die bei einem bestimmten Preis verkaufen wollen (warten auf höheren Preis).</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">FOOTPRINT</div>
+        <div class="glossary-def">Chart-Typ der bei jedem Preis-Level innerhalb einer Kerze zeigt: Bid-Volumen × Ask-Volumen. Format: "340 × 890"</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">DELTA</div>
+        <div class="glossary-def">Ask-Volumen − Bid-Volumen. Positiv = mehr Käufer, Negativ = mehr Verkäufer. Nicht immer = Preis-Richtung!</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">CVD</div>
+        <div class="glossary-def">Cumulative Volume Delta — aufsummiertes Delta über Zeit. Zeigt ob insgesamt mehr Kauf- oder Verkaufsdruck da ist.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">TAPE</div>
+        <div class="glossary-def">Time & Sales — jeder ausgeführte Trade in Echtzeit. Zeit, Preis, Größe, Seite (Bid/Ask Hit).</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">POC</div>
+        <div class="glossary-def">Point of Control — Preis-Level mit höchstem Volumen im Volume Profile. Stärkster Magnet.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">VA</div>
+        <div class="glossary-def">Value Area — Bereich mit 70% des gesamten Volumens. Definiert "fairen Preis".</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">VAH</div>
+        <div class="glossary-def">Value Area High — obere Grenze der Value Area. Wird oft als Resistance getestet.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">VAL</div>
+        <div class="glossary-def">Value Area Low — untere Grenze der Value Area. Wird oft als Support getestet.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">HVN</div>
+        <div class="glossary-def">High Volume Node — Preis-Level mit überdurchschnittlichem Volumen. Preis verlangsamt hier = Support/Resistance.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">LVN</div>
+        <div class="glossary-def">Low Volume Node — Preis-Level mit sehr wenig Volumen. Preis beschleunigt hier = schnelle Durchbewegung.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">ABSORPTION</div>
+        <div class="glossary-def">Große Market-Orders treffen auf starke Limit-Orders — Preis bewegt sich nicht. Zeigt Verteidigung eines Levels.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">ICEBERG</div>
+        <div class="glossary-def">Versteckte große Order die automatisch nachgefüllt wird. Preis "klebt" obwohl Volumen durchgeht.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">SPOOFING</div>
+        <div class="glossary-def">Fake Order im DOM die gecancelt wird bevor Preis sie berührt. Täuschungsmanöver.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">PULLING</div>
+        <div class="glossary-def">Limit-Orders verschwinden kurz vor Preisberührung. Market Maker zieht Liquidität zurück.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">STACKED IMBALANCE</div>
+        <div class="glossary-def">Mehrere aufeinanderfolgende Preis-Level mit extremer Einseitigkeit (z.B. nur Buys). Institutioneller Druck.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">DELTA DIVERGENCE</div>
+        <div class="glossary-def">Preis macht neue Hochs/Tiefs, aber Delta sinkt. Weniger Kraft für neue Extrema = Erschöpfung.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">LARGE PRINT</div>
+        <div class="glossary-def">Einzelner Trade mit überdurchschnittlicher Größe (>200-500 Kontrakte je nach Asset). Oft institutionell.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">PRINT CLUSTER</div>
+        <div class="glossary-def">3-5 große Prints innerhalb weniger Sekunden auf gleicher Seite. Stärker als einzelner Large Print.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">EXHAUSTION</div>
+        <div class="glossary-def">Schnelle Folge großer Orders, Preis bewegt sich kaum noch. Aggressoren erschöpft = potentieller Reversal.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">VELOCITY</div>
+        <div class="glossary-def">Geschwindigkeit der Trades im Tape (Prints pro Minute). Velocity Change = drastische Verlangsamung vor Bewegung.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">LIMIT ORDER</div>
+        <div class="glossary-def">Order die auf einen bestimmten Preis wartet. "Passive" Order — wartet auf Gegenseite. Sichtbar im DOM.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">MARKET ORDER</div>
+        <div class="glossary-def">"Aggressive" Order — wird sofort zum besten verfügbaren Preis ausgeführt. Sichtbar im Tape.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">AGGRESSOR</div>
+        <div class="glossary-def">Die Seite die Market Orders platziert (aktiv). Käufer hit Ask, Verkäufer hit Bid.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">UNFINISHED AUCTION</div>
+        <div class="glossary-def">Kerze schließt auf High/Low ohne letzte Zeile im Footprint zu füllen. Markt wird Level nochmal besuchen.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">IB</div>
+        <div class="glossary-def">Initial Balance — erste Handelsstunde der Session. Range definiert oft das Tages-Setup.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">IMBALANCE</div>
+        <div class="glossary-def">Phase wo eine Seite dominiert — Preis bewegt sich schnell mit niedrigem Volumen in Richtung neuen Wertebereichs.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">BALANCE</div>
+        <div class="glossary-def">Phase wo Preis in akzeptiertem Wertebereich (VA) konsolidiert. Hohe Volumenkonzentration, kein klarer Trend.</div>
+      </div>
+      <div class="glossary-row">
+        <div class="glossary-term">LIQUIDITY</div>
+        <div class="glossary-def">Verfügbare Orders im Markt. Hohe Liquidität = viele Orders, enge Spreads. Niedrig = dünnes Orderbuch, Slippage.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1: DOM -->
+<div class="section" id="section1">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 02</div>
+    <h2 class="section-title">DOM — Depth of Market</h2>
+    <p class="section-desc">Das Orderbuch. Hier siehst du LIVE wo Käufer und Verkäufer ihre Orders platziert haben — bevor ein einziger Trade ausgeführt wurde.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">📖 Was ist DOM?</div>
+    <div class="cb-text">
+      DOM zeigt dir <strong>Limit Orders</strong> — Orders die darauf warten ausgeführt zu werden.<br><br>
+      <strong>Bid Side (Käufer):</strong> Leute die bei einem bestimmten Preis kaufen WOLLEN — sie warten darauf dass der Preis runter kommt.<br><br>
+      <strong>Ask Side (Verkäufer):</strong> Leute die bei einem bestimmten Preis verkaufen WOLLEN — sie warten darauf dass der Preis hoch kommt.<br><br>
+      <em>Das sind NICHT ausgeführte Trades — das sind Absichten.</em>
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">Live DOM Beispiel</div>
+      <div class="visual-subtitle">XAUUSD · Aktueller Preis: 4756.50</div>
+    </div>
+    <div class="visual-body">
+      <div class="dom-display">
+        <div class="dom-header">
+          <div>BID (Käufer)</div>
+          <div>PREIS</div>
+          <div>ASK (Verkäufer)</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">—</div>
+          <div class="dom-price">4761.00</div>
+          <div class="dom-ask">890</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">—</div>
+          <div class="dom-price">4760.00</div>
+          <div class="dom-ask">450</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">—</div>
+          <div class="dom-price">4759.00</div>
+          <div class="dom-ask">320</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">—</div>
+          <div class="dom-price">4758.00</div>
+          <div class="dom-ask">1.240</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">120</div>
+          <div class="dom-price">4757.00</div>
+          <div class="dom-ask">580</div>
+        </div>
+        <div class="dom-row dom-highlight">
+          <div class="dom-bid">180</div>
+          <div class="dom-price" style="color:var(--accent);font-weight:600;">4756.50</div>
+          <div class="dom-ask">200</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">340</div>
+          <div class="dom-price">4756.00</div>
+          <div class="dom-ask">—</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">890</div>
+          <div class="dom-price">4755.00</div>
+          <div class="dom-ask">—</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">1.560</div>
+          <div class="dom-price">4754.00</div>
+          <div class="dom-ask">—</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">2.100</div>
+          <div class="dom-price">4753.00</div>
+          <div class="dom-ask">—</div>
+        </div>
+        <div class="dom-row">
+          <div class="dom-bid">670</div>
+          <div class="dom-price">4752.00</div>
+          <div class="dom-ask">—</div>
+        </div>
+      </div>
+      <div class="cb-text" style="margin-top:1rem;">
+        <strong>Was du siehst:</strong><br>
+        🟢 Bei 4753: <em>2.100 Kontrakte</em> warten auf Kauf → starker Support<br>
+        🔴 Bei 4758: <em>1.240 Kontrakte</em> warten auf Verkauf → starke Resistance<br>
+        ⚠️ Zwischen 4756-4757: sehr dünn → Preis kann hier schnell durchschießen<br><br>
+        <em>Aber: Diese Orders können jederzeit gecancelt werden!</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="concept-term">🧊 ICEBERG ORDER</div>
+      <div class="concept-def">Große Order die automatisch aufgefüllt wird. Im DOM siehst du nur 100 Kontrakte, aber dahinter stecken 5.000. Erkennbar wenn Preis "klebt" obwohl Volumen durchgeht.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🎭 SPOOFING</div>
+      <div class="concept-def">Fake Order die gecancelt wird bevor Preis sie berührt. Ziel: andere Trader in falsche Richtung locken. Erkennbar wenn große Blocks plötzlich verschwinden.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">📊 BID/ASK STACKING</div>
+      <div class="concept-def">Aufbau großer Orders auf einer Seite vor einer Bewegung. Kann echter Druck sein oder Spoofing. Immer mit Footprint/Tape bestätigen!</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🔄 ABSORPTION</div>
+      <div class="concept-def">Market Orders treffen auf große Limit Orders — Preis bewegt sich nicht. Zeigt starke Verteidigung. Nach Absorption oft Reversal.</div>
+    </div>
+  </div>
+
+  <div class="content-block warning">
+    <div class="cb-title">⚠️ DOM Fallen</div>
+    <div class="cb-text">
+      <strong>1. DOM alleine ist KEIN Signal</strong><br>
+      Du siehst 3.000 Kontrakte bei 4750? Cool. Aber die können in Millisekunden verschwinden. <em>Nie allein auf DOM traden.</em><br><br>
+      <strong>2. Spoofing ist real</strong><br>
+      Große Blocks im DOM sind oft Täuschung. Warte bis Preis das Level berührt — dann siehst du ob Orders halten oder verschwinden.<br><br>
+      <strong>3. CFD-Broker zeigen oft KEIN echtes DOM</strong><br>
+      Bei vielen Retail-Brokern ist das DOM synthetisch — nicht das echte Orderbuch der Exchange. Für echtes DOM: Futures oder CME-Daten nötig.
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: FOOTPRINT -->
+<div class="section" id="section2">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 03</div>
+    <h2 class="section-title">Footprint Charts</h2>
+    <p class="section-desc">Während DOM zeigt was Leute WOLLEN — zeigt Footprint was tatsächlich PASSIERT ist. Volumen inside the candle.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">📊 Was ist ein Footprint Chart?</div>
+    <div class="cb-text">
+      Ein Footprint zeigt <strong>bei jedem einzelnen Preis-Level</strong> innerhalb einer Kerze:<br>
+      → Wie viel auf der <span style="color:var(--red);">Bid-Seite</span> gehandelt wurde (Market-Sells = aggressive Verkäufer)<br>
+      → Wie viel auf der <span style="color:var(--green);">Ask-Seite</span> gehandelt wurde (Market-Buys = aggressive Käufer)<br><br>
+      Format: <code>Bid × Ask</code> (z.B. "340 × 890")<br><br>
+      <strong>Delta = Ask-Volumen − Bid-Volumen</strong><br>
+      Positives Delta = mehr Käufer | Negatives Delta = mehr Verkäufer
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">Footprint Beispiel</div>
+      <div class="visual-subtitle">H1 Kerze · 4750 → 4762 · +12 Punkte bullish</div>
+    </div>
+    <div class="visual-body">
+      <div class="footprint-display">
+        <div style="display:flex;justify-content:space-between;padding:0.5rem 0.5rem 0.75rem;border-bottom:2px solid var(--border);margin-bottom:0.5rem;font-weight:600;font-size:0.65rem;color:var(--muted);">
+          <div>PREIS</div>
+          <div>BID × ASK</div>
+          <div>DELTA</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4762</div>
+          <div class="fp-volume"><span class="fp-bid">45</span> × <span class="fp-ask">890</span></div>
+          <div class="fp-delta positive">+845</div>
+        </div>
+        <div class="fp-row fp-highlight">
+          <div class="fp-price">4761</div>
+          <div class="fp-volume"><span class="fp-bid">12</span> × <span class="fp-ask">1.240</span></div>
+          <div class="fp-delta positive">+1228</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4760</div>
+          <div class="fp-volume"><span class="fp-bid">120</span> × <span class="fp-ask">680</span></div>
+          <div class="fp-delta positive">+560</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4759</div>
+          <div class="fp-volume"><span class="fp-bid">340</span> × <span class="fp-ask">450</span></div>
+          <div class="fp-delta positive">+110</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4758</div>
+          <div class="fp-volume"><span class="fp-bid">560</span> × <span class="fp-ask">340</span></div>
+          <div class="fp-delta negative">-220</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4757</div>
+          <div class="fp-volume"><span class="fp-bid">780</span> × <span class="fp-ask">230</span></div>
+          <div class="fp-delta negative">-550</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4756</div>
+          <div class="fp-volume"><span class="fp-bid">1.120</span> × <span class="fp-ask">180</span></div>
+          <div class="fp-delta negative">-940</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4755</div>
+          <div class="fp-volume"><span class="fp-bid">890</span> × <span class="fp-ask">120</span></div>
+          <div class="fp-delta negative">-770</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4754</div>
+          <div class="fp-volume"><span class="fp-bid">450</span> × <span class="fp-ask">90</span></div>
+          <div class="fp-delta negative">-360</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4753</div>
+          <div class="fp-volume"><span class="fp-bid">340</span> × <span class="fp-ask">67</span></div>
+          <div class="fp-delta negative">-273</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4752</div>
+          <div class="fp-volume"><span class="fp-bid">230</span> × <span class="fp-ask">45</span></div>
+          <div class="fp-delta negative">-185</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4751</div>
+          <div class="fp-volume"><span class="fp-bid">120</span> × <span class="fp-ask">23</span></div>
+          <div class="fp-delta negative">-97</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">4750</div>
+          <div class="fp-volume"><span class="fp-bid">67</span> × <span class="fp-ask">0</span></div>
+          <div class="fp-delta negative">-67</div>
+        </div>
+      </div>
+      <div class="cb-text" style="margin-top:1rem;">
+        <strong>Was du siehst:</strong><br><br>
+        🔥 <strong>Bei 4761 (highlighted):</strong> Stacked Imbalance — 12 Sells vs. 1.240 Buys = extreme Einseitigkeit<br><br>
+        📉 <strong>Untere Hälfte (4750-4757):</strong> Negatives Delta = mehr Sellers (aber Preis ist trotzdem gestiegen!)<br><br>
+        📈 <strong>Obere Hälfte (4758-4762):</strong> Positives Delta = Käufer übernehmen<br><br>
+        <em>→ Das zeigt: Passive Käufer (Limit Orders) haben Market-Sells absorbiert und dann übernommen. Bullish Signal!</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="concept-term">🔀 DELTA DIVERGENCE</div>
+      <div class="concept-def">Preis macht neue Hochs, aber Delta sinkt (z.B. +800 → +400 → +150). Weniger Käufer nötig für neue Hochs = Erschöpfung. Warnsignal für Reversal.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">⚡ STACKED IMBALANCE</div>
+      <div class="concept-def">Mehrere aufeinanderfolgende Level mit extremer Einseitigkeit (z.B. nur Buys, kaum Sells). Zeigt starken institutionellen Druck in eine Richtung.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🛑 ABSORPTION</div>
+      <div class="concept-def">Große Market Orders auf einer Seite, Preis bewegt sich nicht. Footprint zeigt massives Volumen aber kein Fortschritt. Starke Limit-Order-Verteidigung.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🔄 UNFINISHED AUCTION</div>
+      <div class="concept-def">Kerze schließt auf High/Low ohne letzte Zeile zu füllen. Markt "unfinished" → wird diesen Bereich wieder besuchen. Oft Bounce-Zone.</div>
+    </div>
+  </div>
+
+  <div class="content-block warning">
+    <div class="cb-title">⚠️ Die Delta-Falle</div>
+    <div class="cb-text">
+      <strong>WICHTIG:</strong> Negatives Delta bei steigender Kerze ist NICHT automatisch bearish!<br><br>
+      <em>Beispiel:</em> Kerze steigt +40 Punkte, Delta ist -800.<br><br>
+      Das bedeutet: <strong>Passive Käufer</strong> (Limit-Orders auf Bid) absorbieren alle Market-Sells UND halten Preis hoch.<br><br>
+      → Das ist eigentlich <span style="color:var(--green);">BULLISH</span> — die Limit-Käufer sind stark genug Market-Druck aufzunehmen.<br><br>
+      <strong>Die Frage ist nicht:</strong> War Delta positiv oder negativ?<br>
+      <strong>Die Frage ist:</strong> Macht das Ergebnis (Preis) Sinn mit dem Delta?
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: VOLUME PROFILE -->
+<div class="section" id="section3">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 04</div>
+    <h2 class="section-title">Volume Profile</h2>
+    <p class="section-desc">Zeigt dir WO die meiste Aktivität stattgefunden hat — und wo Preis wie ein Magnet zurückgezogen wird.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">📊 Was ist Volume Profile?</div>
+    <div class="cb-text">
+      Volume Profile zeigt <strong>horizontal</strong> wie viel Volumen bei jedem Preis-Level gehandelt wurde.<br><br>
+      Stell dir vor: Bei 4750 wurden heute 10.000 Kontrakte gehandelt, bei 4755 nur 200.<br><br>
+      → 4750 ist ein <em>High Volume Node (HVN)</em> — viele offene Positionen, Preis wird dort "kleben"<br>
+      → 4755 ist ein <em>Low Volume Node (LVN)</em> — kaum Aktivität, Preis schießt durch<br><br>
+      <strong>Wichtigste Level:</strong><br>
+      🎯 <strong>POC (Point of Control):</strong> Level mit höchstem Volumen = stärkster Magnet<br>
+      📊 <strong>Value Area (VA):</strong> Bereich mit 70% des Volumens = "fairer Preis"<br>
+      📈 <strong>VAH (Value Area High):</strong> Oberkante der VA = Resistance<br>
+      📉 <strong>VAL (Value Area Low):</strong> Unterkante der VA = Support
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">Volume Profile Visualisierung</div>
+      <div class="visual-subtitle">Tages-Session · XAUUSD</div>
+    </div>
+    <div class="visual-body">
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1.5rem;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;color:var(--muted);">4765</div>
+          <div style="height:4px;width:40px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">420</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;color:var(--muted);">4764</div>
+          <div style="height:4px;width:55px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">680</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;padding:0.25rem;background:rgba(6,182,212,0.08);border-left:2px solid var(--accent);">
+          <div style="width:60px;color:var(--text);font-weight:600;">4763</div>
+          <div style="height:6px;width:140px;background:var(--accent);border-radius:3px;"></div>
+          <div style="color:var(--accent);font-size:0.7rem;font-weight:600;">3.240 ← VAH</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;color:var(--muted);">4762</div>
+          <div style="height:4px;width:120px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">2.890</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;padding:0.5rem;background:rgba(16,185,129,0.1);border-left:3px solid var(--green);">
+          <div style="width:60px;color:#fff;font-weight:700;">4761</div>
+          <div style="height:8px;width:200px;background:var(--green);border-radius:4px;box-shadow:0 0 20px rgba(16,185,129,0.3);"></div>
+          <div style="color:var(--green);font-size:0.75rem;font-weight:700;">5.670 ← POC</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;color:var(--muted);">4760</div>
+          <div style="height:4px;width:110px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">2.450</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;padding:0.25rem;background:rgba(6,182,212,0.08);border-left:2px solid var(--accent);">
+          <div style="width:60px;color:var(--text);font-weight:600;">4759</div>
+          <div style="height:6px;width:130px;background:var(--accent);border-radius:3px;"></div>
+          <div style="color:var(--accent);font-size:0.7rem;font-weight:600;">3.120 ← VAL</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+          <div style="width:60px;color:var(--muted);">4758</div>
+          <div style="height:4px;width:45px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">560</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;padding:0.25rem;background:rgba(239,68,68,0.08);border-left:2px solid var(--red);">
+          <div style="width:60px;color:var(--red);font-weight:600;">4757</div>
+          <div style="height:4px;width:15px;background:var(--red);border-radius:2px;"></div>
+          <div style="color:var(--red);font-size:0.7rem;font-weight:600;">89 ← LVN</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="width:60px;color:var(--muted);">4756</div>
+          <div style="height:4px;width:50px;background:var(--border2);border-radius:2px;"></div>
+          <div style="color:var(--muted);font-size:0.65rem;">670</div>
+        </div>
+      </div>
+      <div class="cb-text" style="margin-top:1.5rem;">
+        <strong>Was du siehst:</strong><br><br>
+        🟢 <strong>POC bei 4761:</strong> 5.670 Kontrakte = höchstes Volumen des Tages. Preis wird hier wie ein Magnet zurückgezogen.<br><br>
+        🔵 <strong>Value Area 4759-4763:</strong> Hier fand 70% der Aktivität statt = "fairer Preis" für heute.<br><br>
+        🔴 <strong>LVN bei 4757:</strong> Nur 89 Kontrakte = sehr dünn. Wenn Preis hier rein kommt → schnelle Bewegung erwartet.<br><br>
+        <em>→ Trading-Idee: Wenn Preis unter VAL (4759) fällt, Target ist der nächste HVN oder POC darunter.</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="concept-term">🎯 POC (Point of Control)</div>
+      <div class="concept-def">Level mit höchstem Volumen = stärkster Magnet im Profil. Preis kehrt oft zum POC zurück wenn er davon wegläuft. Ideal als TP oder Re-Entry Zone.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">📊 HVN (High Volume Node)</div>
+      <div class="concept-def">Bereiche mit überdurchschnittlichem Volumen. Preis verlangsamt hier = viele offene Positionen = Support/Resistance. Gut für Bounces.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🚀 LVN (Low Volume Node)</div>
+      <div class="concept-def">Dünne Bereiche mit wenig Volumen. Preis beschleunigt hier = kaum Interesse = schnelle Durchbewegung. Ideal für TP-Zonen bei Breakouts.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">📈 VALUE AREA (VA)</div>
+      <div class="concept-def">Bereich mit 70% des Volumens. VAH (High) und VAL (Low) definieren fairen Preis. Ausbruch über VAH/unter VAL = potentieller Trendwechsel.</div>
+    </div>
+  </div>
+
+  <div class="content-block success">
+    <div class="cb-title">✅ Wie du Volume Profile nutzt</div>
+    <div class="cb-text">
+      <strong>1. Identifiziere HVNs als potenzielle Bounce-Zonen</strong><br>
+      Preis kommt auf einen HVN zu → Setup für Reversal wenn DOM/Footprint bestätigen<br><br>
+      <strong>2. Nutze LVNs als Target-Zonen</strong><br>
+      Preis bricht aus → Nächster HVN oder LVN ist dein TP<br><br>
+      <strong>3. POC als Magnet verstehen</strong><br>
+      Preis weit vom POC weg → Wahrscheinlichkeit hoch dass er zurückkommt<br><br>
+      <strong>4. VA-Breaks als Trend-Signale</strong><br>
+      Preis schließt über VAH mit Volumen → bullish bias | unter VAL → bearish bias
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: TAPE READING -->
+<div class="section" id="section4">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 05</div>
+    <h2 class="section-title">Tape Reading · Time & Sales</h2>
+    <p class="section-desc">Das Echtzeit-Fenster in den Markt. Jeder ausgeführte Trade, Sekunde für Sekunde.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">⚡ Was ist Time & Sales (T&S)?</div>
+    <div class="cb-text">
+      Time & Sales zeigt jeden <strong>ausgeführten Trade</strong> in Echtzeit:<br>
+      → Zeit | Preis | Größe | Seite (Bid/Ask)<br><br>
+      <strong>Grün / Ask-Hit:</strong> Market-Käufer = aggressiver Kauf<br>
+      <strong>Rot / Bid-Hit:</strong> Market-Verkäufer = aggressiver Verkauf<br><br>
+      <em>Das sind AUSGEFÜHRTE Trades — keine wartenden Orders wie im DOM.</em><br><br>
+      Große Prints (>200 Kontrakte bei Futures, variiert je nach Asset) = institutionelle Aktivität.
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">Time & Sales Stream</div>
+      <div class="visual-subtitle">Live Tape · 13:45:23 - 13:45:31</div>
+    </div>
+    <div class="visual-body">
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:1rem;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;">
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;color:var(--muted);font-weight:600;">
+          <div>ZEIT</div><div>PREIS</div><div>GRÖSSE</div><div>SEITE</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:31</div><div>4758.5</div><div>89</div><div style="color:var(--green);">ASK</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:30</div><div>4758.0</div><div>230</div><div style="color:var(--green);">ASK</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;background:rgba(16,185,129,0.1);">
+          <div>13:45:29</div><div>4758.0</div><div style="font-weight:700;">540</div><div style="color:var(--green);font-weight:700;">ASK ←</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;background:rgba(16,185,129,0.1);">
+          <div>13:45:29</div><div>4758.0</div><div style="font-weight:700;">420</div><div style="color:var(--green);font-weight:700;">ASK ←</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:28</div><div>4757.5</div><div>120</div><div style="color:var(--green);">ASK</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:27</div><div>4757.0</div><div>45</div><div style="color:var(--red);">BID</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:26</div><div>4757.0</div><div>67</div><div style="color:var(--red);">BID</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;background:rgba(239,68,68,0.1);">
+          <div>13:45:25</div><div>4757.0</div><div style="font-weight:700;">890</div><div style="color:var(--red);font-weight:700;">BID ←</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:24</div><div>4756.5</div><div>34</div><div style="color:var(--red);">BID</div>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto auto auto;gap:1rem;padding:0.3rem 0;align-items:center;">
+          <div>13:45:23</div><div>4756.5</div><div>78</div><div style="color:var(--red);">BID</div>
+        </div>
+      </div>
+      <div class="cb-text" style="margin-top:1.5rem;">
+        <strong>Was du siehst:</strong><br><br>
+        🔴 <strong>13:45:25 — 890 BID:</strong> Großer Market-Sell → aggressiver Verkäufer<br><br>
+        🟢 <strong>13:45:29 — 540 + 420 ASK:</strong> Zwei große Market-Buys direkt nacheinander → institutioneller Käufer tritt ein<br><br>
+        ⚡ <strong>Tape drehte von Rot auf Grün:</strong> Sellers erschöpft nach dem 890er-Print, Käufer übernehmen<br><br>
+        <em>→ Das ist ein klassisches Absorptions-Signal wenn du gleichzeitig DOM + Footprint checkst!</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="concept-term">💥 LARGE PRINT CLUSTER</div>
+      <div class="concept-def">3-5 große Prints (400+ Kontrakte) innerhalb von 2-3 Sekunden auf der gleichen Seite. Stärker als ein einzelner großer Print = echter institutioneller Einstieg.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🔄 EXHAUSTION</div>
+      <div class="concept-def">Schnelle Folge großer Market-Orders → Preis bewegt sich kaum mehr. Aggressoren erschöpft, keine Kraft mehr. Oft Reversal-Signal.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🐌 VELOCITY CHANGE</div>
+      <div class="concept-def">Tape verlangsamt drastisch — von 50 Prints/Min auf 5. Market Maker zieht sich zurück. Nächster größerer Trade bewegt Preis signifikant.</div>
+    </div>
+    <div class="concept-card">
+      <div class="concept-term">🎯 ABSORPTION IM TAPE</div>
+      <div class="concept-def">Tape zeigt massives Volumen auf einer Seite, Preis stoppt. Große Limit-Order absorbiert alles. Wenn Tape dreht → sehr starkes Signal.</div>
+    </div>
+  </div>
+
+  <div class="content-block warning">
+    <div class="cb-title">⚠️ Tape alleine ist nicht genug</div>
+    <div class="cb-text">
+      Ein großer Print im Tape sagt dir:<br>
+      "Jemand hat 800 Kontrakte gekauft"<br><br>
+      Was du NICHT weißt:<br>
+      → War das ein Opening oder Closing einer Position?<br>
+      → Wurde das absorbiert oder hat es Preis bewegt?<br>
+      → Ist das Teil einer größeren Strategie?<br><br>
+      <strong>Deshalb:</strong> Tape immer kombiniert mit DOM (wo liegen Orders) + Footprint (wie reagiert Preis) + Volume Profile (wo ist Kontext).<br><br>
+      <em>Die Kombination aller 4 Tools gibt dir das komplette Bild.</em>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5: PLATTFORMEN -->
+<div class="section" id="section5">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 06</div>
+    <h2 class="section-title">Wo bekommst du diese Tools?</h2>
+    <p class="section-desc">Kostenlose und günstige Plattformen für DOM, Footprint, Volume Profile und Tape Reading.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">🎯 Was du wirklich brauchst</div>
+    <div class="cb-text">
+      Für echtes Orderflow-Trading brauchst du <strong>Echtzeit-Daten</strong> — nicht verzögerte Charts.<br><br>
+      <strong>Die Wahrheit:</strong> TradingView Free zeigt dir <strong>KEIN echtes DOM oder Footprint</strong>. Die Daten sind verzögert und synthetisch.<br><br>
+      Für CFDs (XAUUSD bei den meisten Brokern) gibt es <strong>kein echtes Orderbuch</strong> — weil du gegen den Broker tradest, nicht an einer Exchange.<br><br>
+      <em>Für echtes Orderflow brauchst du Futures-Daten (z.B. CME Gold GC) oder einen Broker mit Level 2 Data.</em>
+    </div>
+  </div>
+
+  <div class="tool-grid">
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">ATAS</div>
+        <div class="tool-badge">14 Tage Free</div>
+      </div>
+      <div class="tool-desc">
+        Die beste Plattform für Orderflow. Footprint Charts, Volume Profile, Cluster Charts, DOM, Smart Tape — alles in einem. MT5-Anbindung möglich für CFDs.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">✅ Footprint</div>
+        <div class="tool-tag">✅ DOM</div>
+        <div class="tool-tag">✅ Volume Profile</div>
+        <div class="tool-tag">✅ Tape</div>
+        <div class="tool-tag">✅ MT5 Support</div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">Sierra Chart</div>
+        <div class="tool-badge paid">$36/Monat</div>
+      </div>
+      <div class="tool-desc">
+        Professionelle Trading-Plattform mit allen Orderflow-Tools. Sehr beliebt bei Futures-Tradern. Steile Lernkurve aber mächtig.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">✅ Footprint</div>
+        <div class="tool-tag">✅ DOM</div>
+        <div class="tool-tag">✅ Volume Profile</div>
+        <div class="tool-tag">✅ Tape</div>
+        <div class="tool-tag">⚠️ Nur Futures</div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">Bookmap</div>
+        <div class="tool-badge">Free Basic</div>
+      </div>
+      <div class="tool-desc">
+        Visualisiert Liquidität im Orderbuch als Heatmap. Zeigt wo große Orders liegen und wie sie sich bewegen. Einzigartige Darstellung.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">✅ DOM Heatmap</div>
+        <div class="tool-tag">✅ Liquidity Tracker</div>
+        <div class="tool-tag">❌ Kein Footprint</div>
+        <div class="tool-tag">✅ Tape</div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">TradingView Pro+</div>
+        <div class="tool-badge paid">$30/Monat</div>
+      </div>
+      <div class="tool-desc">
+        Hat Volume Profile und Session-Profile. KEIN echtes DOM oder Footprint. Gut für Visual Profile Analysis, aber nicht für Echtzeit-Orderflow.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">✅ Volume Profile</div>
+        <div class="tool-tag">❌ Kein DOM</div>
+        <div class="tool-tag">❌ Kein Footprint</div>
+        <div class="tool-tag">❌ Kein Tape</div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">NinjaTrader</div>
+        <div class="tool-badge">Free Sim</div>
+      </div>
+      <div class="tool-desc">
+        Kostenlos für Sim-Trading. Hat DOM, Footprint (mit Addon), und Tape. Gute Wahl zum Lernen ohne Kosten. Nur für Futures.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">✅ DOM</div>
+        <div class="tool-tag">🔧 Footprint (Addon)</div>
+        <div class="tool-tag">✅ Tape</div>
+        <div class="tool-tag">⚠️ Nur Futures</div>
+        <div class="tool-tag">✅ Free Sim</div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-header">
+        <div class="tool-name">MT5 + Plugins</div>
+        <div class="tool-badge">Variiert</div>
+      </div>
+      <div class="tool-desc">
+        MetaTrader 5 mit kostenlosen/günstigen Plugins. Volume Profile geht, echtes DOM/Footprint schwierig bei CFDs. Besser als nichts.
+      </div>
+      <div class="tool-features">
+        <div class="tool-tag">🔧 Volume Profile</div>
+        <div class="tool-tag">⚠️ Kein echtes DOM</div>
+        <div class="tool-tag">❌ Kein Footprint</div>
+        <div class="tool-tag">✅ Du hast es schon</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block success">
+    <div class="cb-title">✅ Meine Empfehlung für dich</div>
+    <div class="cb-text">
+      <strong>Wenn du mit XAUUSD CFDs tradest (FTMO):</strong><br><br>
+      1. <strong>ATAS Free Trial (14 Tage)</strong> starten<br>
+      → MT5-Anbindung nutzen für deine CFD-Charts<br>
+      → Footprint + Volume Profile + Cluster Charts lernen<br>
+      → Danach entscheiden ob du 19€/Monat zahlen willst<br><br>
+      2. <strong>Parallel: TradingView für Volume Profile</strong><br>
+      → Wenn ATAS zu teuer wird, hat TV zumindest Volume Profile<br>
+      → Kostet auch ~30€/Monat aber du hast wahrscheinlich sowieso schon<br><br>
+      3. <strong>Später: NinjaTrader Sim für Futures-Übung</strong><br>
+      → Komplett kostenlos zum Üben<br>
+      → Wenn du irgendwann auf Futures wechselst, bist du vorbereitet<br><br>
+      <em>Start mit ATAS Free Trial — das gibt dir alles was du brauchst zum Lernen!</em>
+    </div>
+  </div>
+
+  <div class="toggle-section">
+    <div class="toggle-header" onclick="toggleContent(this)">
+      <div class="toggle-title">🔧 ATAS Setup Guide · Schritt für Schritt</div>
+      <div class="toggle-icon">▼</div>
+    </div>
+    <div class="toggle-content">
+      <div class="step-guide">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">ATAS herunterladen</div>
+          <div class="step-text">
+            Gehe auf <strong>atas.net</strong> → Download → Installiere die Platform<br>
+            Account erstellen (Free Trial 14 Tage — keine Kreditkarte nötig)
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">MT5 Verbindung einrichten</div>
+          <div class="step-text">
+            In ATAS: Settings → Connections → Add Connection → MetaTrader 5<br>
+            Deine MT5 Login-Daten eingeben → Verbinden<br>
+            <em>Jetzt kannst du XAUUSD Charts aus deinem Broker in ATAS mit Footprint sehen!</em>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Footprint Chart öffnen</div>
+          <div class="step-text">
+            Neues Chart erstellen → XAUUSD auswählen<br>
+            Chart Type → Footprint → Cluster Chart<br>
+            Timeframe: Start mit H1 oder M15
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Volume Profile hinzufügen</div>
+          <div class="step-text">
+            Indicators → Volume Profile → Session Profile<br>
+            Settings: Session = Daily (00:00-23:59) oder nach Handelszeiten<br>
+            Jetzt siehst du POC, VAH, VAL direkt im Chart!
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-title">DOM + Tape öffnen</div>
+          <div class="step-text">
+            Rechtsklick im Chart → Show DOM<br>
+            Rechtsklick im Chart → Show Time & Sales<br>
+            <em>Achtung: Bei CFDs ist das synthetisches DOM — für echte Daten brauchst du Futures!</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toggle-section">
+    <div class="toggle-header" onclick="toggleContent(this)">
+      <div class="toggle-title">🔧 TradingView Volume Profile Setup</div>
+      <div class="toggle-icon">▼</div>
+    </div>
+    <div class="toggle-content">
+      <div class="step-guide">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Pro+ Account nötig</div>
+          <div class="step-text">
+            Volume Profile braucht mindestens <strong>TradingView Pro+</strong> ($30/Monat)<br>
+            Wenn du nur Free hast → kein Volume Profile verfügbar
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Volume Profile Indicator</div>
+          <div class="step-text">
+            Indicators → Suche "Volume Profile" → <strong>Fixed Range Volume Profile</strong> oder <strong>Session Volume Profile</strong><br>
+            Fixed Range = du wählst manuell den Zeitraum<br>
+            Session = automatisch pro Session (London/NY/Asian)
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Settings anpassen</div>
+          <div class="step-text">
+            Value Area: 70% (Standard)<br>
+            Row Size: Auto oder 1-5 Ticks je nach Asset<br>
+            Show POC: An<br>
+            Show VAH/VAL: An
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Was du NICHT bekommst</div>
+          <div class="step-text">
+            ❌ Kein DOM<br>
+            ❌ Kein Footprint<br>
+            ❌ Kein Tape<br>
+            ✅ Nur Volume Profile<br><br>
+            <em>Für die anderen Tools brauchst du ATAS, Sierra Chart, oder NinjaTrader.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SECTION 6: STRATEGIE BAUEN -->
+<div class="section" id="section6">
+  <div class="section-header">
+    <div class="section-tag">Kapitel 07</div>
+    <h2 class="section-title">Vom Wissen zur Strategie</h2>
+    <p class="section-desc">Jetzt verstehst du den Markt. Hier ist wie du daraus DEINE eigene Strategie baust — keine Copy-Paste-Setups.</p>
+  </div>
+
+  <div class="content-block highlight">
+    <div class="cb-title">🎯 Der Framework — nicht die Strategie</div>
+    <div class="cb-text">
+      Ich gebe dir KEIN fertiges Setup. Das wäre nutzlos — weil jeder Trader andere Assets, Timeframes, und Risikotoleranz hat.<br><br>
+      <strong>Stattdessen:</strong> Ein Framework wie du Orderflow-Signale kombinierst um DEINE Setups zu finden.<br><br>
+      <em>Am Ende tradest du nicht "meine Strategie" — du tradest basierend auf dem was du im Markt SIEHST.</em>
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">Der 4-Layer-Filter</div>
+      <div class="visual-subtitle">Jedes Signal muss durch 4 Checks</div>
+    </div>
+    <div class="visual-body">
+      <div class="step-guide">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">KONTEXT · Volume Profile</div>
+          <div class="step-text">
+            <strong>Wo bin ich im größeren Bild?</strong><br>
+            → Sind wir am POC, HVN, LVN?<br>
+            → Über/unter der Value Area?<br>
+            → Nahe an gestern's High/Low?<br><br>
+            <em>Ohne Kontext ist jedes Signal wertlos. Der Markt verhält sich anders am POC als im LVN.</em>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">ABSICHT · DOM</div>
+          <div class="step-text">
+            <strong>Wo liegen die großen Orders?</strong><br>
+            → Große Bid-Wall unter mir = potentieller Support<br>
+            → Große Ask-Wall über mir = potentielle Resistance<br>
+            → Orders verschwinden plötzlich = Spoofing oder Pulling<br><br>
+            <em>DOM zeigt Absichten — aber erst Footprint bestätigt ob sie echt sind.</em>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">AUSFÜHRUNG · Footprint</div>
+          <div class="step-text">
+            <strong>Was passiert WIRKLICH?</strong><br>
+            → Delta positiv/negativ?<br>
+            → Absorption sichtbar? (Preis stoppt trotz Druck)<br>
+            → Stacked Imbalance? (mehrere Level mit Einseitigkeit)<br>
+            → Unfinished Auction?<br><br>
+            <em>Footprint ist die Wahrheit — hier siehst du WER gewonnen hat.</em>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">BESTÄTIGUNG · Tape</div>
+          <div class="step-text">
+            <strong>Dreht der Druck?</strong><br>
+            → Große Prints in meine Richtung?<br>
+            → Print Cluster (3-5 große Prints in 2-3 Sek)?<br>
+            → Velocity Change (Tape verlangsamt vor Bewegung)?<br>
+            → Exhaustion (viel Druck, kaum Bewegung)?<br><br>
+            <em>Tape ist der Trigger — hier siehst du den Switch in Echtzeit.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-block success">
+    <div class="cb-title">✅ Beispiel-Setup: Absorption Reversal</div>
+    <div class="cb-text">
+      <strong>Situation:</strong> Preis fällt in einen HVN (Volume Profile) bei 4750<br><br>
+      <strong>Layer 1 · Kontext:</strong><br>
+      → 4750 ist ein HVN mit 3.200 Kontrakt-Volumen heute<br>
+      → Preis kommt von oben → potenzielle Bounce-Zone<br><br>
+      <strong>Layer 2 · DOM:</strong><br>
+      → Ich sehe eine 2.100 Kontrakte Bid-Wall bei 4749<br>
+      → Keine großen Ask-Walls darüber → kein Widerstand nach oben<br><br>
+      <strong>Layer 3 · Footprint:</strong><br>
+      → Preis kommt auf 4750, viele rote Prints (Market-Sells)<br>
+      → Dann: Preis stoppt bei 4750.5, Delta dreht von -800 auf -200<br>
+      → Footprint zeigt massive Absorption → Sells werden aufgenommen<br><br>
+      <strong>Layer 4 · Tape:</strong><br>
+      → Tape zeigt 3 große grüne Prints (450, 560, 420) innerhalb 2 Sekunden<br>
+      → Institutioneller Käufer steigt ein → Sellers erschöpft<br><br>
+      <strong>→ ENTRY LONG bei 4751</strong><br>
+      SL: 4748 (unter HVN + DOM-Wall)<br>
+      TP: Nächster HVN oder POC bei 4761<br><br>
+      <em>Alle 4 Layer bestätigt = hochwahrscheinliches Setup!</em>
+    </div>
+  </div>
+
+  <div class="content-block warning">
+    <div class="cb-title">⚠️ Wann NICHT traden</div>
+    <div class="cb-text">
+      Selbst wenn 3 von 4 Layern bestätigen — in diesen Situationen KEIN Trade:<br><br>
+      🔴 <strong>News in <30 Min</strong> (High Impact wie NFP, CPI, FOMC)<br>
+      → DOM/Footprint werden nutzlos bei News-Spikes<br><br>
+      🔴 <strong>Spread >2× normal</strong><br>
+      → Market Maker zieht sich zurück, Slippage zu hoch<br><br>
+      🔴 <strong>DOM komplett leer</strong><br>
+      → Keine Liquidität = unkontrollierbare Fills<br><br>
+      🔴 <strong>Weniger als 2 Layer bestätigen</strong><br>
+      → Nie auf Kontext alleine traden<br>
+      → Nie auf DOM alleine traden<br>
+      → Minimum 2 Bestätigungen, besser 3-4<br><br>
+      <em>Disziplin ist wichtiger als Setups finden.</em>
+    </div>
+  </div>
+
+  <div class="content-block">
+    <div class="cb-title">🛣️ Dein Weg von hier</div>
+    <div class="cb-text">
+      <strong>Schritt 1: Screen Time (Woche 1-2)</strong><br>
+      → Nur schauen, nicht traden<br>
+      → ATAS oder Bookmap öffnen, Footprint + DOM + Tape live beobachten<br>
+      → Patterns markieren, Screenshots machen<br>
+      → Ziel: Muster in Echtzeit erkennen lernen<br><br>
+      <strong>Schritt 2: Sim-Trading (Woche 3-6)</strong><br>
+      → NinjaTrader Sim oder ATAS Demo<br>
+      → Nur 1-2 Setups pro Tag — vollständig dokumentiert<br>
+      → Kontext + DOM + Footprint + Tape checken VOR Entry<br>
+      → Screenshot bei Entry + Ergebnis protokollieren<br><br>
+      <strong>Schritt 3: Strategie entwickeln (Woche 7-10)</strong><br>
+      → Nach 30-40 dokumentierten Sim-Trades: Was funktioniert?<br>
+      → Welche Layer-Kombination hat höchste Win-Rate?<br>
+      → Welche Timeframes/Sessions passen zu dir?<br>
+      → Verfeinern und spezifizieren<br><br>
+      <strong>Schritt 4: Live mit Mini-Size (ab Woche 11)</strong><br>
+      → Kleines Live-Konto oder FTMO mit Mini-Lots<br>
+      → Gleiche Setups, gleiche Regeln<br>
+      → Emotionale Kontrolle aufbauen<br><br>
+      <strong>Wichtig:</strong><br>
+      🚨 Kein Live-Trading vor 40 dokumentierten Sim-Trades<br>
+      🚨 Keine Ausnahmen — der Markt läuft nicht weg<br>
+      🚨 Theorie ≠ Execution — Screen Time ist NICHT optional<br><br>
+      <em>In 3 Monaten hast du eine eigene Strategie die auf echtem Marktverständnis basiert — nicht auf fremden Setups.</em>
+    </div>
+  </div>
+
+  <div class="visual-card">
+    <div class="visual-header">
+      <div class="visual-title">🎓 Final Checklist</div>
+      <div class="visual-subtitle">Das musst du können bevor du live tradest</div>
+    </div>
+    <div class="visual-body">
+      <div class="cb-text">
+        ✅ <strong>Ich kann ein HVN vs. LVN im Volume Profile erkennen</strong><br>
+        ✅ <strong>Ich verstehe was POC, VAH, VAL bedeuten und wo sie liegen</strong><br>
+        ✅ <strong>Ich kann eine Iceberg-Order von echtem Pulling unterscheiden</strong><br>
+        ✅ <strong>Ich erkenne Absorption im Footprint (Preis stoppt trotz Delta)</strong><br>
+        ✅ <strong>Ich kann Stacked Imbalance und Delta Divergence lesen</strong><br>
+        ✅ <strong>Ich verstehe warum negativer Delta bei steigender Kerze bullish sein kann</strong><br>
+        ✅ <strong>Ich erkenne Large Print Cluster im Tape (3-5 große Prints schnell hintereinander)</strong><br>
+        ✅ <strong>Ich kann Velocity Change und Exhaustion im Tape sehen</strong><br>
+        ✅ <strong>Ich habe mindestens 40 vollständig dokumentierte Sim-Trades</strong><br>
+        ✅ <strong>Ich habe eine positive Win-Rate (>45%) über die letzten 30 Trades</strong><br>
+        ✅ <strong>Ich kann alle 4 Layer (Kontext, DOM, Footprint, Tape) VOR Entry checken</strong><br>
+        ✅ <strong>Ich weiß wann ich NICHT traden soll</strong><br><br>
+        <em>Wenn du alle 12 Punkte abhaken kannst → du bist bereit für Live-Trading.</em>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-nav">
+  <button class="footer-btn" id="prevBtn" onclick="prevSection()" disabled>← Zurück</button>
+  <button class="footer-btn primary" id="nextBtn" onclick="nextSection()">Weiter →</button>
+</div>
+
+<script>
+let currentSection = 0;
+const totalSections = 7;
+
+function goToSection(index) {
+  if(index < 0 || index >= totalSections) return;
+  
+  // Hide all sections
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  // Show target section
+  document.getElementById('section' + index).classList.add('active');
+  document.querySelectorAll('.nav-item')[index].classList.add('active');
+  
+  currentSection = index;
+  updateProgress();
+  updateButtons();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function nextSection() {
+  if(currentSection < totalSections - 1) {
+    goToSection(currentSection + 1);
+  }
+}
+
+function prevSection() {
+  if(currentSection > 0) {
+    goToSection(currentSection - 1);
+  }
+}
+
+function updateProgress() {
+  const progress = ((currentSection + 1) / totalSections) * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('progressText').textContent = (currentSection + 1) + '/' + totalSections;
+}
+
+function updateButtons() {
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  
+  prevBtn.disabled = currentSection === 0;
+  
+  if(currentSection === totalSections - 1) {
+    nextBtn.textContent = '✓ Fertig';
+    nextBtn.onclick = () => {
+      alert('🎉 Glückwunsch! Du hast die Market Microstructure Academy abgeschlossen.\n\nJetzt: ATAS Free Trial starten und Screen Time sammeln. Kein Live-Trading vor 40 Sim-Trades. Viel Erfolg!');
+    };
+  } else {
+    nextBtn.textContent = 'Weiter →';
+    nextBtn.onclick = nextSection;
+  }
+}
+
+function toggleContent(header) {
+  const section = header.parentElement;
+  section.classList.toggle('open');
+}
+
+// Initialize
+updateProgress();
+updateButtons();
+</script>
+
+</body>
+</html>
